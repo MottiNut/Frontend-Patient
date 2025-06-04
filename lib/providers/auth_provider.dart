@@ -46,8 +46,14 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     required String firstName,
     required String lastName,
+    required bool hasMedicalCondition,
+    String? chronicDisease,
     String? phone,
     DateTime? birthDate,
+    double? height,
+    double? weight,
+    String? allergies,
+    String? dietaryPreferences,
   }) async {
     _setLoading(true);
     _clearError();
@@ -57,8 +63,14 @@ class AuthProvider extends ChangeNotifier {
       password: password,
       firstName: firstName,
       lastName: lastName,
+      hasMedicalCondition: hasMedicalCondition,
+      chronicDisease: chronicDisease,
       phone: phone,
       birthDate: birthDate,
+      height: height,
+      weight: weight,
+      allergies: allergies,
+      dietaryPreferences: dietaryPreferences,
     );
 
     if (result.success && result.patient != null) {

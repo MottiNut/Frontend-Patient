@@ -1,4 +1,3 @@
-// models/patient_model.dart
 import 'package:frontendpatient/models/user_model.dart';
 
 class Patient {
@@ -9,7 +8,8 @@ class Patient {
   final String? phone;
   final double? height;
   final double? weight;
-  final String? medicalConditions;
+  final bool hasMedicalCondition;
+  final String? chronicDisease;
   final String? allergies;
   final String? dietaryPreferences;
 
@@ -21,12 +21,12 @@ class Patient {
     this.phone,
     this.height,
     this.weight,
-    this.medicalConditions,
+    required this.hasMedicalCondition,
+    this.chronicDisease,
     this.allergies,
     this.dietaryPreferences,
   });
 
-  // Getters para acceder fácilmente a propiedades del usuario
   int? get id => user.id;
   String get email => user.email;
   String get password => user.password;
@@ -56,7 +56,8 @@ class Patient {
       'phone': phone,
       'height': height,
       'weight': weight,
-      'medical_conditions': medicalConditions,
+      'has_medical_condition': hasMedicalCondition ? 1 : 0, // CORREGIDO: convertir bool a int
+      'chronic_disease': chronicDisease,
       'allergies': allergies,
       'dietary_preferences': dietaryPreferences,
     });
@@ -69,19 +70,17 @@ class Patient {
       user: user,
       firstName: map['first_name'] ?? '',
       lastName: map['last_name'] ?? '',
-      birthDate: map['birth_date'] != null
-          ? DateTime.parse(map['birth_date'])
-          : null,
+      birthDate: map['birth_date'] != null ? DateTime.parse(map['birth_date']) : null,
       phone: map['phone'],
       height: map['height']?.toDouble(),
       weight: map['weight']?.toDouble(),
-      medicalConditions: map['medical_conditions'],
+      hasMedicalCondition: (map['has_medical_condition'] == 1) || (map['has_medical_condition'] == true), // CORREGIDO: manejar int y bool
+      chronicDisease: map['chronic_disease'],
       allergies: map['allergies'],
       dietaryPreferences: map['dietary_preferences'],
     );
   }
 
-  // Constructor de conveniencia
   factory Patient.create({
     int? id,
     required String email,
@@ -92,7 +91,8 @@ class Patient {
     String? phone,
     double? height,
     double? weight,
-    String? medicalConditions,
+    required bool hasMedicalCondition,
+    String? chronicDisease,
     String? allergies,
     String? dietaryPreferences,
   }) {
@@ -112,7 +112,8 @@ class Patient {
       phone: phone,
       height: height,
       weight: weight,
-      medicalConditions: medicalConditions,
+      hasMedicalCondition: hasMedicalCondition,
+      chronicDisease: chronicDisease,
       allergies: allergies,
       dietaryPreferences: dietaryPreferences,
     );
@@ -126,7 +127,8 @@ class Patient {
     String? phone,
     double? height,
     double? weight,
-    String? medicalConditions,
+    bool? hasMedicalCondition,
+    String? chronicDisease,
     String? allergies,
     String? dietaryPreferences,
   }) {
@@ -138,13 +140,13 @@ class Patient {
       phone: phone ?? this.phone,
       height: height ?? this.height,
       weight: weight ?? this.weight,
-      medicalConditions: medicalConditions ?? this.medicalConditions,
+      hasMedicalCondition: hasMedicalCondition ?? this.hasMedicalCondition,
+      chronicDisease: chronicDisease ?? this.chronicDisease,
       allergies: allergies ?? this.allergies,
       dietaryPreferences: dietaryPreferences ?? this.dietaryPreferences,
     );
   }
 
-  // Método para actualizar tanto datos de usuario como de paciente
   Patient copyWithAll({
     int? id,
     String? email,
@@ -157,7 +159,8 @@ class Patient {
     String? phone,
     double? height,
     double? weight,
-    String? medicalConditions,
+    bool? hasMedicalCondition,
+    String? chronicDisease,
     String? allergies,
     String? dietaryPreferences,
   }) {
@@ -177,7 +180,8 @@ class Patient {
       phone: phone ?? this.phone,
       height: height ?? this.height,
       weight: weight ?? this.weight,
-      medicalConditions: medicalConditions ?? this.medicalConditions,
+      hasMedicalCondition: hasMedicalCondition ?? this.hasMedicalCondition,
+      chronicDisease: chronicDisease ?? this.chronicDisease,
       allergies: allergies ?? this.allergies,
       dietaryPreferences: dietaryPreferences ?? this.dietaryPreferences,
     );

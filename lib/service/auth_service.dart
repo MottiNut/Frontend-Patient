@@ -48,6 +48,7 @@ class AuthService {
 
       return AuthResult.success(_currentPatient!);
     } catch (e) {
+      print('Error en login: $e'); // Para debugging
       return AuthResult.error('Error al iniciar sesión: ${e.toString()}');
     }
   }
@@ -58,14 +59,22 @@ class AuthService {
     required String password,
     required String firstName,
     required String lastName,
+    required bool hasMedicalCondition,
+    String? chronicDisease,
     String? phone,
     DateTime? birthDate,
+    double? height,
+    double? weight,
+    String? allergies,
+    String? dietaryPreferences,
   }) async {
     try {
-      // Validaciones
-      if (email.trim().isEmpty || password.trim().isEmpty ||
-          firstName.trim().isEmpty || lastName.trim().isEmpty) {
-        return AuthResult.error('Todos los campos son requeridos');
+      // Validaciones básicas
+      if (email.trim().isEmpty ||
+          password.trim().isEmpty ||
+          firstName.trim().isEmpty ||
+          lastName.trim().isEmpty) {
+        return AuthResult.error('Todos los campos requeridos deben estar completos');
       }
 
       if (!_isValidEmail(email)) {
@@ -81,21 +90,27 @@ class AuthService {
         return AuthResult.error('El email ya está registrado');
       }
 
-      // Crear paciente
+      // Crear objeto paciente
       final patient = Patient.create(
         email: email.trim(),
         password: password,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        phone: phone?.trim(),
         birthDate: birthDate,
+        phone: phone?.trim(),
+        height: height,
+        weight: weight,
+        hasMedicalCondition: hasMedicalCondition,
+        chronicDisease: chronicDisease?.trim(),
+        allergies: allergies?.trim(),
+        dietaryPreferences: dietaryPreferences?.trim(),
       );
 
-      // Guardar en base de datos
+      // Insertar en base de datos
       final patientMap = patient.toMap();
       final userId = await _databaseService.insertUser(patientMap);
 
-      // Crear paciente con ID
+      // Actualizar paciente con ID
       _currentPatient = patient.copyWithAll(id: userId);
 
       // Guardar sesión
@@ -103,6 +118,7 @@ class AuthService {
 
       return AuthResult.success(_currentPatient!);
     } catch (e) {
+      print('Error en register: $e'); // Para debugging
       return AuthResult.error('Error al registrar usuario: ${e.toString()}');
     }
   }
@@ -115,7 +131,7 @@ class AuthService {
     await prefs.remove('is_logged_in');
   }
 
-  // Verificar sesión guardada
+  // Verificar sesión guardada - CORREGIDO
   Future<bool> checkSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -126,12 +142,26 @@ class AuthService {
         return false;
       }
 
-      // Buscar usuario en base de datos
-      final userMap = await _databaseService.getUserByEmail('');
-      // Como no tenemos el email, buscamos por ID (necesitarías modificar DatabaseService)
-      // Por simplicidad, retornamos false aquí
-      return false;
+      // Buscar usuario por ID en lugar de email vacío
+      final userMap = await _databaseService.getUserById(userId);
+
+      if (userMap == null) {
+        // Sesión inválida, limpiar
+        await logout();
+        return false;
+      }
+
+      // Verificar que sea paciente
+      if (userMap['role'] != 'patient') {
+        await logout();
+        return false;
+      }
+
+      // Restaurar paciente actual
+      _currentPatient = Patient.fromMap(userMap);
+      return true;
     } catch (e) {
+      print('Error en checkSession: $e');
       return false;
     }
   }
