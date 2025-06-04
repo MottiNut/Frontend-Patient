@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
+import 'package:frontendpatient/screens/auth/widgets/height_weight_screen.dart';
+
 import 'package:provider/provider.dart';
 import 'package:frontendpatient/utils/validators.dart';
 import 'package:frontendpatient/providers/auth_provider.dart';
@@ -402,30 +404,21 @@ class _RegisterFlowState extends State<RegisterFlow> {
           ],
         );
       case 4:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Datos físicos',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            _buildTextField(
-              'Peso (kg)',
-              'weight',
-              _weightController,
-              type: TextInputType.number,
-              validator: Validators.validateWeight,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              'Altura (cm)',
-              'height',
-              _heightController,
-              type: TextInputType.number,
-              validator: Validators.validateHeight,
-            ),
-          ],
+        return HeightWeightScreen(
+          initialHeight: _weightController.text.isNotEmpty
+              ? double.tryParse(_heightController.text)! / 100 // Convertir de cm a metros
+              : null,
+          initialWeight: _weightController.text.isNotEmpty
+              ? int.tryParse(_weightController.text)
+              : null,
+          onValuesChanged: (height, weight) {
+            setState(() {
+              _heightController.text = (height * 100).toInt().toString(); // Convertir a cm
+              _weightController.text = weight.toString();
+              formData['height'] = (height * 100).toInt().toString();
+              formData['weight'] = weight.toString();
+            });
+          },
         );
       case 5:
         return Column(
