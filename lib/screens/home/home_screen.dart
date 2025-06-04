@@ -146,6 +146,8 @@ class HomeScreen extends StatelessWidget {
                         _buildInfoRow('Peso', '${patient.weight} kg'),
                       if (patient.chronicDisease != null)
                         _buildInfoRow('Enfermedad Crónica', patient.chronicDisease!),
+                      if (patient.allergies != null)
+                        _buildInfoRow('Alergias', patient.allergies!),
                     ],
                   ),
                 ),

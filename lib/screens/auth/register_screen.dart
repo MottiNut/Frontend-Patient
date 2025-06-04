@@ -121,6 +121,23 @@ class _RegisterFlowState extends State<RegisterFlow> {
           }
         }
 
+        // Obtener alergias correctamente
+        String? allergies;
+        if (formData['allergies'] == 'Gluten' ||
+            formData['allergies'] == 'Lactosa' ||
+            formData['allergies'] == 'Frutos Secos' ||
+            formData['allergies'] == 'Mariscos') {
+          allergies = formData['allergies'];
+        }
+        // Si es "Otro" (campo de texto), usar el valor del controlador
+        else if (_allergiesController.text.trim().isNotEmpty) {
+          allergies = _allergiesController.text.trim();
+        }
+        // Si seleccionó "Ninguna", enviamos null
+        else if (formData['allergies'] == 'Ninguna') {
+          allergies = null;
+        }
+
         // Llamar al servicio de registro
         final success = await authProvider.register(
           email: _emailController.text.trim(),
@@ -128,13 +145,11 @@ class _RegisterFlowState extends State<RegisterFlow> {
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           hasMedicalCondition: formData['hasMedicalCondition'] ?? false,
-          chronicDisease: chronicDisease, // Usar la variable corregida
+          chronicDisease: chronicDisease,
           birthDate: birthDate,
           height: height,
           weight: weight,
-          allergies: _allergiesController.text.trim().isNotEmpty
-              ? _allergiesController.text.trim()
-              : null,
+          allergies: allergies,
         );
 
         if (success) {
@@ -202,6 +217,34 @@ class _RegisterFlowState extends State<RegisterFlow> {
             formData['chronicDisease'] = label;
             // Limpiar el campo de texto cuando se selecciona una opción predefinida
             _chronicDiseaseController.clear();
+          });
+        },
+      ),
+    );
+  }
+
+  // Método para manejar las opciones de alergias
+  Widget _buildAllergyOption(String label, IconData icon) {
+    final isSelected = formData['allergies'] == label;
+    return Card(
+      color: isSelected ? AppColors.lightOrange : null,
+      child: ListTile(
+        leading: Icon(icon, color: AppColors.mainOrange),
+        title: Text(
+          label,
+          style: AppTextStyles.descripcion.copyWith(
+            letterSpacing: 0,
+            fontSize: 16,
+          ),
+        ),
+        trailing: isSelected
+            ? const Icon(Icons.check, color: AppColors.mainOrange)
+            : null,
+        onTap: () {
+          setState(() {
+            formData['allergies'] = label;
+            // Limpiar el campo de texto cuando se selecciona una opción predefinida
+            _allergiesController.clear();
           });
         },
       ),
@@ -536,18 +579,159 @@ class _RegisterFlowState extends State<RegisterFlow> {
           ],
         );
       case 7:
+      case 7:
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              'Alergias e intolerancias',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            const SizedBox(height: 24),
+            Text(
+              '¿Tienes alergias o intolerancias?',
+              style: AppTextStyles.subtitulo.copyWith(
+                color: AppColors.mainOrange,
+                letterSpacing: 0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tu seguridad es primero. Evitaremos estos alimentos',
+              style: AppTextStyles.descripcion.copyWith(
+                color: Colors.grey[600],
+                fontSize: 14,
+                letterSpacing: 0,
+              ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            _buildTextField(
-              'Alergias o intolerancias (opcional)',
-              'allergies',
-              _allergiesController,
+            _buildAllergyOption('Gluten', Icons.grain),
+            _buildAllergyOption('Lactosa', Icons.local_drink),
+            _buildAllergyOption('Frutos Secos', Icons.nature),
+            _buildAllergyOption('Mariscos', Icons.set_meal),
+
+            // Opción "Otro" con campo de texto
+            Card(
+              color: formData['allergies'] != null &&
+                  formData['allergies'] != 'Gluten' &&
+                  formData['allergies'] != 'Lactosa' &&
+                  formData['allergies'] != 'Frutos Secos' &&
+                  formData['allergies'] != 'Mariscos' &&
+                  formData['allergies'] != 'Ninguna'
+                  ? AppColors.lightOrange : null,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.more_horiz, color: AppColors.mainOrange),
+                    title: Text(
+                      'Otro...',
+                      style: AppTextStyles.descripcion.copyWith(
+                        letterSpacing: 0,
+                        fontSize: 16,
+                      ),
+                    ),
+                    trailing: formData['allergies'] != null &&
+                        formData['allergies'] != 'Gluten' &&
+                        formData['allergies'] != 'Lactosa' &&
+                        formData['allergies'] != 'Frutos Secos' &&
+                        formData['allergies'] != 'Mariscos' &&
+                        formData['allergies'] != 'Ninguna'
+                        ? const Icon(Icons.check, color: AppColors.mainOrange)
+                        : null,
+                    onTap: () {
+                      setState(() {
+                        if (formData['allergies'] == null ||
+                            formData['allergies'] == 'Gluten' ||
+                            formData['allergies'] == 'Lactosa' ||
+                            formData['allergies'] == 'Frutos Secos' ||
+                            formData['allergies'] == 'Mariscos' ||
+                            formData['allergies'] == 'Ninguna') {
+                          formData['allergies'] = '';
+                          _allergiesController.text = '';
+                        }
+                      });
+                    },
+                  ),
+                  // Mostrar campo de texto si "Otro" está seleccionado
+                  if (formData['allergies'] != null &&
+                      formData['allergies'] != 'Gluten' &&
+                      formData['allergies'] != 'Lactosa' &&
+                      formData['allergies'] != 'Frutos Secos' &&
+                      formData['allergies'] != 'Mariscos' &&
+                      formData['allergies'] != 'Ninguna')
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: TextFormField(
+                        controller: _allergiesController,
+                        style: AppTextStyles.descripcion.copyWith(
+                          fontSize: 16,
+                          letterSpacing: 0,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Especifica tu alergia o intolerancia',
+                          labelStyle: AppTextStyles.descripcion.copyWith(
+                            color: AppColors.darkOrange1,
+                            fontSize: 14,
+                            letterSpacing: 0,
+                          ),
+                          hintText: 'Ej: Huevos, Soja, Chocolate, etc.',
+                          hintStyle: AppTextStyles.descripcion.copyWith(
+                            color: Colors.grey[500],
+                            fontSize: 14,
+                            letterSpacing: 0,
+                          ),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.mediumOrange),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.mainOrange, width: 2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.mediumOrange),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        validator: (value) {
+                          if (formData['allergies'] != null &&
+                              formData['allergies'] != 'Gluten' &&
+                              formData['allergies'] != 'Lactosa' &&
+                              formData['allergies'] != 'Frutos Secos' &&
+                              formData['allergies'] != 'Mariscos' &&
+                              formData['allergies'] != 'Ninguna' &&
+                              (value == null || value.trim().isEmpty)) {
+                            return 'Por favor especifica tu alergia o intolerancia';
+                          }
+                          return null;
+                        },
+                        onChanged: (value) {
+                          formData['allergies'] = value.trim();
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // Opción "Ninguna"
+            Card(
+              color: formData['allergies'] == 'Ninguna' ? AppColors.lightOrange : null,
+              child: ListTile(
+                leading: const Icon(Icons.check_circle_outline, color: AppColors.mainOrange),
+                title: Text(
+                  'Ninguna',
+                  style: AppTextStyles.descripcion.copyWith(
+                    letterSpacing: 0,
+                    fontSize: 16,
+                  ),
+                ),
+                trailing: formData['allergies'] == 'Ninguna'
+                    ? const Icon(Icons.check, color: AppColors.mainOrange)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    formData['allergies'] = 'Ninguna';
+                    _allergiesController.clear();
+                  });
+                },
+              ),
             ),
           ],
         );
