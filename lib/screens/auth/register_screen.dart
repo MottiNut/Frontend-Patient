@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/core/themes/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:frontendpatient/utils/validators.dart';
 import 'package:frontendpatient/providers/auth_provider.dart';
@@ -90,6 +91,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
     }
   }
 
+
   void _finishRegistration() async {
     if (_validateCurrentPage()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -104,6 +106,21 @@ class _RegisterFlowState extends State<RegisterFlow> {
             ? double.tryParse(_heightController.text)
             : null;
 
+        // CORRECCIÓN: Obtener chronicDisease correctamente
+        String? chronicDisease;
+        if (formData['hasMedicalCondition'] == true) {
+          // Si es una opción predefinida, usar el valor de formData
+          if (formData['chronicDisease'] == 'Diabetes' ||
+              formData['chronicDisease'] == 'Hipertensión arterial' ||
+              formData['chronicDisease'] == 'Obesidad o sobrepeso') {
+            chronicDisease = formData['chronicDisease'];
+          }
+          // Si es "Otro" (campo de texto), usar el valor del controlador
+          else if (_chronicDiseaseController.text.trim().isNotEmpty) {
+            chronicDisease = _chronicDiseaseController.text.trim();
+          }
+        }
+
         // Llamar al servicio de registro
         final success = await authProvider.register(
           email: _emailController.text.trim(),
@@ -111,9 +128,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           hasMedicalCondition: formData['hasMedicalCondition'] ?? false,
-          chronicDisease: _chronicDiseaseController.text.trim().isNotEmpty
-              ? _chronicDiseaseController.text.trim()
-              : null,
+          chronicDisease: chronicDisease, // Usar la variable corregida
           birthDate: birthDate,
           height: height,
           weight: weight,
@@ -166,13 +181,41 @@ class _RegisterFlowState extends State<RegisterFlow> {
     }
   }
 
+  Widget _buildHealthOption(String label, IconData icon) {
+    final isSelected = formData['chronicDisease'] == label;
+    return Card(
+      color: isSelected ? AppColors.lightOrange : null,
+      child: ListTile(
+        leading: Icon(icon, color: AppColors.mainOrange),
+        title: Text(
+          label,
+          style: AppTextStyles.descripcion.copyWith(
+            letterSpacing: 0,
+            fontSize: 16,
+          ),
+        ),
+        trailing: isSelected
+            ? const Icon(Icons.check, color: AppColors.mainOrange)
+            : null,
+        onTap: () {
+          setState(() {
+            formData['chronicDisease'] = label;
+            // Limpiar el campo de texto cuando se selecciona una opción predefinida
+            _chronicDiseaseController.clear();
+          });
+        },
+      ),
+    );
+  }
+
+
   Widget _buildProgressBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: LinearProgressIndicator(
         value: (_currentPage + 1) / 8,
         backgroundColor: Colors.grey[300],
-        color: Colors.orange,
+        color: AppColors.mainOrange,
         minHeight: 6,
       ),
     );
@@ -373,19 +416,122 @@ class _RegisterFlowState extends State<RegisterFlow> {
         );
       case 6:
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              'Enfermedad crónica',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            const SizedBox(height: 24),
+            Text(
+              '¿Qué condición deseas manejar con tu alimentación?',
+              style: AppTextStyles.subtitulo.copyWith(
+                color: AppColors.mainOrange,
+                letterSpacing: 0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Esto nos ayuda a crear un plan seguro y efectivo para ti',
+              style: AppTextStyles.descripcion.copyWith(
+                color: Colors.grey[600],
+                fontSize: 14,
+                letterSpacing: 0,
+              ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            _buildTextField(
-              formData['hasMedicalCondition']
-                  ? '¿Qué enfermedad crónica tienes?'
-                  : 'Información adicional (opcional)',
-              'chronicDisease',
-              _chronicDiseaseController,
+            _buildHealthOption('Diabetes', Icons.bloodtype),
+            _buildHealthOption('Hipertensión arterial', Icons.favorite),
+            _buildHealthOption('Obesidad o sobrepeso', Icons.monitor_weight),
+
+            // Opción "Otro" con campo de texto
+            Card(
+              color: formData['chronicDisease'] != null &&
+                  formData['chronicDisease'] != 'Diabetes' &&
+                  formData['chronicDisease'] != 'Hipertensión arterial' &&
+                  formData['chronicDisease'] != 'Obesidad o sobrepeso'
+                  ? AppColors.lightOrange : null,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.more_horiz, color: AppColors.mainOrange),
+                    title: Text(
+                      'Otro...',
+                      style: AppTextStyles.descripcion.copyWith(
+                        letterSpacing: 0,
+                        fontSize: 16,
+                      ),
+                    ),
+                    trailing: formData['chronicDisease'] != null &&
+                        formData['chronicDisease'] != 'Diabetes' &&
+                        formData['chronicDisease'] != 'Hipertensión arterial' &&
+                        formData['chronicDisease'] != 'Obesidad o sobrepeso'
+                        ? const Icon(Icons.check, color: AppColors.mainOrange)
+                        : null,
+                    onTap: () {
+                      setState(() {
+                        if (formData['chronicDisease'] == null ||
+                            formData['chronicDisease'] == 'Diabetes' ||
+                            formData['chronicDisease'] == 'Hipertensión arterial' ||
+                            formData['chronicDisease'] == 'Obesidad o sobrepeso') {
+                          formData['chronicDisease'] = '';
+                          _chronicDiseaseController.text = '';
+                        }
+                      });
+                    },
+                  ),
+                  // Mostrar campo de texto si "Otro" está seleccionado
+                  if (formData['chronicDisease'] != null &&
+                      formData['chronicDisease'] != 'Diabetes' &&
+                      formData['chronicDisease'] != 'Hipertensión arterial' &&
+                      formData['chronicDisease'] != 'Obesidad o sobrepeso')
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: TextFormField(
+                        controller: _chronicDiseaseController,
+                        style: AppTextStyles.descripcion.copyWith(
+                          fontSize: 16,
+                          letterSpacing: 0,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Especifica tu condición',
+                          labelStyle: AppTextStyles.descripcion.copyWith(
+                            color: AppColors.darkOrange1,
+                            fontSize: 14,
+                            letterSpacing: 0,
+                          ),
+                          hintText: 'Ej: Colesterol alto, Gastritis, etc.',
+                          hintStyle: AppTextStyles.descripcion.copyWith(
+                            color: Colors.grey[500],
+                            fontSize: 14,
+                            letterSpacing: 0,
+                          ),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.mediumOrange),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.mainOrange, width: 2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.mediumOrange),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        validator: (value) {
+                          if (formData['chronicDisease'] != null &&
+                              formData['chronicDisease'] != 'Diabetes' &&
+                              formData['chronicDisease'] != 'Hipertensión arterial' &&
+                              formData['chronicDisease'] != 'Obesidad o sobrepeso' &&
+                              (value == null || value.trim().isEmpty)) {
+                            return 'Por favor especifica tu condición médica';
+                          }
+                          return null;
+                        },
+                        onChanged: (value) {
+                          formData['chronicDisease'] = value.trim();
+                        },
+                      ),
+                    ),
+                ],
+              ),
             ),
           ],
         );
