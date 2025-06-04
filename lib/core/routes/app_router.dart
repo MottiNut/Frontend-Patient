@@ -18,7 +18,7 @@ class AppRouter {
 
       case RouteNames.register:
         return MaterialPageRoute(
-          builder: (_) => const RegisterScreen(),
+          builder: (_) => const RegisterFlow(),
           settings: settings,
         );
 
