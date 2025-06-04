@@ -144,11 +144,13 @@ class HomeScreen extends StatelessWidget {
                         _buildInfoRow('Altura', '${patient.height} cm'),
                       if (patient.weight != null)
                         _buildInfoRow('Peso', '${patient.weight} kg'),
+                      if (patient.chronicDisease != null)
+                        _buildInfoRow('Enfermedad Crónica', patient.chronicDisease!),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 50),
 
                 // Próximas funcionalidades
                 Text(
