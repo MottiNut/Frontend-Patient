@@ -17,7 +17,7 @@ class MedicalConditionScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Padeces algún tipo de enfermedad?',
+          '¿Padeces algún tipo de enfermedad?',
           style: AppTextStyles.subtitulo.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,

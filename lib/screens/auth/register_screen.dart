@@ -54,6 +54,28 @@ class _RegisterFlowState extends State<RegisterFlow> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    // Agregar listeners para actualizar el estado cuando cambien los campos
+    _firstNameController.addListener(_updateFormState);
+    _lastNameController.addListener(_updateFormState);
+    _emailController.addListener(_updateFormState);
+    _passwordController.addListener(_updateFormState);
+    _repeatPasswordController.addListener(_updateFormState);
+    _ageController.addListener(_updateFormState);
+    _weightController.addListener(_updateFormState);
+    _heightController.addListener(_updateFormState);
+    _chronicDiseaseController.addListener(_updateFormState);
+    _allergiesController.addListener(_updateFormState);
+  }
+
+  void _updateFormState() {
+    setState(() {
+      // Solo actualizar el estado para refrescar los colores
+    });
+  }
+
+  @override
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
@@ -66,6 +88,49 @@ class _RegisterFlowState extends State<RegisterFlow> {
     _chronicDiseaseController.dispose();
     _allergiesController.dispose();
     super.dispose();
+  }
+
+  // Función para verificar si la página actual está completa
+  bool _isCurrentPageComplete() {
+    switch (_currentPage) {
+      case 0: // PersonalInfoScreen
+        return _firstNameController.text.trim().isNotEmpty &&
+            _lastNameController.text.trim().isNotEmpty;
+
+      case 1: // CredentialsScreen
+        return _emailController.text.trim().isNotEmpty &&
+            _passwordController.text.trim().isNotEmpty &&
+            _repeatPasswordController.text.trim().isNotEmpty &&
+            _passwordController.text == _repeatPasswordController.text;
+
+      case 2: // BirthDateScreen
+        return formData['birthDate'] != null;
+
+      case 3: // AgeScreen
+        return _ageController.text.trim().isNotEmpty;
+
+      case 4: // HeightWeightScreen
+        return _heightController.text.trim().isNotEmpty &&
+            _weightController.text.trim().isNotEmpty;
+
+      case 5: // MedicalConditionScreen
+        return true; // Esta página siempre es válida (tiene valor por defecto)
+
+      case 6: // ChronicDiseaseScreen
+        if (formData['hasMedicalCondition'] == true) {
+          // Si tiene condición médica, debe seleccionar algo
+          return formData['chronicDisease'] != null && formData['chronicDisease'] != '' ||
+              _chronicDiseaseController.text.trim().isNotEmpty;
+        }
+        return true; // Si no tiene condición médica, es válido
+
+      case 7: // AllergiesScreen
+        return formData['allergies'] != null && formData['allergies'] != '' ||
+            _allergiesController.text.trim().isNotEmpty;
+
+      default:
+        return false;
+    }
   }
 
   bool _validateCurrentPage() {
@@ -277,6 +342,11 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
   @override
   Widget build(BuildContext context) {
+    // Determinar los colores del botón según si la página está completa
+    final bool isPageComplete = _isCurrentPageComplete();
+    final Color buttonColor = isPageComplete ? AppColors.mainOrange : const Color(0xFFE5E4E3);
+    final Color iconColor = isPageComplete ? AppColors.whiteBackground : const Color(0xFFB2B0B0);
+
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         return Scaffold(
@@ -314,23 +384,30 @@ class _RegisterFlowState extends State<RegisterFlow> {
                         )
                       else
                         const SizedBox(),
-                      ElevatedButton.icon(
-                        onPressed: authProvider.isLoading ? null : _nextPage,
-                        icon: authProvider.isLoading && _currentPage == 7
-                            ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      GestureDetector(
+                        onTap: authProvider.isLoading ? null : (isPageComplete ? _nextPage : null),
+                        child: Container(
+                          width: 73,
+                          height: 73,
+                          decoration: BoxDecoration(
+                            color: buttonColor,
+                            shape: BoxShape.circle,
                           ),
-                        )
-                            : Icon(_currentPage == 7 ? Icons.check : Icons.arrow_forward),
-                        label: Text(_currentPage == 7 ? 'Finalizar' : 'Siguiente'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.mainOrange,
-                          foregroundColor: AppColors.whiteBackground,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          child: Center(
+                            child: authProvider.isLoading && _currentPage == 7
+                                ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                                : Icon(
+                              _currentPage == 7 ? Icons.check : Icons.arrow_forward,
+                              color: iconColor,
+                            ),
+                          ),
                         ),
                       ),
                     ],
