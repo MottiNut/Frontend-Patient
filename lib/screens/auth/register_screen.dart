@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
+import 'package:frontendpatient/screens/auth/widgets/age_screen.dart';
+import 'package:frontendpatient/screens/auth/widgets/allergies_screen.dart';
+import 'package:frontendpatient/screens/auth/widgets/birth_date_screen.dart';
+import 'package:frontendpatient/screens/auth/widgets/chronic_disease_screen.dart';
+import 'package:frontendpatient/screens/auth/widgets/credentials_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/height_weight_screen.dart';
+import 'package:frontendpatient/screens/auth/widgets/medical_condition_screen.dart';
+import 'package:frontendpatient/screens/auth/widgets/personal_info_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'package:frontendpatient/utils/validators.dart';
@@ -92,7 +99,6 @@ class _RegisterFlowState extends State<RegisterFlow> {
       );
     }
   }
-
 
   void _finishRegistration() async {
     if (_validateCurrentPage()) {
@@ -198,62 +204,6 @@ class _RegisterFlowState extends State<RegisterFlow> {
     }
   }
 
-  Widget _buildHealthOption(String label, IconData icon) {
-    final isSelected = formData['chronicDisease'] == label;
-    return Card(
-      color: isSelected ? AppColors.lightOrange : null,
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.mainOrange),
-        title: Text(
-          label,
-          style: AppTextStyles.descripcion.copyWith(
-            letterSpacing: 0,
-            fontSize: 16,
-          ),
-        ),
-        trailing: isSelected
-            ? const Icon(Icons.check, color: AppColors.mainOrange)
-            : null,
-        onTap: () {
-          setState(() {
-            formData['chronicDisease'] = label;
-            // Limpiar el campo de texto cuando se selecciona una opción predefinida
-            _chronicDiseaseController.clear();
-          });
-        },
-      ),
-    );
-  }
-
-  // Método para manejar las opciones de alergias
-  Widget _buildAllergyOption(String label, IconData icon) {
-    final isSelected = formData['allergies'] == label;
-    return Card(
-      color: isSelected ? AppColors.lightOrange : null,
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.mainOrange),
-        title: Text(
-          label,
-          style: AppTextStyles.descripcion.copyWith(
-            letterSpacing: 0,
-            fontSize: 16,
-          ),
-        ),
-        trailing: isSelected
-            ? const Icon(Icons.check, color: AppColors.mainOrange)
-            : null,
-        onTap: () {
-          setState(() {
-            formData['allergies'] = label;
-            // Limpiar el campo de texto cuando se selecciona una opción predefinida
-            _allergiesController.clear();
-          });
-        },
-      ),
-    );
-  }
-
-
   Widget _buildProgressBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -266,154 +216,37 @@ class _RegisterFlowState extends State<RegisterFlow> {
     );
   }
 
-  Widget _buildTextField(
-      String label,
-      String key,
-      TextEditingController controller, {
-        bool obscure = false,
-        TextInputType type = TextInputType.text,
-        String? Function(String?)? validator,
-      }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: type,
-      obscureText: obscure,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-      validator: validator,
-      onSaved: (value) => formData[key] = value ?? '',
-    );
-  }
-
   Widget _buildPage(int index) {
     switch (index) {
       case 0:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Información personal',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            _buildTextField(
-              'Nombre',
-              'firstName',
-              _firstNameController,
-              validator: (value) => Validators.validateName(value, 'El nombre'),
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              'Apellido',
-              'lastName',
-              _lastNameController,
-              validator: (value) => Validators.validateName(value, 'El apellido'),
-            ),
-          ],
+        return PersonalInfoScreen(
+          firstNameController: _firstNameController,
+          lastNameController: _lastNameController,
         );
       case 1:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Credenciales de acceso',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            _buildTextField(
-              'Correo electrónico',
-              'email',
-              _emailController,
-              type: TextInputType.emailAddress,
-              validator: Validators.validateEmail,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              'Contraseña',
-              'password',
-              _passwordController,
-              obscure: true,
-              validator: Validators.validatePassword,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              'Repetir contraseña',
-              'repeatPassword',
-              _repeatPasswordController,
-              obscure: true,
-              validator: (value) => Validators.validateConfirmPassword(
-                  value,
-                  _passwordController.text
-              ),
-            ),
-          ],
+        return CredentialsScreen(
+          emailController: _emailController,
+          passwordController: _passwordController,
+          repeatPasswordController: _repeatPasswordController,
         );
       case 2:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Fecha de nacimiento',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Fecha de nacimiento',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                suffixIcon: Icon(Icons.calendar_today),
-              ),
-              onTap: () async {
-                DateTime? picked = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime(2000),
-                  firstDate: DateTime(1900),
-                  lastDate: DateTime.now(),
-                );
-                if (picked != null) {
-                  setState(() => formData['birthDate'] = picked);
-                }
-              },
-              readOnly: true,
-              controller: TextEditingController(
-                text: formData['birthDate']?.toString().split(' ').first ?? '',
-              ),
-              validator: (value) => Validators.validateBirthDate(formData['birthDate']),
-            ),
-          ],
+        return BirthDateScreen(
+          selectedDate: formData['birthDate'],
+          onDateChanged: (date) => setState(() => formData['birthDate'] = date),
         );
       case 3:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Edad',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            _buildTextField(
-              'Edad (años)',
-              'age',
-              _ageController,
-              type: TextInputType.number,
-            ),
-          ],
-        );
+        return AgeScreen(ageController: _ageController);
       case 4:
         return HeightWeightScreen(
-          initialHeight: _weightController.text.isNotEmpty
-              ? double.tryParse(_heightController.text)! / 100 // Convertir de cm a metros
+          initialHeight: _heightController.text.isNotEmpty
+              ? double.tryParse(_heightController.text)! / 100
               : null,
           initialWeight: _weightController.text.isNotEmpty
               ? int.tryParse(_weightController.text)
               : null,
           onValuesChanged: (height, weight) {
             setState(() {
-              _heightController.text = (height * 100).toInt().toString(); // Convertir a cm
+              _heightController.text = (height * 100).toInt().toString();
               _weightController.text = weight.toString();
               formData['height'] = (height * 100).toInt().toString();
               formData['weight'] = weight.toString();
@@ -421,312 +254,21 @@ class _RegisterFlowState extends State<RegisterFlow> {
           },
         );
       case 5:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Información médica',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '¿Padeces alguna enfermedad crónica?',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
-                    Switch(
-                      value: formData['hasMedicalCondition'],
-                      onChanged: (val) => setState(() => formData['hasMedicalCondition'] = val),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+        return MedicalConditionScreen(
+          hasMedicalCondition: formData['hasMedicalCondition'],
+          onConditionChanged: (value) => setState(() => formData['hasMedicalCondition'] = value),
         );
       case 6:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 24),
-            Text(
-              '¿Qué condición deseas manejar con tu alimentación?',
-              style: AppTextStyles.subtitulo.copyWith(
-                color: AppColors.mainOrange,
-                letterSpacing: 0,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Esto nos ayuda a crear un plan seguro y efectivo para ti',
-              style: AppTextStyles.descripcion.copyWith(
-                color: Colors.grey[600],
-                fontSize: 14,
-                letterSpacing: 0,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            _buildHealthOption('Diabetes', Icons.bloodtype),
-            _buildHealthOption('Hipertensión arterial', Icons.favorite),
-            _buildHealthOption('Obesidad o sobrepeso', Icons.monitor_weight),
-
-            // Opción "Otro" con campo de texto
-            Card(
-              color: formData['chronicDisease'] != null &&
-                  formData['chronicDisease'] != 'Diabetes' &&
-                  formData['chronicDisease'] != 'Hipertensión arterial' &&
-                  formData['chronicDisease'] != 'Obesidad o sobrepeso'
-                  ? AppColors.lightOrange : null,
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.more_horiz, color: AppColors.mainOrange),
-                    title: Text(
-                      'Otro...',
-                      style: AppTextStyles.descripcion.copyWith(
-                        letterSpacing: 0,
-                        fontSize: 16,
-                      ),
-                    ),
-                    trailing: formData['chronicDisease'] != null &&
-                        formData['chronicDisease'] != 'Diabetes' &&
-                        formData['chronicDisease'] != 'Hipertensión arterial' &&
-                        formData['chronicDisease'] != 'Obesidad o sobrepeso'
-                        ? const Icon(Icons.check, color: AppColors.mainOrange)
-                        : null,
-                    onTap: () {
-                      setState(() {
-                        if (formData['chronicDisease'] == null ||
-                            formData['chronicDisease'] == 'Diabetes' ||
-                            formData['chronicDisease'] == 'Hipertensión arterial' ||
-                            formData['chronicDisease'] == 'Obesidad o sobrepeso') {
-                          formData['chronicDisease'] = '';
-                          _chronicDiseaseController.text = '';
-                        }
-                      });
-                    },
-                  ),
-                  // Mostrar campo de texto si "Otro" está seleccionado
-                  if (formData['chronicDisease'] != null &&
-                      formData['chronicDisease'] != 'Diabetes' &&
-                      formData['chronicDisease'] != 'Hipertensión arterial' &&
-                      formData['chronicDisease'] != 'Obesidad o sobrepeso')
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: TextFormField(
-                        controller: _chronicDiseaseController,
-                        style: AppTextStyles.descripcion.copyWith(
-                          fontSize: 16,
-                          letterSpacing: 0,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Especifica tu condición',
-                          labelStyle: AppTextStyles.descripcion.copyWith(
-                            color: AppColors.darkOrange1,
-                            fontSize: 14,
-                            letterSpacing: 0,
-                          ),
-                          hintText: 'Ej: Colesterol alto, Gastritis, etc.',
-                          hintStyle: AppTextStyles.descripcion.copyWith(
-                            color: Colors.grey[500],
-                            fontSize: 14,
-                            letterSpacing: 0,
-                          ),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.mediumOrange),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.mainOrange, width: 2),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.mediumOrange),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        validator: (value) {
-                          if (formData['chronicDisease'] != null &&
-                              formData['chronicDisease'] != 'Diabetes' &&
-                              formData['chronicDisease'] != 'Hipertensión arterial' &&
-                              formData['chronicDisease'] != 'Obesidad o sobrepeso' &&
-                              (value == null || value.trim().isEmpty)) {
-                            return 'Por favor especifica tu condición médica';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) {
-                          formData['chronicDisease'] = value.trim();
-                        },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
+        return ChronicDiseaseScreen(
+          selectedDisease: formData['chronicDisease'],
+          customDiseaseController: _chronicDiseaseController,
+          onDiseaseChanged: (disease) => setState(() => formData['chronicDisease'] = disease),
         );
       case 7:
-      case 7:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 24),
-            Text(
-              '¿Tienes alergias o intolerancias?',
-              style: AppTextStyles.subtitulo.copyWith(
-                color: AppColors.mainOrange,
-                letterSpacing: 0,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Tu seguridad es primero. Evitaremos estos alimentos',
-              style: AppTextStyles.descripcion.copyWith(
-                color: Colors.grey[600],
-                fontSize: 14,
-                letterSpacing: 0,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            _buildAllergyOption('Gluten', Icons.grain),
-            _buildAllergyOption('Lactosa', Icons.local_drink),
-            _buildAllergyOption('Frutos Secos', Icons.nature),
-            _buildAllergyOption('Mariscos', Icons.set_meal),
-
-            // Opción "Otro" con campo de texto
-            Card(
-              color: formData['allergies'] != null &&
-                  formData['allergies'] != 'Gluten' &&
-                  formData['allergies'] != 'Lactosa' &&
-                  formData['allergies'] != 'Frutos Secos' &&
-                  formData['allergies'] != 'Mariscos' &&
-                  formData['allergies'] != 'Ninguna'
-                  ? AppColors.lightOrange : null,
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.more_horiz, color: AppColors.mainOrange),
-                    title: Text(
-                      'Otro...',
-                      style: AppTextStyles.descripcion.copyWith(
-                        letterSpacing: 0,
-                        fontSize: 16,
-                      ),
-                    ),
-                    trailing: formData['allergies'] != null &&
-                        formData['allergies'] != 'Gluten' &&
-                        formData['allergies'] != 'Lactosa' &&
-                        formData['allergies'] != 'Frutos Secos' &&
-                        formData['allergies'] != 'Mariscos' &&
-                        formData['allergies'] != 'Ninguna'
-                        ? const Icon(Icons.check, color: AppColors.mainOrange)
-                        : null,
-                    onTap: () {
-                      setState(() {
-                        if (formData['allergies'] == null ||
-                            formData['allergies'] == 'Gluten' ||
-                            formData['allergies'] == 'Lactosa' ||
-                            formData['allergies'] == 'Frutos Secos' ||
-                            formData['allergies'] == 'Mariscos' ||
-                            formData['allergies'] == 'Ninguna') {
-                          formData['allergies'] = '';
-                          _allergiesController.text = '';
-                        }
-                      });
-                    },
-                  ),
-                  // Mostrar campo de texto si "Otro" está seleccionado
-                  if (formData['allergies'] != null &&
-                      formData['allergies'] != 'Gluten' &&
-                      formData['allergies'] != 'Lactosa' &&
-                      formData['allergies'] != 'Frutos Secos' &&
-                      formData['allergies'] != 'Mariscos' &&
-                      formData['allergies'] != 'Ninguna')
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: TextFormField(
-                        controller: _allergiesController,
-                        style: AppTextStyles.descripcion.copyWith(
-                          fontSize: 16,
-                          letterSpacing: 0,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Especifica tu alergia o intolerancia',
-                          labelStyle: AppTextStyles.descripcion.copyWith(
-                            color: AppColors.darkOrange1,
-                            fontSize: 14,
-                            letterSpacing: 0,
-                          ),
-                          hintText: 'Ej: Huevos, Soja, Chocolate, etc.',
-                          hintStyle: AppTextStyles.descripcion.copyWith(
-                            color: Colors.grey[500],
-                            fontSize: 14,
-                            letterSpacing: 0,
-                          ),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.mediumOrange),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.mainOrange, width: 2),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.mediumOrange),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        validator: (value) {
-                          if (formData['allergies'] != null &&
-                              formData['allergies'] != 'Gluten' &&
-                              formData['allergies'] != 'Lactosa' &&
-                              formData['allergies'] != 'Frutos Secos' &&
-                              formData['allergies'] != 'Mariscos' &&
-                              formData['allergies'] != 'Ninguna' &&
-                              (value == null || value.trim().isEmpty)) {
-                            return 'Por favor especifica tu alergia o intolerancia';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) {
-                          formData['allergies'] = value.trim();
-                        },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            // Opción "Ninguna"
-            Card(
-              color: formData['allergies'] == 'Ninguna' ? AppColors.lightOrange : null,
-              child: ListTile(
-                leading: const Icon(Icons.check_circle_outline, color: AppColors.mainOrange),
-                title: Text(
-                  'Ninguna',
-                  style: AppTextStyles.descripcion.copyWith(
-                    letterSpacing: 0,
-                    fontSize: 16,
-                  ),
-                ),
-                trailing: formData['allergies'] == 'Ninguna'
-                    ? const Icon(Icons.check, color: AppColors.mainOrange)
-                    : null,
-                onTap: () {
-                  setState(() {
-                    formData['allergies'] = 'Ninguna';
-                    _allergiesController.clear();
-                  });
-                },
-              ),
-            ),
-          ],
+        return AllergiesScreen(
+          selectedAllergy: formData['allergies'],
+          customAllergyController: _allergiesController,
+          onAllergyChanged: (allergy) => setState(() => formData['allergies'] = allergy),
         );
       default:
         return const Text('Registro finalizado');
@@ -786,8 +328,8 @@ class _RegisterFlowState extends State<RegisterFlow> {
                             : Icon(_currentPage == 7 ? Icons.check : Icons.arrow_forward),
                         label: Text(_currentPage == 7 ? 'Finalizar' : 'Siguiente'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.mediumOrange,
+                          foregroundColor: AppColors.whiteBackground,
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         ),
                       ),
