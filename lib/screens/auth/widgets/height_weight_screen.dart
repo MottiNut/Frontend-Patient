@@ -74,7 +74,6 @@ class _HeightWeightScreenState extends State<HeightWeightScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 24),
         Text(
           '¿Cuál es tu peso y altura?',
           style: AppTextStyles.subtitulo.copyWith(
@@ -93,7 +92,7 @@ class _HeightWeightScreenState extends State<HeightWeightScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 30),
         // Altura
         const Text(
             'Altura',

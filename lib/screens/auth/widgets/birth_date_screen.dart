@@ -1,5 +1,6 @@
 // birth_date_screen.dart
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/core/themes/app_theme.dart';
 import 'package:frontendpatient/utils/validators.dart';
 
 class BirthDateScreen extends StatelessWidget {
@@ -17,11 +18,15 @@ class BirthDateScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Fecha de nacimiento',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        Text(
+          'Fecha de Nacimiento',
+          style: AppTextStyles.subtitulo.copyWith(
+            color: AppColors.mainOrange,
+            letterSpacing: 0,
+          ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 10),
         TextFormField(
           decoration: const InputDecoration(
             labelText: 'Fecha de nacimiento',

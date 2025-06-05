@@ -50,7 +50,6 @@ class AllergiesScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 24),
         Text(
           '¿Tienes alergias o intolerancias?',
           style: AppTextStyles.subtitulo.copyWith(

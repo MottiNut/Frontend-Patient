@@ -328,7 +328,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
                             : Icon(_currentPage == 7 ? Icons.check : Icons.arrow_forward),
                         label: Text(_currentPage == 7 ? 'Finalizar' : 'Siguiente'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.mediumOrange,
+                          backgroundColor: AppColors.mainOrange,
                           foregroundColor: AppColors.whiteBackground,
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         ),

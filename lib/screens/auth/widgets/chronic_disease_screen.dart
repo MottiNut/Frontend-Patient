@@ -48,7 +48,6 @@ class ChronicDiseaseScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 24),
         Text(
           '¿Qué condición deseas manejar con tu alimentación?',
           style: AppTextStyles.subtitulo.copyWith(

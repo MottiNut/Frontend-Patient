@@ -1,5 +1,6 @@
 // credentials_screen.dart
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/core/themes/app_theme.dart';
 import 'package:frontendpatient/utils/validators.dart';
 
 class CredentialsScreen extends StatelessWidget {
@@ -19,38 +20,60 @@ class CredentialsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Credenciales de acceso',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        Text(
+          'Correo electrónico',
+          style: AppTextStyles.subtitulo.copyWith(
+            color: AppColors.mainOrange,
+            letterSpacing: 0,
+          ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 10),
         TextFormField(
           controller: emailController,
           keyboardType: TextInputType.emailAddress,
           decoration: const InputDecoration(
-            labelText: 'Correo electrónico',
+            hintText: 'Example@gmail.com',
             border: OutlineInputBorder(),
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           validator: Validators.validateEmail,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
+        Text(
+          'Contraseña',
+          style: AppTextStyles.subtitulo.copyWith(
+            color: AppColors.mainOrange,
+            letterSpacing: 0,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 10),
         TextFormField(
           controller: passwordController,
           obscureText: true,
           decoration: const InputDecoration(
-            labelText: 'Contraseña',
+            hintText: 'Ingresa tu contraseña',
             border: OutlineInputBorder(),
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           validator: Validators.validatePassword,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
+        Text(
+          'Repertir Contraseña',
+          style: AppTextStyles.subtitulo.copyWith(
+            color: AppColors.mainOrange,
+            letterSpacing: 0,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 10),
         TextFormField(
           controller: repeatPasswordController,
           obscureText: true,
           decoration: const InputDecoration(
-            labelText: 'Repetir contraseña',
+            hintText: 'Ingresa nuevamente tu contraseña',
             border: OutlineInputBorder(),
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
