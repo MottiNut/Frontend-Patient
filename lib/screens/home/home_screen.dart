@@ -1,9 +1,14 @@
 // screens/home/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/models/nutrition_plan.dart';
+import 'package:frontendpatient/service/nutrition_plan_service.dart';
 import 'package:provider/provider.dart';
 import '../../core/themes/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/routes/route_names.dart';
+// Asegúrate de importar tu servicio y modelo
+// import '../../services/nutrition_plan_service.dart';
+// import '../../models/nutrition_plan.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -29,7 +34,7 @@ class HomeScreen extends StatelessWidget {
               if (value == 'logout') {
                 final authProvider = Provider.of<AuthProvider>(context, listen: false);
                 await authProvider.logout();
-                if (context .mounted) {
+                if (context.mounted) {
                   Navigator.pushReplacementNamed(context, RouteNames.login);
                 }
               }
@@ -154,7 +159,129 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 50),
+                // AQUÍ VA TU FUTUREBUILDER - PLAN DE NUTRICIÓN
+                FutureBuilder<List<NutritionPlan>>(
+                  future: NutritionPlanService().getByPatientId(patient.id!, patient),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.red[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red[200]!),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.error_outline, color: Colors.red[700]),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Text(
+                                  'Error al cargar el plan de nutrición',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    final plans = snapshot.data ?? [];
+                    if (plans.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.amber[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.amber[200]!),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Colors.amber[700]),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Text(
+                                  'Aún no tienes un plan de nutrición.',
+                                  style: TextStyle(color: Colors.amber),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    final plan = plans.first;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 32),
+                        Text(
+                          'Tu Plan de Nutrición',
+                          style: AppTextStyles.titulo.copyWith(fontSize: 22),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppColors.lightOrange.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.mediumOrange.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.mainOrange,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(
+                                      Icons.restaurant_menu,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Plan Activo',
+                                    style: AppTextStyles.subtitulo.copyWith(
+                                      fontSize: 16,
+                                      letterSpacing: 0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              _buildPlanInfoRow('Requerimiento energético', '${plan.energyRequirement} kcal'),
+                              _buildPlanInfoRow('Fecha de creación', plan.creationDate.toLocal().toString().split(' ')[0]),
+                              _buildPlanInfoRow('Estado', plan.status.name),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 32),
 
                 // Próximas funcionalidades
                 Text(
@@ -257,6 +384,37 @@ class HomeScreen extends StatelessWidget {
               value,
               style: const TextStyle(
                 fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlanInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
             ),
           ),
