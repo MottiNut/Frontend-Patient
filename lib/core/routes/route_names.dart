@@ -14,6 +14,7 @@ class RouteNames {
   static const String feedback = '/feedback';
   static const String progress = '/progress';
   static const String profile = '/profile';
+  static const String recipes = '/recipes';
 
   // Initial route
   static const String initial = '/';

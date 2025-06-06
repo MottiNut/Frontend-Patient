@@ -1,5 +1,6 @@
 // core/routes/app_router.dart
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/screens/recipes/recipes_screen.dart';
 import 'package:provider/provider.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
@@ -24,7 +25,13 @@ class AppRouter {
 
       case RouteNames.home:
         return MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
+          builder: (_) => const PatientHomeScreen(),
+          settings: settings,
+        );
+
+      case RouteNames.recipes:
+        return MaterialPageRoute(
+          builder: (_) => const RecipeScreen(),
           settings: settings,
         );
 
@@ -45,7 +52,7 @@ class AppRouter {
         }
 
         if (authProvider.isAuthenticated) {
-          return const HomeScreen();
+          return const PatientHomeScreen();
         }
 
         return const LoginScreen();
