@@ -1,72 +1,103 @@
-// services/plan_detail_service.dart
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+
+// lib/services/plan_detail_service.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/plan_detail.dart';
 
 class PlanDetailService {
-  static final PlanDetailService _instance = PlanDetailService._internal();
-  factory PlanDetailService() => _instance;
-  PlanDetailService._internal();
+  static const String baseUrl = 'http://10.0.2.2:8000'; // Cambia por tu URL
 
-  Database? _database;
+  // Obtener detalles de un plan específico
+  static Future<List<PlanDetail>> getPlanDetailsByPlan(
+      String token, int planId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/plan-details/plan/$planId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('plan_details.db');
-    return _database!;
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((detail) => PlanDetail.fromJson(detail)).toList();
+      } else {
+        throw Exception('Error al obtener detalles del plan: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 
-  Future<Database> _initDB(String path) async {
-    final dbPath = await getDatabasesPath();
-    final fullPath = join(dbPath, path);
-    return await openDatabase(
-      fullPath,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE plan_details (
-            plan_detail_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nutrition_plan_id INTEGER,
-            meal_type TEXT,
-            description TEXT,
-            creation_date TEXT,
-            meals_meal_id INTEGER
-          )
-        ''');
-      },
-    );
+  // Crear un nuevo detalle de plan (solo nutricionistas)
+  static Future<Map<String, dynamic>> createPlanDetail(
+      String token, PlanDetailCreate detail) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/plan-details'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(detail.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Error al crear detalle del plan');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 
-  Future<int> insert(PlanDetail detail) async {
-    final db = await database;
-    return await db.insert('plan_details', detail.toMap());
+  // Eliminar un detalle de plan
+  static Future<Map<String, dynamic>> deletePlanDetail(
+      String token, int detailId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/plan-details/$detailId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Error al eliminar detalle del plan');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 
-  Future<PlanDetail?> getById(int id) async {
-    final db = await database;
-    final maps = await db.query('plan_details', where: 'plan_detail_id = ?', whereArgs: [id]);
-    if (maps.isNotEmpty) return PlanDetail.fromMap(maps.first);
-    return null;
-  }
+  // Actualizar un detalle de plan
+  static Future<Map<String, dynamic>> updatePlanDetail(
+      String token, int detailId, PlanDetailCreate detail) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/plan-details/$detailId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(detail.toJson()),
+      );
 
-  Future<List<PlanDetail>> getAll() async {
-    final db = await database;
-    final maps = await db.query('plan_details');
-    return maps.map((e) => PlanDetail.fromMap(e)).toList();
-  }
-
-  Future<int> update(PlanDetail detail) async {
-    final db = await database;
-    return await db.update(
-      'plan_details',
-      detail.toMap(),
-      where: 'plan_detail_id = ?',
-      whereArgs: [detail.planDetailId],
-    );
-  }
-
-  Future<int> delete(int id) async {
-    final db = await database;
-    return await db.delete('plan_details', where: 'plan_detail_id = ?', whereArgs: [id]);
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Error al actualizar detalle del plan');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 }

@@ -211,18 +211,30 @@ class _RegisterFlowState extends State<RegisterFlow> {
           allergies = null;
         }
 
+        // CORRECCIÓN: Convertir hasMedicalCondition a int según el AuthProvider
+        final int hasMedicalConditionInt = (formData['hasMedicalCondition'] == true) ? 1 : 0;
+
+        // CORRECCIÓN: Formatear birthDate como String
+        String? birthDateString;
+        if (birthDate != null) {
+          birthDateString = "${birthDate.year}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}";
+        }
+
         // Llamar al servicio de registro
         final success = await authProvider.register(
           email: _emailController.text.trim(),
           password: _passwordController.text,
+          role: 'patient', // CORRECCIÓN: Agregar rol requerido
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
-          hasMedicalCondition: formData['hasMedicalCondition'] ?? false,
-          chronicDisease: chronicDisease,
-          birthDate: birthDate,
+          birthDate: birthDateString ?? '', // CORRECCIÓN: String requerido
+          phone: '', // CORRECCIÓN: Agregar teléfono requerido (puedes agregar un campo para esto)
           height: height,
           weight: weight,
+          hasMedicalCondition: hasMedicalConditionInt, // CORRECCIÓN: Usar int
+          chronicDisease: chronicDisease,
           allergies: allergies,
+          dietaryPreferences: null, // Opcional
         );
 
         if (success) {
@@ -247,7 +259,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(authProvider.error ?? 'Error al registrar usuario'),
+                content: Text(authProvider.errorMessage ?? 'Error al registrar usuario'),
                 backgroundColor: Colors.red,
                 duration: const Duration(seconds: 3),
               ),
@@ -414,7 +426,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
                   ),
                 ),
                 // Mostrar error si existe
-                if (authProvider.error != null)
+                if (authProvider.errorMessage != null)
                   Container(
                     width: double.infinity,
                     margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -430,7 +442,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            authProvider.error!,
+                            authProvider.errorMessage!,
                             style: TextStyle(
                               color: Colors.red.shade700,
                               fontSize: 14,
@@ -438,7 +450,9 @@ class _RegisterFlowState extends State<RegisterFlow> {
                           ),
                         ),
                         IconButton(
-                          onPressed: () => authProvider.clearError(),
+                          onPressed: () {
+                            authProvider.clearError();
+                          },
                           icon: Icon(Icons.close, color: Colors.red.shade600, size: 18),
                           constraints: const BoxConstraints(),
                           padding: EdgeInsets.zero,

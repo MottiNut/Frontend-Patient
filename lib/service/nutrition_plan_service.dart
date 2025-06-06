@@ -1,111 +1,101 @@
-// services/nutrition_plan_service.dart
-import 'package:frontendpatient/models/patient_model.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+// lib/services/nutrition_plan_service.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/nutrition_plan.dart';
 
 class NutritionPlanService {
-  static final NutritionPlanService _instance = NutritionPlanService._internal();
-  factory NutritionPlanService() => _instance;
-  NutritionPlanService._internal();
+  static const String baseUrl = 'http://10.0.2.2:8000'; // Cambia por tu URL
 
-  Database? _database;
-
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('nutrition_plans.db');
-    return _database!;
-  }
-
-  Future<List<NutritionPlan>> getByPatientId(int patientId, Patient patient) async {
+  // Obtener mis planes nutricionales
+  static Future<List<NutritionPlan>> getMyNutritionPlans(String token) async {
     try {
-      final db = await database;
-
-      // ✅ Debug: Verificar qué datos tenemos
-      print('Buscando planes para paciente ID: $patientId');
-
-      final maps = await db.query(
-        'nutrition_plans',
-        where: 'patients_users_user_id = ?',
-        whereArgs: [patientId],
+      final response = await http.get(
+        Uri.parse('$baseUrl/nutrition-plans/my-plans'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
       );
 
-      print('Planes encontrados: ${maps.length}');
-      print('Datos encontrados: $maps');
-
-      return maps.map((map) => NutritionPlan.fromMap(map, patient)).toList();
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((plan) => NutritionPlan.fromJson(plan)).toList();
+      } else {
+        throw Exception('Error al obtener planes nutricionales: ${response.statusCode}');
+      }
     } catch (e) {
-      print('Error al obtener planes de nutrición: $e');
-      return [];
+      throw Exception('Error de conexión: $e');
     }
   }
 
-  Future<Database> _initDB(String path) async {
-    final dbPath = await getDatabasesPath();
-    final fullPath = join(dbPath, path);
+  // Obtener un plan nutricional específico
+  static Future<NutritionPlan> getNutritionPlanById(
+      String token, int planId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/nutrition-plans/$planId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
 
-    return await openDatabase(
-      fullPath,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE nutrition_plans (
-            plan_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nutritionists_users_id INTEGER,
-            patients_users_user_id INTEGER,
-            medical_records_rec INTEGER,
-            energy_requirement INTEGER,
-            creation_date TEXT,
-            status TEXT
-          )
-        ''');
-
-        // ✅ Insertar datos de prueba automáticamente
-        await _insertTestData(db);
-      },
-    );
+      if (response.statusCode == 200) {
+        return NutritionPlan.fromJson(json.decode(response.body));
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Error al obtener plan nutricional');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 
-  // ✅ Método para insertar datos de prueba
-  Future<void> _insertTestData(Database db) async {
-    final now = DateTime.now().toIso8601String();
+  // Crear un nuevo plan nutricional (solo nutricionistas)
+  static Future<Map<String, dynamic>> createNutritionPlan(
+      String token, NutritionPlanCreate plan) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/nutrition-plans'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(plan.toJson()),
+      );
 
-    // Insertar plan de prueba para paciente con ID 1
-    await db.insert('nutrition_plans', {
-      'nutritionists_users_id': 1,
-      'patients_users_user_id': 1, // ✅ Asegúrate de que coincida con tu paciente
-      'medical_records_rec': 1,
-      'energy_requirement': 2000,
-      'creation_date': now,
-      'status': 'validated',
-    });
-
-    print('Plan de prueba insertado para paciente ID: 1');
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Error al crear plan nutricional');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 
-  Future<int> insert(NutritionPlan plan) async {
-    final db = await database;
-    return await db.insert('nutrition_plans', plan.toMap());
-  }
+  // Actualizar estado de un plan nutricional
+  static Future<Map<String, dynamic>> updatePlanStatus(
+      String token, int planId, String status) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/nutrition-plans/$planId/status'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'status': status}),
+      );
 
-  Future<int> getAllNutritionPlans() async {
-    final db = await database;
-    final maps = await db.query('nutrition_plans');
-    return maps.length;
-  }
-
-  Future<int> update(NutritionPlan plan) async {
-    final db = await database;
-    return await db.update(
-      'nutrition_plans',
-      plan.toMap(),
-      where: 'plan_id = ?',
-      whereArgs: [plan.planId],
-    );
-  }
-
-  Future<int> delete(int id) async {
-    final db = await database;
-    return await db.delete('nutrition_plans', where: 'plan_id = ?', whereArgs: [id]);
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Error al actualizar estado del plan');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 }

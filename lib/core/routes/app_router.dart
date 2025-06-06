@@ -44,7 +44,7 @@ class AppRouter {
           return const _LoadingScreen();
         }
 
-        if (authProvider.isLoggedIn) {
+        if (authProvider.isAuthenticated) {
           return const HomeScreen();
         }
 

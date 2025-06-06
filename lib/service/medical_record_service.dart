@@ -1,84 +1,77 @@
-// services/medical_record_service.dart
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+// lib/services/medical_record_service.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/medical_record.dart';
 
 class MedicalRecordService {
-  static final MedicalRecordService _instance = MedicalRecordService._internal();
-  factory MedicalRecordService() => _instance;
-  MedicalRecordService._internal();
+  static const String baseUrl = 'http://10.0.2.2:8000'; // Cambia por tu URL
 
-  Database? _database;
+  // Crear un registro médico
+  static Future<Map<String, dynamic>> createMedicalRecord(
+      String token, MedicalRecordCreate record) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/medical-records'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(record.toJson()),
+      );
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('medical_records.db');
-    return _database!;
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Error al crear registro médico');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 
-  Future<Database> _initDB(String path) async {
-    final dbPath = await getDatabasesPath();
-    final fullPath = join(dbPath, path);
-    return await openDatabase(
-      fullPath,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE medical_records (
-            record_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            patients_users_user_id INTEGER,
-            nutritionists_users_user_id INTEGER,
-            appointments_appointments_id INTEGER,
-            healthcare_facility TEXT,
-            service_date TEXT,
-            residence_location TEXT,
-            family_nucleus TEXT,
-            occupation TEXT,
-            education_level TEXT,
-            marital_status TEXT,
-            religion TEXT,
-            id_number TEXT,
-            previous_diagnosis TEXT,
-            illness_duration TEXT,
-            recent_diagnosis TEXT,
-            family_history TEXT,
-            creation_date TEXT
-          )
-        ''');
-      },
-    );
+  // Obtener registros médicos del usuario actual
+  static Future<List<MedicalRecord>> getMyMedicalRecords(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/medical-records/my-records'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((record) => MedicalRecord.fromJson(record)).toList();
+      } else {
+        throw Exception('Error al obtener registros médicos: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 
-  Future<int> insert(MedicalRecord record) async {
-    final db = await database;
-    return await db.insert('medical_records', record.toMap());
-  }
+  // Obtener un registro médico específico
+  static Future<MedicalRecord> getMedicalRecordById(
+      String token, int recordId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/medical-records/$recordId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
 
-  Future<MedicalRecord?> getById(int id) async {
-    final db = await database;
-    final maps = await db.query('medical_records', where: 'record_id = ?', whereArgs: [id]);
-    if (maps.isNotEmpty) return MedicalRecord.fromMap(maps.first);
-    return null;
-  }
-
-  Future<List<MedicalRecord>> getAll() async {
-    final db = await database;
-    final maps = await db.query('medical_records');
-    return maps.map((e) => MedicalRecord.fromMap(e)).toList();
-  }
-
-  Future<int> update(MedicalRecord record) async {
-    final db = await database;
-    return await db.update(
-      'medical_records',
-      record.toMap(),
-      where: 'record_id = ?',
-      whereArgs: [record.recordId],
-    );
-  }
-
-  Future<int> delete(int id) async {
-    final db = await database;
-    return await db.delete('medical_records', where: 'record_id = ?', whereArgs: [id]);
+      if (response.statusCode == 200) {
+        return MedicalRecord.fromJson(json.decode(response.body));
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Error al obtener registro médico');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 }

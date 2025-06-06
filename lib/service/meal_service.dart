@@ -1,85 +1,54 @@
-// services/meal_service.dart
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+// lib/services/meal_service.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/meal.dart';
 
 class MealService {
-  static final MealService _instance = MealService._internal();
-  factory MealService() => _instance;
-  MealService._internal();
+  static const String baseUrl = 'http://10.0.2.2:8000'; // Cambia por tu URL
 
-  Database? _database;
+  // Obtener todas las comidas
+  static Future<List<Meal>> getMeals(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/meals'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('meals.db');
-    return _database!;
-  }
-
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
-  }
-
-  Future _createDB(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE meals (
-        meal_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        description TEXT,
-        calories INTEGER NOT NULL,
-        prep_time_minutes INTEGER NOT NULL,
-        creation_date TEXT NOT NULL
-      )
-    ''');
-  }
-
-  Future<int> insertMeal(Meal meal) async {
-    final db = await database;
-    return await db.insert('meals', meal.toMap());
-  }
-
-  Future<Meal?> getMeal(int id) async {
-    final db = await database;
-    final maps = await db.query(
-      'meals',
-      where: 'meal_id = ?',
-      whereArgs: [id],
-    );
-    if (maps.isNotEmpty) {
-      return Meal.fromMap(maps.first);
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((meal) => Meal.fromJson(meal)).toList();
+      } else {
+        throw Exception('Error al obtener comidas: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
     }
-    return null;
   }
 
-  Future<List<Meal>> getAllMeals() async {
-    final db = await database;
-    final result = await db.query('meals');
-    return result.map((map) => Meal.fromMap(map)).toList();
-  }
+  // Crear una nueva comida (solo nutricionistas)
+  static Future<Map<String, dynamic>> createMeal(
+      String token, MealCreate meal) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/meals'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(meal.toJson()),
+      );
 
-  Future<int> updateMeal(Meal meal) async {
-    final db = await database;
-    return await db.update(
-      'meals',
-      meal.toMap(),
-      where: 'meal_id = ?',
-      whereArgs: [meal.mealId],
-    );
-  }
-
-  Future<int> deleteMeal(int id) async {
-    final db = await database;
-    return await db.delete(
-      'meals',
-      where: 'meal_id = ?',
-      whereArgs: [id],
-    );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['detail'] ?? 'Error al crear comida');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
   }
 }

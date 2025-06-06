@@ -28,11 +28,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     final success = await authProvider.login(
       _emailController.text.trim(),
       _passwordController.text,
     );
+
     if (success && mounted) {
       Navigator.pushReplacementNamed(context, RouteNames.home);
     }
@@ -99,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(24)),
-                      borderSide: BorderSide(color: AppColors.mainOrange), // Borde naranja
+                      borderSide: BorderSide(color: AppColors.mainOrange),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(24)),
@@ -142,12 +145,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 50),
 
-                // Errores
+                // Errores y Botón
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
                     return Column(
                       children: [
-                        if (authProvider.error != null)
+                        // Mostrar error si existe
+                        if (authProvider.errorMessage != null)
                           Container(
                             padding: const EdgeInsets.all(12),
                             margin: const EdgeInsets.only(bottom: 16),
@@ -163,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    authProvider.error!,
+                                    authProvider.errorMessage!,
                                     style: TextStyle(
                                       color: Colors.red[700],
                                       fontSize: 14,
@@ -173,13 +177,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.close, size: 18),
                                   color: Colors.red[700],
-                                  onPressed: authProvider.clearError,
+                                  onPressed: () {
+                                    authProvider.clearError();
+                                  },
                                 ),
                               ],
                             ),
                           ),
 
-                        // Botón
+                        // Botón de iniciar sesión
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -188,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.mainOrange,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24), // Más redondeado
+                                borderRadius: BorderRadius.circular(24),
                               ),
                             ),
                             child: authProvider.isLoading
@@ -201,6 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -211,6 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
+                // Divisor "o"
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Row(
@@ -241,7 +249,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-
 
                 // Iconos externos
                 Row(

@@ -1,197 +1,217 @@
-// services/auth_service.dart
+// lib/services/auth_service.dart
+
+import 'dart:convert';
+import 'package:frontendpatient/models/user_model.dart';
+import 'package:frontendpatient/utils/exceptions.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/patient_model.dart';
-import 'database_service.dart';
 
 class AuthService {
-  static final AuthService _instance = AuthService._internal();
-  factory AuthService() => _instance;
-  AuthService._internal();
+  // Cambia esta URL por la de tu servidor FastAPI
+  static const String baseUrl = 'http://10.0.2.2:8000';
 
-  final DatabaseService _databaseService = DatabaseService();
-  Patient? _currentPatient;
+  // Headers comunes
+  static const Map<String, String> _headers = {
+    'Content-Type': 'application/json',
+  };
 
-  Patient? get currentPatient => _currentPatient;
-  bool get isLoggedIn => _currentPatient != null;
+  // Obtener headers con token de autorización
+  static Future<Map<String, String>> _getAuthHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
 
-  // Login
-  Future<AuthResult> login(String email, String password) async {
-    try {
-      // Validar entrada
-      if (email.trim().isEmpty || password.trim().isEmpty) {
-        return AuthResult.error('Email y contraseña son requeridos');
-      }
+    return {
+      ..._headers,
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+  // En tu AuthService
+  Future<String?> getStoredToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
 
-      // Buscar usuario en base de datos
-      final userMap = await _databaseService.getUserByEmail(email.trim());
-
-      if (userMap == null) {
-        return AuthResult.error('Usuario no encontrado');
-      }
-
-      // Verificar contraseña (en producción usar hash)
-      if (userMap['password'] != password) {
-        return AuthResult.error('Contraseña incorrecta');
-      }
-
-      // Verificar que sea paciente
-      final userRole = userMap['role'];
-      if (userRole != 'patient') {
-        return AuthResult.error('Solo los pacientes pueden acceder a esta aplicación');
-      }
-
-      // Crear objeto Patient
-      _currentPatient = Patient.fromMap(userMap);
-
-      // Guardar sesión
-      await _saveSession(_currentPatient!.id!);
-
-      return AuthResult.success(_currentPatient!);
-    } catch (e) {
-      print('Error en login: $e'); // Para debugging
-      return AuthResult.error('Error al iniciar sesión: ${e.toString()}');
+  // Manejar respuestas HTTP
+  static dynamic _handleResponse(http.Response response) {
+    switch (response.statusCode) {
+      case 200:
+      case 201:
+        if (response.body.isNotEmpty) {
+          return json.decode(response.body);
+        }
+        return null;
+      case 400:
+        final errorData = json.decode(response.body);
+        throw ValidationException(errorData['detail'] ?? 'Error de validación');
+      case 401:
+        final errorData = json.decode(response.body);
+        throw UnauthorizedException(errorData['detail'] ?? 'No autorizado');
+      case 403:
+        final errorData = json.decode(response.body);
+        throw ForbiddenException(errorData['detail'] ?? 'Acceso prohibido');
+      case 404:
+        final errorData = json.decode(response.body);
+        throw NotFoundException(errorData['detail'] ?? 'No encontrado');
+      case 422:
+        final errorData = json.decode(response.body);
+        throw ValidationException(errorData['detail'] ?? 'Error de validación');
+      case 500:
+        throw ServerException('Error interno del servidor');
+      default:
+        throw ApiException(
+          'Error inesperado: ${response.statusCode}',
+          statusCode: response.statusCode,
+        );
     }
   }
 
-  // Registro
-  Future<AuthResult> register({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-    required bool hasMedicalCondition,
-    String? chronicDisease,
-    String? phone,
-    DateTime? birthDate,
-    double? height,
-    double? weight,
-    String? allergies,
-    String? dietaryPreferences,
-  }) async {
+  // Registrar usuario
+  Future<AuthResponse> register(UserCreate userCreate) async {
     try {
-      // Validaciones básicas
-      if (email.trim().isEmpty ||
-          password.trim().isEmpty ||
-          firstName.trim().isEmpty ||
-          lastName.trim().isEmpty) {
-        return AuthResult.error('Todos los campos requeridos deben estar completos');
-      }
-
-      if (!_isValidEmail(email)) {
-        return AuthResult.error('Email no válido');
-      }
-
-      if (password.length < 6) {
-        return AuthResult.error('La contraseña debe tener al menos 6 caracteres');
-      }
-
-      // Verificar si el email ya existe
-      if (await _databaseService.emailExists(email.trim())) {
-        return AuthResult.error('El email ya está registrado');
-      }
-
-      // Crear objeto paciente
-      final patient = Patient.create(
-        email: email.trim(),
-        password: password,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        birthDate: birthDate,
-        phone: phone?.trim(),
-        height: height,
-        weight: weight,
-        hasMedicalCondition: hasMedicalCondition,
-        chronicDisease: chronicDisease?.trim(),
-        allergies: allergies?.trim(),
-        dietaryPreferences: dietaryPreferences?.trim(),
+      final response = await http.post(
+        Uri.parse('$baseUrl/register'),
+        headers: _headers,
+        body: json.encode(userCreate.toJson()),
       );
 
-      // Insertar en base de datos
-      final patientMap = patient.toMap();
-      final userId = await _databaseService.insertUser(patientMap);
+      final data = _handleResponse(response);
 
-      // Actualizar paciente con ID
-      _currentPatient = patient.copyWithAll(id: userId);
+      if (data != null) {
+        final authResponse = AuthResponse.fromJson(data);
 
-      // Guardar sesión
-      await _saveSession(userId);
+        // Guardar token en SharedPreferences
+        if (authResponse.token.isNotEmpty) {
+          await _saveToken(authResponse.token);
+          if (authResponse.userId != null) {
+            await _saveUserId(authResponse.userId!);
+          }
+          if (authResponse.role != null) {
+            await _saveUserRole(authResponse.role!);
+          }
+        }
 
-      return AuthResult.success(_currentPatient!);
+        return authResponse;
+      }
+
+      throw ApiException('Respuesta vacía del servidor');
     } catch (e) {
-      print('Error en register: $e'); // Para debugging
-      return AuthResult.error('Error al registrar usuario: ${e.toString()}');
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw NetworkException('Error de conexión: ${e.toString()}');
     }
   }
 
-  // Logout
-  Future<void> logout() async {
-    _currentPatient = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_id');
-    await prefs.remove('is_logged_in');
-  }
-
-  // Verificar sesión guardada - CORREGIDO
-  Future<bool> checkSession() async {
+  // Iniciar sesión
+  Future<AuthResponse> login(UserLogin userLogin) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
-      final userId = prefs.getInt('user_id');
+      final response = await http.post(
+        Uri.parse('$baseUrl/login'),
+        headers: _headers,
+        body: json.encode(userLogin.toJson()),
+      );
 
-      if (!isLoggedIn || userId == null) {
-        return false;
+      final data = _handleResponse(response);
+
+      if (data != null) {
+        final authResponse = AuthResponse.fromJson(data);
+
+        // Guardar token en SharedPreferences
+        if (authResponse.token.isNotEmpty) {
+          await _saveToken(authResponse.token);
+          if (authResponse.userId != null) {
+            await _saveUserId(authResponse.userId!);
+          }
+          if (authResponse.role != null) {
+            await _saveUserRole(authResponse.role!);
+          }
+        }
+
+        return authResponse;
       }
 
-      // Buscar usuario por ID en lugar de email vacío
-      final userMap = await _databaseService.getUserById(userId);
-
-      if (userMap == null) {
-        // Sesión inválida, limpiar
-        await logout();
-        return false;
-      }
-
-      // Verificar que sea paciente
-      if (userMap['role'] != 'patient') {
-        await logout();
-        return false;
-      }
-
-      // Restaurar paciente actual
-      _currentPatient = Patient.fromMap(userMap);
-      return true;
+      throw ApiException('Respuesta vacía del servidor');
     } catch (e) {
-      print('Error en checkSession: $e');
-      return false;
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw NetworkException('Error de conexión: ${e.toString()}');
     }
   }
 
-  // Guardar sesión
-  Future<void> _saveSession(int userId) async {
+  // Obtener información del usuario actual
+  Future<UserResponse> getCurrentUser() async {
+    try {
+      final headers = await _getAuthHeaders();
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/users/me'),
+        headers: headers,
+      );
+
+      final data = _handleResponse(response);
+
+      if (data != null) {
+        return UserResponse.fromJson(data);
+      }
+
+      throw ApiException('Respuesta vacía del servidor');
+    } catch (e) {
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw NetworkException('Error de conexión: ${e.toString()}');
+    }
+  }
+
+  // Cerrar sesión
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_id');
+    await prefs.remove('user_role');
+  }
+
+  // Verificar si el usuario está autenticado
+  Future<bool> isAuthenticated() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    return token != null && token.isNotEmpty;
+  }
+
+  // Obtener token guardado
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
+  // Obtener ID de usuario guardado
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('user_id');
+  }
+
+  // Obtener rol de usuario guardado
+  Future<String?> getUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_role');
+  }
+
+  // Guardar token
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+  }
+
+  // Guardar ID de usuario
+  Future<void> _saveUserId(int userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('user_id', userId);
-    await prefs.setBool('is_logged_in', true);
   }
 
-  // Validar email
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
-  }
-}
-
-// Clase para resultados de autenticación
-class AuthResult {
-  final bool success;
-  final String? error;
-  final Patient? patient;
-
-  AuthResult._({required this.success, this.error, this.patient});
-
-  factory AuthResult.success(Patient patient) {
-    return AuthResult._(success: true, patient: patient);
-  }
-
-  factory AuthResult.error(String error) {
-    return AuthResult._(success: false, error: error);
+  // Guardar rol de usuario
+  Future<void> _saveUserRole(String role) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_role', role);
   }
 }

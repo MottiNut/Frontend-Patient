@@ -1,69 +1,170 @@
-// models/user_model.dart
-enum UserRole {
-  patient,
-  nutritionist,
-}
-
-class User {
-  final int? id;
+class UserCreate {
   final String email;
   final String password;
-  final UserRole role;
-  final DateTime createdAt;
-  final DateTime? updatedAt;
+  final String role; // 'patient' o 'nutritionist'
+  final String firstName;
+  final String lastName;
+  final String birthDate;
+  final String phone;
+  final double? height;
+  final double? weight;
+  final int hasMedicalCondition;
+  final String? chronicDisease;
+  final String? allergies;
+  final String? dietaryPreferences;
 
-  User({
-    this.id,
+  UserCreate({
     required this.email,
     required this.password,
     required this.role,
-    required this.createdAt,
-    this.updatedAt,
+    required this.firstName,
+    required this.lastName,
+    required this.birthDate,
+    required this.phone,
+    this.height,
+    this.weight,
+    this.hasMedicalCondition = 0,
+    this.chronicDisease,
+    this.allergies,
+    this.dietaryPreferences,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'email': email,
       'password': password,
-      'role': role.toString().split('.').last,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
+      'role': role,
+      'first_name': firstName,
+      'last_name': lastName,
+      'birth_date': birthDate,
+      'phone': phone,
+      'height': height,
+      'weight': weight,
+      'has_medical_condition': hasMedicalCondition,
+      'chronic_disease': chronicDisease,
+      'allergies': allergies,
+      'dietary_preferences': dietaryPreferences,
     };
-  }
-
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
-      id: map['id']?.toInt(),
-      email: map['email'] ?? '',
-      password: map['password'] ?? '',
-      role: UserRole.values.firstWhere(
-            (e) => e.toString().split('.').last == map['role'],
-        orElse: () => UserRole.patient,
-      ),
-      createdAt: DateTime.parse(map['created_at']),
-      updatedAt: map['updated_at'] != null
-          ? DateTime.parse(map['updated_at'])
-          : null,
-    );
-  }
-
-  User copyWith({
-    int? id,
-    String? email,
-    String? password,
-    UserRole? role,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return User(
-      id: id ?? this.id,
-      email: email ?? this.email,
-      password: password ?? this.password,
-      role: role ?? this.role,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
   }
 }
 
+class UserLogin {
+  final String email;
+  final String password;
+
+  UserLogin({
+    required this.email,
+    required this.password,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'password': password,
+    };
+  }
+}
+
+class UserResponse {
+  final int userId;
+  final String email;
+  final String role;
+  final String firstName;
+  final String lastName;
+  final String birthDate;
+  final String phone;
+  final double? height;
+  final double? weight;
+  final int hasMedicalCondition;
+  final String? chronicDisease;
+  final String? allergies;
+  final String? dietaryPreferences;
+  final String createdAt;
+
+  UserResponse({
+    required this.userId,
+    required this.email,
+    required this.role,
+    required this.firstName,
+    required this.lastName,
+    required this.birthDate,
+    required this.phone,
+    this.height,
+    this.weight,
+    required this.hasMedicalCondition,
+    this.chronicDisease,
+    this.allergies,
+    this.dietaryPreferences,
+    required this.createdAt,
+  });
+
+  factory UserResponse.fromJson(Map<String, dynamic> json) {
+    return UserResponse(
+      userId: json['user_id'],
+      email: json['email'],
+      role: json['role'],
+      firstName: json['first_name'],
+      lastName: json['last_name'],
+      birthDate: json['birth_date'],
+      phone: json['phone'],
+      height: json['height']?.toDouble(),
+      weight: json['weight']?.toDouble(),
+      hasMedicalCondition: json['has_medical_condition'],
+      chronicDisease: json['chronic_disease'],
+      allergies: json['allergies'],
+      dietaryPreferences: json['dietary_preferences'],
+      createdAt: json['created_at'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': userId,
+      'email': email,
+      'role': role,
+      'first_name': firstName,
+      'last_name': lastName,
+      'birth_date': birthDate,
+      'phone': phone,
+      'height': height,
+      'weight': weight,
+      'has_medical_condition': hasMedicalCondition,
+      'chronic_disease': chronicDisease,
+      'allergies': allergies,
+      'dietary_preferences': dietaryPreferences,
+      'created_at': createdAt,
+    };
+  }
+}
+
+class AuthResponse {
+  final String? message;
+  final int? userId;
+  final String token;
+  final String? role;
+
+  AuthResponse({
+    this.message,
+    this.userId,
+    required this.token,
+    this.role,
+  });
+
+  factory AuthResponse.fromJson(Map<String, dynamic> json) {
+    return AuthResponse(
+      message: json['message'],
+      userId: json['user_id'],
+      token: json['token'],
+      role: json['role'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'message': message,
+      'user_id': userId,
+      'token': token,
+      'role': role,
+    };
+  }
+}
