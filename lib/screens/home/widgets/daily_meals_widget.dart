@@ -313,7 +313,7 @@ class DailyMealsWidget extends StatelessWidget {
                     Text(
                       meal.meal.name,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
