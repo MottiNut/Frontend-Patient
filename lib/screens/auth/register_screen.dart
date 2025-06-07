@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
+import 'package:frontendpatient/models/enums.dart';
 import 'package:frontendpatient/screens/auth/widgets/age_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/allergies_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/birth_date_screen.dart';
@@ -8,9 +9,7 @@ import 'package:frontendpatient/screens/auth/widgets/credentials_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/height_weight_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/medical_condition_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/personal_info_screen.dart';
-
 import 'package:provider/provider.dart';
-import 'package:frontendpatient/utils/validators.dart';
 import 'package:frontendpatient/providers/auth_provider.dart';
 
 class RegisterFlow extends StatefulWidget {
@@ -179,16 +178,14 @@ class _RegisterFlowState extends State<RegisterFlow> {
             ? double.tryParse(_heightController.text)
             : null;
 
-        // CORRECCIÓN: Obtener chronicDisease correctamente
+        // Obtener chronicDisease correctamente
         String? chronicDisease;
         if (formData['hasMedicalCondition'] == true) {
-          // Si es una opción predefinida, usar el valor de formData
           if (formData['chronicDisease'] == 'Diabetes' ||
               formData['chronicDisease'] == 'Hipertensión arterial' ||
               formData['chronicDisease'] == 'Obesidad o sobrepeso') {
             chronicDisease = formData['chronicDisease'];
           }
-          // Si es "Otro" (campo de texto), usar el valor del controlador
           else if (_chronicDiseaseController.text.trim().isNotEmpty) {
             chronicDisease = _chronicDiseaseController.text.trim();
           }
@@ -202,39 +199,37 @@ class _RegisterFlowState extends State<RegisterFlow> {
             formData['allergies'] == 'Mariscos') {
           allergies = formData['allergies'];
         }
-        // Si es "Otro" (campo de texto), usar el valor del controlador
         else if (_allergiesController.text.trim().isNotEmpty) {
           allergies = _allergiesController.text.trim();
         }
-        // Si seleccionó "Ninguna", enviamos null
         else if (formData['allergies'] == 'Ninguna') {
           allergies = null;
         }
 
-        // CORRECCIÓN: Convertir hasMedicalCondition a int según el AuthProvider
-        final int hasMedicalConditionInt = (formData['hasMedicalCondition'] == true) ? 1 : 0;
+        // CORRECCIÓN 1: Usar bool directamente (no int)
+        final bool hasMedicalConditionBool = formData['hasMedicalCondition'] == true;
 
-        // CORRECCIÓN: Formatear birthDate como String
+        // Formatear birthDate como String
         String? birthDateString;
         if (birthDate != null) {
           birthDateString = "${birthDate.year}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}";
         }
 
-        // Llamar al servicio de registro
+        // CORRECCIÓN 2: Usar UserRole enum (no String)
         final success = await authProvider.register(
           email: _emailController.text.trim(),
           password: _passwordController.text,
-          role: 'patient', // CORRECCIÓN: Agregar rol requerido
+          role: UserRole.patient, // CORRECCIÓN: Usar enum UserRole
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
-          birthDate: birthDateString ?? '', // CORRECCIÓN: String requerido
-          phone: '', // CORRECCIÓN: Agregar teléfono requerido (puedes agregar un campo para esto)
+          birthDate: birthDateString ?? '',
+          phone: '', // Puedes agregar un campo para esto si es necesario
           height: height,
           weight: weight,
-          hasMedicalCondition: hasMedicalConditionInt, // CORRECCIÓN: Usar int
+          hasMedicalCondition: hasMedicalConditionBool, // CORRECCIÓN: Usar bool
           chronicDisease: chronicDisease,
           allergies: allergies,
-          dietaryPreferences: null, // Opcional
+          dietaryPreferences: null,
         );
 
         if (success) {
