@@ -1,5 +1,7 @@
 // core/routes/app_router.dart
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/models/plan_detail.dart';
+import 'package:frontendpatient/screens/meal/meal_detail_screen.dart';
 import 'package:frontendpatient/screens/recipes/recipes_screen.dart';
 import 'package:provider/provider.dart';
 import '../../screens/auth/login_screen.dart';
@@ -27,6 +29,12 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => const PatientHomeScreen(),
           settings: settings,
+        );
+
+      case RouteNames.mealDetail:
+        final mealDetail = settings.arguments as PlanDetailResponse;
+        return MaterialPageRoute(
+          builder: (context) => MealDetailScreen(mealDetail: mealDetail),
         );
 
       case RouteNames.recipes:
