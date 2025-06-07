@@ -106,6 +106,8 @@ class PlanService {
         endpoint += '?week_start=$weekStart';
       }
 
+      print('🔍 Iniciando carga del plan semanal...');
+
       final response = await _apiService.get(endpoint);
       final data = json.decode(response.body);
 
