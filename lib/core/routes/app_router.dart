@@ -39,7 +39,7 @@ class AppRouter {
 
       case RouteNames.recipes:
         return MaterialPageRoute(
-          builder: (_) => const RecipeScreen(),
+          builder: (_) => const RecipesScreen(),
           settings: settings,
         );
 
