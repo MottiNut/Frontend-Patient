@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/models/plan_detail.dart';
 import 'package:frontendpatient/screens/meal/meal_detail_screen.dart';
+import 'package:frontendpatient/screens/perfil/profile_screen.dart';
 import 'package:frontendpatient/screens/recipes/recipes_screen.dart';
 import 'package:provider/provider.dart';
 import '../../screens/auth/login_screen.dart';
@@ -42,6 +43,13 @@ class AppRouter {
           builder: (_) => const RecipesScreen(),
           settings: settings,
         );
+
+      case RouteNames.profile:
+        return MaterialPageRoute(
+          builder: (_) => const ProfileScreen(),
+          settings: settings,
+        );
+
 
       default:
         return MaterialPageRoute(

@@ -38,18 +38,21 @@ class MealHeaderSection extends StatelessWidget {
                 color: AppColors.whiteBackground,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 10),
             // Nombre del platillo
             Text(
               mealDetail.meal.name,
               style: AppTextStyles.titulo.copyWith(
                 color: AppColors.whiteBackground,
+                height: 1.3
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 16),
             // Imagen del meal
             Center(
-              child: Container(
+              child: SizedBox(
                 width: 120,
                 height: 120,
                 child: MealIconWidget(mealType: mealDetail.mealType),
