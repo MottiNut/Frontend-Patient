@@ -1,103 +1,135 @@
-
-// lib/services/plan_detail_service.dart
+// lib/services/plan_service.dart
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../models/plan_detail.dart';
+import 'package:frontendpatient/models/nutrition_plan.dart';
+import 'package:frontendpatient/models/user_model.dart';
+import '../models/api_response_models.dart';
+import 'api_service.dart';
 
-class PlanDetailService {
-  static const String baseUrl = 'http://10.0.2.2:8000'; // Cambia por tu URL
+class PlanService {
+  final ApiService _apiService = ApiService();
 
-  // Obtener detalles de un plan específico
-  static Future<List<PlanDetail>> getPlanDetailsByPlan(
-      String token, int planId) async {
+  /// Crear un plan nutricional completo (solo nutricionistas)
+  Future<CreatePlanResponse> createNutritionPlan(
+      NutritionPlanCreate planCreate) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/plan-details/plan/$planId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+      final response = await _apiService.post(
+        '/nutrition-plans',
+        body: planCreate.toJson(),
       );
 
-      if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
-        return data.map((detail) => PlanDetail.fromJson(detail)).toList();
-      } else {
-        throw Exception('Error al obtener detalles del plan: ${response.statusCode}');
-      }
+      final data = json.decode(response.body);
+      return CreatePlanResponse.fromJson(data);
     } catch (e) {
-      throw Exception('Error de conexión: $e');
+      throw PlanException('Error al crear plan nutricional: $e');
+      
     }
   }
 
-  // Crear un nuevo detalle de plan (solo nutricionistas)
-  static Future<Map<String, dynamic>> createPlanDetail(
-      String token, PlanDetailCreate detail) async {
+  /// Obtener planes creados por el nutricionista actual
+  Future<List<NutritionistPlanResponse>> getNutritionistPlans() async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/plan-details'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(detail.toJson()),
-      );
+      final response = await _apiService.get(
+          '/nutrition-plans/my-created-plans');
+      final List<dynamic> data = json.decode(response.body);
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['detail'] ?? 'Error al crear detalle del plan');
-      }
+      return data
+          .map((json) => NutritionistPlanResponse.fromJson(json))
+          .toList();
     } catch (e) {
-      throw Exception('Error de conexión: $e');
+      throw PlanException('Error al obtener planes del nutricionista: $e');
     }
   }
 
-  // Eliminar un detalle de plan
-  static Future<Map<String, dynamic>> deletePlanDetail(
-      String token, int detailId) async {
+  /// Obtener plan semanal de un paciente específico (solo nutricionistas)
+  Future<WeeklyPlanResponse> getPatientWeeklyPlan(int patientId, {
+    String? weekStart,
+  }) async {
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/plan-details/$detailId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['detail'] ?? 'Error al eliminar detalle del plan');
+      String endpoint = '/nutrition-plans/patient/$patientId/weekly';
+      if (weekStart != null) {
+        endpoint += '?week_start=$weekStart';
       }
+
+      final response = await _apiService.get(endpoint);
+      final data = json.decode(response.body);
+
+      return WeeklyPlanResponse.fromJson(data);
     } catch (e) {
-      throw Exception('Error de conexión: $e');
+      throw PlanException('Error al obtener plan semanal del paciente: $e');
     }
   }
 
-  // Actualizar un detalle de plan
-  static Future<Map<String, dynamic>> updatePlanDetail(
-      String token, int detailId, PlanDetailCreate detail) async {
+  /// Obtener un plan nutricional específico por ID
+  Future<Map<String, dynamic>> getNutritionPlan(int planId) async {
     try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/plan-details/$detailId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(detail.toJson()),
-      );
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['detail'] ?? 'Error al actualizar detalle del plan');
-      }
+      final response = await _apiService.get('/nutrition-plans/$planId');
+      return json.decode(response.body);
     } catch (e) {
-      throw Exception('Error de conexión: $e');
+      throw PlanException('Error al obtener plan nutricional: $e');
     }
   }
+
+  /// Obtener comidas del día actual (solo pacientes)
+  Future<DailyPlanResponse> getTodayMeals() async {
+    try {
+      final response = await _apiService.get('/my-nutrition-plan/today');
+      final data = json.decode(response.body);
+
+      return DailyPlanResponse.fromJson(data);
+    } catch (e) {
+      throw PlanException('Error al obtener comidas de hoy: $e');
+    }
+  }
+
+  /// Obtener comidas de un día específico (1-7) (solo pacientes)
+  Future<DailyPlanResponse> getMealsByDay(int dayNumber) async {
+    try {
+      if (dayNumber < 1 || dayNumber > 7) {
+        throw PlanException('El día debe estar entre 1 (Lunes) y 7 (Domingo)');
+      }
+
+      final response = await _apiService.get(
+          '/my-nutrition-plan/day/$dayNumber');
+      final data = json.decode(response.body);
+
+      return DailyPlanResponse.fromJson(data);
+    } catch (e) {
+      throw PlanException('Error al obtener comidas del día: $e');
+    }
+  }
+
+  /// Obtener plan semanal completo del paciente (solo pacientes)
+  Future<WeeklyPlanResponse> getMyWeeklyPlan({String? weekStart}) async {
+    try {
+      String endpoint = '/my-nutrition-plan/weekly';
+      if (weekStart != null) {
+        endpoint += '?week_start=$weekStart';
+      }
+
+      print('🔍 Iniciando carga del plan semanal...');
+
+      final response = await _apiService.get(endpoint);
+      final data = json.decode(response.body);
+
+      return WeeklyPlanResponse.fromJson(data);
+    } catch (e) {
+      throw PlanException('Error al obtener mi plan semanal: $e');
+    }
+  }
+
+  /// Obtener lista de pacientes (solo nutricionistas)
+  Future<List<UserResponse>> getPatients() async {
+    try {
+      final response = await _apiService.get('/users/patients');
+      final List<dynamic> data = json.decode(response.body);
+
+      return data.map((json) => UserResponse.fromJson(json)).toList();
+    } catch (e) {
+      throw PlanException('Error al obtener lista de pacientes: $e');
+    }
+  }
+}
+
+class PlanException {
+  PlanException(String s);
 }

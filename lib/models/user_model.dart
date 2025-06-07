@@ -1,3 +1,4 @@
+// lib/models/user_models.dart
 class UserCreate {
   final String email;
   final String password;
@@ -115,56 +116,5 @@ class UserResponse {
       dietaryPreferences: json['dietary_preferences'],
       createdAt: json['created_at'],
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'user_id': userId,
-      'email': email,
-      'role': role,
-      'first_name': firstName,
-      'last_name': lastName,
-      'birth_date': birthDate,
-      'phone': phone,
-      'height': height,
-      'weight': weight,
-      'has_medical_condition': hasMedicalCondition,
-      'chronic_disease': chronicDisease,
-      'allergies': allergies,
-      'dietary_preferences': dietaryPreferences,
-      'created_at': createdAt,
-    };
-  }
-}
-
-class AuthResponse {
-  final String? message;
-  final int? userId;
-  final String token;
-  final String? role;
-
-  AuthResponse({
-    this.message,
-    this.userId,
-    required this.token,
-    this.role,
-  });
-
-  factory AuthResponse.fromJson(Map<String, dynamic> json) {
-    return AuthResponse(
-      message: json['message'],
-      userId: json['user_id'],
-      token: json['token'],
-      role: json['role'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'message': message,
-      'user_id': userId,
-      'token': token,
-      'role': role,
-    };
   }
 }
