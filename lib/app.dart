@@ -1,10 +1,10 @@
 // lib/app.dart
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'core/themes/app_theme.dart';
 import 'core/routes/app_router.dart';
 import 'core/routes/route_names.dart';
-import 'providers/auth_provider.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

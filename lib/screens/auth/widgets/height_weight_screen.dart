@@ -76,7 +76,7 @@ class _HeightWeightScreenState extends State<HeightWeightScreen> {
       children: [
         Text(
           '¿Cuál es tu peso y altura?',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),
@@ -85,7 +85,7 @@ class _HeightWeightScreenState extends State<HeightWeightScreen> {
         const SizedBox(height: 8),
         Text(
           'Proporciona más información y podré ayudarte mejor',
-          style: AppTextStyles.descripcion.copyWith(
+          style: AppTextStyles.description.copyWith(
             color: Colors.grey[600],
             fontSize: 14,
             letterSpacing: 0,

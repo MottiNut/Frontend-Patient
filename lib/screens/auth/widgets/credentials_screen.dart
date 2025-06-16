@@ -22,7 +22,7 @@ class CredentialsScreen extends StatelessWidget {
       children: [
         Text(
           'Correo electrónico',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),
@@ -42,7 +42,7 @@ class CredentialsScreen extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           'Contraseña',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),
@@ -62,7 +62,7 @@ class CredentialsScreen extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           'Repertir Contraseña',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),

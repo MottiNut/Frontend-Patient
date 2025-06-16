@@ -22,7 +22,7 @@ class ChronicDiseaseScreen extends StatelessWidget {
         leading: Icon(icon, color: AppColors.mainOrange),
         title: Text(
           label,
-          style: AppTextStyles.descripcion.copyWith(
+          style: AppTextStyles.description.copyWith(
             letterSpacing: 0,
             fontSize: 16,
           ),
@@ -50,7 +50,7 @@ class ChronicDiseaseScreen extends StatelessWidget {
       children: [
         Text(
           '¿Qué condición deseas manejar con tu alimentación?',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),
@@ -59,7 +59,7 @@ class ChronicDiseaseScreen extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Esto nos ayuda a crear un plan seguro y efectivo para ti',
-          style: AppTextStyles.descripcion.copyWith(
+          style: AppTextStyles.description.copyWith(
             color: Colors.grey[600],
             fontSize: 14,
             letterSpacing: 0,
@@ -80,7 +80,7 @@ class ChronicDiseaseScreen extends StatelessWidget {
                 leading: const Icon(Icons.more_horiz, color: AppColors.mainOrange),
                 title: Text(
                   'Otro...',
-                  style: AppTextStyles.descripcion.copyWith(
+                  style: AppTextStyles.description.copyWith(
                     letterSpacing: 0,
                     fontSize: 16,
                   ),
@@ -101,19 +101,19 @@ class ChronicDiseaseScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: TextFormField(
                     controller: customDiseaseController,
-                    style: AppTextStyles.descripcion.copyWith(
+                    style: AppTextStyles.description.copyWith(
                       fontSize: 16,
                       letterSpacing: 0,
                     ),
                     decoration: InputDecoration(
                       labelText: 'Especifica tu condición',
-                      labelStyle: AppTextStyles.descripcion.copyWith(
+                      labelStyle: AppTextStyles.description.copyWith(
                         color: AppColors.darkOrange1,
                         fontSize: 14,
                         letterSpacing: 0,
                       ),
                       hintText: 'Ej: Colesterol alto, Gastritis, etc.',
-                      hintStyle: AppTextStyles.descripcion.copyWith(
+                      hintStyle: AppTextStyles.description.copyWith(
                         color: Colors.grey[500],
                         fontSize: 14,
                         letterSpacing: 0,

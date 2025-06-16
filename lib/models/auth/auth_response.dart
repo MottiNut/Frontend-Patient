@@ -1,26 +1,25 @@
-// lib/models/auth_models.dart
 class AuthResponse {
   final String token;
   final int userId;
+  final String email;
   final String role;
-  final String? name;
-  final String? message;
+  final String fullName;
 
   AuthResponse({
     required this.token,
     required this.userId,
+    required this.email,
     required this.role,
-    this.name,
-    this.message,
+    required this.fullName,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     return AuthResponse(
       token: json['token'],
-      userId: json['user_id'],
+      userId: json['userId'],
+      email: json['email'],
       role: json['role'],
-      name: json['name'],
-      message: json['message'],
+      fullName: json['fullName'],
     );
   }
 }

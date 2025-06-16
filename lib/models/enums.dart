@@ -1,29 +1,3 @@
-// lib/models/enums.dart
-enum UserRole {
-  patient,
-  nutritionist;
-
-  String get value {
-    switch (this) {
-      case UserRole.patient:
-        return 'patient';
-      case UserRole.nutritionist:
-        return 'nutritionist';
-    }
-  }
-
-  static UserRole fromString(String value) {
-    switch (value) {
-      case 'patient':
-        return UserRole.patient;
-      case 'nutritionist':
-        return UserRole.nutritionist;
-      default:
-        throw ArgumentError('Invalid user role: $value');
-    }
-  }
-}
-
 enum MealType {
   breakfast,
   snackMorning,

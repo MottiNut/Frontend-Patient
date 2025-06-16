@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
-import 'package:frontendpatient/models/enums.dart';
 import 'package:frontendpatient/screens/auth/widgets/age_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/allergies_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/birth_date_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/chronic_disease_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/credentials_screen.dart';
+import 'package:frontendpatient/screens/auth/widgets/gender_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/height_weight_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/medical_condition_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/personal_info_screen.dart';
@@ -30,6 +31,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _repeatPasswordController = TextEditingController();
+  final _genderController = TextEditingController();
   final _ageController = TextEditingController();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
@@ -102,20 +104,23 @@ class _RegisterFlowState extends State<RegisterFlow> {
             _repeatPasswordController.text.trim().isNotEmpty &&
             _passwordController.text == _repeatPasswordController.text;
 
-      case 2: // BirthDateScreen
+      case 2:
+        return formData['gender'] != null && formData['gender'].toString().trim().isNotEmpty;
+
+      case 3: // BirthDateScreen
         return formData['birthDate'] != null;
 
-      case 3: // AgeScreen
+      case 4: // AgeScreen
         return _ageController.text.trim().isNotEmpty;
 
-      case 4: // HeightWeightScreen
+      case 5: // HeightWeightScreen
         return _heightController.text.trim().isNotEmpty &&
             _weightController.text.trim().isNotEmpty;
 
-      case 5: // MedicalConditionScreen
+      case 6: // MedicalConditionScreen
         return true; // Esta página siempre es válida (tiene valor por defecto)
 
-      case 6: // ChronicDiseaseScreen
+      case 7: // ChronicDiseaseScreen
         if (formData['hasMedicalCondition'] == true) {
           // Si tiene condición médica, debe seleccionar algo
           return formData['chronicDisease'] != null && formData['chronicDisease'] != '' ||
@@ -123,7 +128,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
         }
         return true; // Si no tiene condición médica, es válido
 
-      case 7: // AllergiesScreen
+      case 8: // AllergiesScreen
         return formData['allergies'] != null && formData['allergies'] != '' ||
             _allergiesController.text.trim().isNotEmpty;
 
@@ -142,7 +147,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
   void _nextPage() {
     if (_validateCurrentPage()) {
-      if (_currentPage < 7) {
+      if (_currentPage < 8) {
         setState(() => _currentPage++);
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
@@ -165,8 +170,14 @@ class _RegisterFlowState extends State<RegisterFlow> {
   }
 
   void _finishRegistration() async {
+    print('🚀 Iniciando registro...');
+    print('📄 Página actual: $_currentPage');
+
     if (_validateCurrentPage()) {
+      print('✅ Validación de página actual exitosa');
+
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      print('🔗 AuthProvider obtenido');
 
       try {
         // Preparar los datos
@@ -177,6 +188,10 @@ class _RegisterFlowState extends State<RegisterFlow> {
         final height = _heightController.text.isNotEmpty
             ? double.tryParse(_heightController.text)
             : null;
+
+        print('📅 Fecha de nacimiento: $birthDate');
+        print('⚖️ Peso: $weight');
+        print('📏 Altura: $height');
 
         // Obtener chronicDisease correctamente
         String? chronicDisease;
@@ -190,6 +205,8 @@ class _RegisterFlowState extends State<RegisterFlow> {
             chronicDisease = _chronicDiseaseController.text.trim();
           }
         }
+
+        final gender = formData['gender'] as String?;
 
         // Obtener alergias correctamente
         String? allergies;
@@ -206,33 +223,48 @@ class _RegisterFlowState extends State<RegisterFlow> {
           allergies = null;
         }
 
-        // CORRECCIÓN 1: Usar bool directamente (no int)
         final bool hasMedicalConditionBool = formData['hasMedicalCondition'] == true;
 
-        // Formatear birthDate como String
-        String? birthDateString;
-        if (birthDate != null) {
-          birthDateString = "${birthDate.year}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}";
-        }
+        print('🏥 Tiene condición médica: $hasMedicalConditionBool');
+        print('💊 Enfermedad crónica: $chronicDisease');
+        print('🥜 Alergias: $allergies');
+        print('👤 Género: $gender');
 
-        // CORRECCIÓN 2: Usar UserRole enum (no String)
-        final success = await authProvider.register(
+        // Log de todos los datos que se van a enviar
+        print('📝 Datos del registro:');
+        print('  - Email: ${_emailController.text.trim()}');
+        print('  - Nombre: ${_firstNameController.text.trim()}');
+        print('  - Apellido: ${_lastNameController.text.trim()}');
+        print('  - Fecha nacimiento: $birthDate');
+        print('  - Altura: $height');
+        print('  - Peso: $weight');
+        print('  - Género: $gender');
+        print('  - Condición médica: $hasMedicalConditionBool');
+        print('  - Enfermedad crónica: $chronicDisease');
+        print('  - Alergias: $allergies');
+
+        print('🌐 Llamando al método registerPatient...');
+
+        final success = await authProvider.registerPatient(
           email: _emailController.text.trim(),
           password: _passwordController.text,
-          role: UserRole.patient, // CORRECCIÓN: Usar enum UserRole
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
-          birthDate: birthDateString ?? '',
-          phone: '', // Puedes agregar un campo para esto si es necesario
+          birthDate: birthDate!,
+          phone: '',
           height: height,
           weight: weight,
-          hasMedicalCondition: hasMedicalConditionBool, // CORRECCIÓN: Usar bool
+          hasMedicalCondition: hasMedicalConditionBool,
           chronicDisease: chronicDisease,
           allergies: allergies,
+          gender: gender,
           dietaryPreferences: null,
         );
 
+        print('📊 Resultado del registro: $success');
+
         if (success) {
+          print('🎉 Registro exitoso!');
           // Mostrar mensaje de éxito
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -250,6 +282,9 @@ class _RegisterFlowState extends State<RegisterFlow> {
             }
           }
         } else {
+          print('❌ Error en el registro');
+          print('💬 Mensaje de error: ${authProvider.errorMessage}');
+
           // Mostrar error
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -262,6 +297,9 @@ class _RegisterFlowState extends State<RegisterFlow> {
           }
         }
       } catch (e) {
+        print('💥 Error inesperado en _finishRegistration: $e');
+        print('📍 Stack trace: ${StackTrace.current}');
+
         // Manejar errores inesperados
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -273,17 +311,44 @@ class _RegisterFlowState extends State<RegisterFlow> {
           );
         }
       }
+    } else {
+      print('❌ Validación de página falló');
     }
   }
 
   Widget _buildProgressBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: LinearProgressIndicator(
-        value: (_currentPage + 1) / 8,
-        backgroundColor: Colors.grey[300],
-        color: AppColors.mainOrange,
-        minHeight: 6,
+      child: Row(
+        children: [
+          // Botón de retroceso con SVG - siempre visible
+          GestureDetector(
+            onTap: _currentPage > 0 ? _prevPage : () {
+              // Si estamos en la primera página, regresar a la pantalla anterior (login)
+              Navigator.of(context).pop();
+            },
+            child: Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(right: 16),
+              child: SvgPicture.asset(
+                'assets/images/vector-retrocession.svg',
+                width: 32,
+                height: 32,
+              ),
+            ),
+          ),
+
+          // Barra de progreso
+          Expanded(
+            child: LinearProgressIndicator(
+              value: (_currentPage + 1) / 9,
+              backgroundColor: Colors.grey[300],
+              color: AppColors.mainOrange,
+              minHeight: 6,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -302,13 +367,18 @@ class _RegisterFlowState extends State<RegisterFlow> {
           repeatPasswordController: _repeatPasswordController,
         );
       case 2:
+        return GenderScreen(
+          selectedGender: formData['gender'],
+          onGenderSelected: (value) => setState(() => formData['gender'] = value),
+        );
+      case 3:
         return BirthDateScreen(
           selectedDate: formData['birthDate'],
           onDateChanged: (date) => setState(() => formData['birthDate'] = date),
         );
-      case 3:
-        return AgeScreen(ageController: _ageController);
       case 4:
+        return AgeScreen(ageController: _ageController);
+      case 5:
         return HeightWeightScreen(
           initialHeight: _heightController.text.isNotEmpty
               ? double.tryParse(_heightController.text)! / 100
@@ -325,18 +395,18 @@ class _RegisterFlowState extends State<RegisterFlow> {
             });
           },
         );
-      case 5:
+      case 6:
         return MedicalConditionScreen(
           hasMedicalCondition: formData['hasMedicalCondition'],
           onConditionChanged: (value) => setState(() => formData['hasMedicalCondition'] = value),
         );
-      case 6:
+      case 7:
         return ChronicDiseaseScreen(
           selectedDisease: formData['chronicDisease'],
           customDiseaseController: _chronicDiseaseController,
           onDiseaseChanged: (disease) => setState(() => formData['chronicDisease'] = disease),
         );
-      case 7:
+      case 8:
         return AllergiesScreen(
           selectedAllergy: formData['allergies'],
           customAllergyController: _allergiesController,
@@ -368,7 +438,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
                     child: PageView.builder(
                       controller: _pageController,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: 8,
+                      itemCount: 9,
                       itemBuilder: (context, index) => Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: SingleChildScrollView(
@@ -381,16 +451,8 @@ class _RegisterFlowState extends State<RegisterFlow> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end, // Cambiar a end para solo mostrar botón de siguiente
                     children: [
-                      if (_currentPage > 0)
-                        TextButton.icon(
-                          onPressed: authProvider.isLoading ? null : _prevPage,
-                          icon: const Icon(Icons.arrow_back),
-                          label: const Text('Atrás'),
-                        )
-                      else
-                        const SizedBox(),
                       GestureDetector(
                         onTap: authProvider.isLoading ? null : (isPageComplete ? _nextPage : null),
                         child: Container(
@@ -401,7 +463,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
                             shape: BoxShape.circle,
                           ),
                           child: Center(
-                            child: authProvider.isLoading && _currentPage == 7
+                            child: authProvider.isLoading
                                 ? const SizedBox(
                               width: 20,
                               height: 20,
@@ -411,7 +473,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
                               ),
                             )
                                 : Icon(
-                              _currentPage == 7 ? Icons.check : Icons.arrow_forward,
+                              _currentPage == 8 ? Icons.check : Icons.arrow_forward,
                               color: iconColor,
                             ),
                           ),

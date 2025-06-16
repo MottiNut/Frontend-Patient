@@ -44,7 +44,7 @@ class _AgeScreenState extends State<AgeScreen> {
       children: [
         Text(
           '¿Cuál es tu edad?',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),
@@ -53,7 +53,7 @@ class _AgeScreenState extends State<AgeScreen> {
         const SizedBox(height: 8),
         Text(
           'El tipo de nutrición varia según tu edad',
-          style: AppTextStyles.descripcion.copyWith(
+          style: AppTextStyles.description.copyWith(
             color: Colors.grey[600],
             fontSize: 14,
             letterSpacing: 0,

@@ -21,7 +21,7 @@ class PersonalInfoScreen extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           'Nombre',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),
@@ -40,7 +40,7 @@ class PersonalInfoScreen extends StatelessWidget {
         const SizedBox(height: 20),
         Text(
           'Apellido',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),

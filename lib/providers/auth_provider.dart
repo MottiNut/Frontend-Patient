@@ -1,8 +1,12 @@
-// lib/providers/auth_provider.dart
 import 'package:flutter/foundation.dart';
-import 'package:frontendpatient/models/user_model.dart';
+import 'package:frontendpatient/models/auth/login_request.dart';
+import 'package:frontendpatient/models/auth/register_nutritionist_request.dart';
+import 'package:frontendpatient/models/auth/register_patient_request.dart';
+import 'package:frontendpatient/models/auth/update_profile.dart';
+import 'package:frontendpatient/models/user/role.dart';
+import 'package:frontendpatient/models/user/user_model.dart';
 import 'package:frontendpatient/service/auth_service.dart';
-import '../models/enums.dart';
+
 enum AuthState {
   initial,
   loading,
@@ -15,217 +19,218 @@ class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
 
   AuthState _state = AuthState.initial;
-  UserResponse? _currentUser;
+  User? _currentUser;
   String? _errorMessage;
-  bool _isLoading = false;
 
-  // Getters
   AuthState get state => _state;
-  UserResponse? get currentUser => _currentUser;
+  User? get currentUser => _currentUser;
   String? get errorMessage => _errorMessage;
-  bool get isLoading => _isLoading;
   bool get isAuthenticated => _state == AuthState.authenticated;
-  bool get isPatient => _currentUser?.role == UserRole.patient;
-  bool get isNutritionist => _currentUser?.role == UserRole.nutritionist;
+  bool get isLoading => _state == AuthState.loading;
 
-  /// Inicializar el estado de autenticación
-  Future<void> initialize() async {
+  Future<void> checkAuthStatus() async {
     _setState(AuthState.loading);
 
     try {
-      final hasToken = await _authService.isAuthenticated();
-
-      if (hasToken) {
-        // Verificar si el token sigue siendo válido
-        final isValid = await _authService.validateToken();
-
-        if (isValid) {
-          // Obtener información del usuario
-          await _loadUserProfile();
-        } else {
-          _setState(AuthState.unauthenticated);
-        }
+      final isLoggedIn = await _authService.isLoggedIn();
+      if (isLoggedIn) {
+        final user = await _authService.getCurrentUser();
+        _currentUser = user;
+        _setState(AuthState.authenticated);
       } else {
         _setState(AuthState.unauthenticated);
       }
     } catch (e) {
-      _setError('Error al inicializar autenticación: $e');
+      _setError('Error verificando autenticación: $e');
     }
   }
 
-  /// Registrar nuevo usuario
-  Future<bool> register({
+  Future<bool> login(String email, String password) async {
+    _setState(AuthState.loading);
+
+    try {
+      final request = LoginRequest(email: email, password: password);
+      final response = await _authService.login(request);
+
+      // Obtener el perfil completo del usuario
+      _currentUser = await _authService.getCurrentUser();
+      _setState(AuthState.authenticated);
+
+      return true;
+    } catch (e) {
+      _setError('Error en login: $e');
+      return false;
+    }
+  }
+
+  Future<bool> registerPatient({
     required String email,
     required String password,
-    required UserRole role,
     required String firstName,
     required String lastName,
-    required String birthDate,
-    required String phone,
+    required DateTime birthDate,
+    String? phone,
     double? height,
     double? weight,
-    bool hasMedicalCondition = false,
+    bool? hasMedicalCondition,
     String? chronicDisease,
     String? allergies,
     String? dietaryPreferences,
+    String? gender,
   }) async {
-    _setLoading(true);
+    print('🔄 AuthProvider.registerPatient iniciado');
+    print('📧 Email: $email');
+    print('👤 Nombre completo: $firstName $lastName');
+
+    _setState(AuthState.loading);
+    print('⏳ Estado cambiado a loading');
 
     try {
-      final userCreate = UserCreate(
+      final request = RegisterPatientRequest(
         email: email,
         password: password,
-        role: role.name,
         firstName: firstName,
         lastName: lastName,
         birthDate: birthDate,
         phone: phone,
         height: height,
         weight: weight,
-        hasMedicalCondition: hasMedicalCondition ? 1 : 0,
+        hasMedicalCondition: hasMedicalCondition,
         chronicDisease: chronicDisease,
         allergies: allergies,
         dietaryPreferences: dietaryPreferences,
+        gender: gender,
       );
 
-      final authResponse = await _authService.register(userCreate);
+      print('📋 RegisterPatientRequest creado');
+      print('🌐 Llamando al AuthService.registerPatient...');
 
-      if (authResponse.token != null) {
-        await _loadUserProfile();
-        return true;
-      } else {
-        _setError('Error en el registro: No se recibió token');
-        return false;
-      }
+      final response = await _authService.registerPatient(request);
+
+      print('✅ Respuesta del servidor recibida');
+      print('🔑 Token recibido: ${response.token.substring(0, 20)}...');
+
+      print('👤 Obteniendo información del usuario actual...');
+      _currentUser = await _authService.getCurrentUser();
+
+      print('✅ Usuario actual obtenido: ${_currentUser?.firstName} ${_currentUser?.lastName}');
+
+      _setState(AuthState.authenticated);
+      print('🔐 Estado cambiado a authenticated');
+
+      return true;
     } catch (e) {
-      _setError('Error al registrar: $e');
+      print('❌ ERROR en registerPatient: $e');
+      print('📍 Tipo de error: ${e.runtimeType}');
+
+      _setError('Error en registro: $e');
+      print('💬 Error establecido: $errorMessage');
+
       return false;
-    } finally {
-      _setLoading(false);
     }
   }
 
-  /// Iniciar sesión
-  Future<bool> login(String email, String password) async {
-    _setLoading(true);
+  Future<bool> registerNutritionist({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    required DateTime birthDate,
+    String? phone,
+    required String licenseNumber,
+    required String specialization,
+    required String workplace,
+  }) async {
+    _setState(AuthState.loading);
 
     try {
-      final userLogin = UserLogin(email: email, password: password);
-      final authResponse = await _authService.login(userLogin);
+      final request = RegisterNutritionistRequest(
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        birthDate: birthDate,
+        phone: phone,
+        licenseNumber: licenseNumber,
+        specialization: specialization,
+        workplace: workplace,
+      );
 
-      if (authResponse.token != null) {
-        await _loadUserProfile();
-        return true;
-      } else {
-        _setError('Error en el login: No se recibió token');
-        return false;
-      }
+      final response = await _authService.registerNutritionist(request);
+      _currentUser = await _authService.getCurrentUser();
+      _setState(AuthState.authenticated);
+
+      return true;
     } catch (e) {
-      _setError('Error al iniciar sesión: $e');
+      _setError('Error en registro: $e');
       return false;
-    } finally {
-      _setLoading(false);
     }
   }
 
-  /// Cerrar sesión
+  Future<bool> updatePatientProfile(UpdatePatientProfileRequest request) async {
+    if (_currentUser == null || _currentUser!.role != Role.patient) {
+      _setError('Usuario no es paciente');
+      return false;
+    }
+
+    _setState(AuthState.loading);
+
+    try {
+      final updatedPatient = await _authService.updatePatientProfile(request);
+      _currentUser = updatedPatient;
+      _setState(AuthState.authenticated);
+      return true;
+    } catch (e) {
+      _setError('Error actualizando perfil: $e');
+      return false;
+    }
+  }
+
+  Future<bool> updateNutritionistProfile(UpdateNutritionistProfileRequest request) async {
+    if (_currentUser == null || _currentUser!.role != Role.nutritionist) {
+      _setError('Usuario no es nutricionista');
+      return false;
+    }
+
+    _setState(AuthState.loading);
+
+    try {
+      final updatedNutritionist = await _authService.updateNutritionistProfile(request);
+      _currentUser = updatedNutritionist;
+      _setState(AuthState.authenticated);
+      return true;
+    } catch (e) {
+      _setError('Error actualizando perfil: $e');
+      return false;
+    }
+  }
+
   Future<void> logout() async {
-    _setLoading(true);
+    _setState(AuthState.loading);
 
     try {
       await _authService.logout();
       _currentUser = null;
       _setState(AuthState.unauthenticated);
     } catch (e) {
-      _setError('Error al cerrar sesión: $e');
-    } finally {
-      _setLoading(false);
+      _setError('Error en logout: $e');
     }
   }
 
-  /// Actualizar perfil del usuario
-  Future<bool> updateProfile() async {
-    if (!isAuthenticated) return false;
-
-    _setLoading(true);
-
-    try {
-      await _loadUserProfile();
-      return true;
-    } catch (e) {
-      _setError('Error al actualizar perfil: $e');
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  /// Verificar conexión con la API
-  Future<bool> checkConnection() async {
-    try {
-      return await _authService.checkApiHealth();
-    } catch (e) {
-      return false;
-    }
-  }
-
-  /// Limpiar mensaje de error
   void clearError() {
     _errorMessage = null;
-    if (_state == AuthState.error) {
-      _setState(AuthState.unauthenticated);
-    }
     notifyListeners();
   }
 
-  /// Cargar perfil del usuario
-  Future<void> _loadUserProfile() async {
-    try {
-      final userProfile = await _authService.getProfile();
-      _currentUser = userProfile;
-      _setState(AuthState.authenticated);
-    } catch (e) {
-      throw Exception('Error al cargar perfil: $e');
-    }
-  }
-
-  /// Establecer estado de carga
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  /// Establecer estado
   void _setState(AuthState newState) {
     _state = newState;
-    _isLoading = false;
     _errorMessage = null;
     notifyListeners();
   }
 
-  /// Establecer error
   void _setError(String error) {
     _state = AuthState.error;
     _errorMessage = error;
-    _isLoading = false;
     notifyListeners();
-  }
-}
-
-/// Extension para obtener nombre completo del usuario
-extension UserResponseExtension on UserResponse {
-  String get fullName => '$firstName $lastName';
-
-  int get age {
-    final birthDateTime = DateTime.parse(birthDate);
-    final now = DateTime.now();
-    int age = now.year - birthDateTime.year;
-
-    if (now.month < birthDateTime.month ||
-        (now.month == birthDateTime.month && now.day < birthDateTime.day)) {
-      age--;
-    }
-
-    return age;
   }
 }

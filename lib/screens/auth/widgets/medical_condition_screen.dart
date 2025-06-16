@@ -18,7 +18,7 @@ class MedicalConditionScreen extends StatelessWidget {
       children: [
         Text(
           '¿Padeces algún tipo de enfermedad?',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),
@@ -27,7 +27,7 @@ class MedicalConditionScreen extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Proporciona más información y podré ayudarte mejor',
-          style: AppTextStyles.descripcion.copyWith(
+          style: AppTextStyles.description.copyWith(
             color: Colors.grey[600],
             fontSize: 14,
             letterSpacing: 0,

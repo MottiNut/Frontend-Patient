@@ -1,138 +1,224 @@
-// lib/services/auth_service.dart
+import 'dart:async';
 import 'dart:convert';
-import 'package:frontendpatient/models/user_model.dart';
-import '../models/auth_models.dart';
-import 'api_service.dart';
+import 'dart:io';
+import 'package:frontendpatient/models/auth/auth_response.dart';
+import 'package:frontendpatient/models/auth/login_request.dart';
+import 'package:frontendpatient/models/auth/register_nutritionist_request.dart';
+import 'package:frontendpatient/models/auth/register_patient_request.dart';
+import 'package:frontendpatient/models/auth/update_profile.dart';
+import 'package:frontendpatient/models/user/nutritionist_model.dart';
+import 'package:frontendpatient/models/user/patient_model.dart';
+import 'package:frontendpatient/models/user/user_model.dart';
+import 'package:frontendpatient/utils/ApiError.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  final ApiService _apiService = ApiService();
+  static const String baseUrl = 'http://10.0.2.2:5000/api/bff/auth'; // Reemplaza con tu URL
+  static const String tokenKey = 'auth_token';
 
-  /// Registrar nuevo usuario
-  Future<AuthResponse> register(UserCreate userCreate) async {
+  final http.Client _client = http.Client();
+
+  Future<AuthResponse> login(LoginRequest request) async {
     try {
-      final response = await _apiService.post(
-        '/register',
-        body: userCreate.toJson(),
-        requireAuth: false,
+      final response = await _client.post(
+        Uri.parse('$baseUrl/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(request.toJson()),
       );
 
-      final data = json.decode(response.body);
-      final authResponse = AuthResponse.fromJson(data);
-
-      // Guardar token automáticamente
-      if (authResponse.token != null) {
-        await _apiService.saveToken(authResponse.token);
+      if (response.statusCode == 200) {
+        final authResponse = AuthResponse.fromJson(json.decode(response.body));
+        await _saveToken(authResponse.token);
+        return authResponse;
+      } else {
+        final error = ApiError.fromJson(json.decode(response.body));
+        throw Exception(error.message);
       }
-
-      return authResponse;
     } catch (e) {
-      throw _handleAuthError(e);
+      throw Exception('Error de conexión: $e');
     }
   }
 
-  /// Iniciar sesión
-  Future<AuthResponse> login(UserLogin userLogin) async {
+  Future<AuthResponse> registerPatient(RegisterPatientRequest request) async {
+    print('🌐 AuthService.registerPatient iniciado');
+    print('📍 URL: $baseUrl/register/patient');
+
     try {
-      final response = await _apiService.post(
-        '/login',
-        body: userLogin.toJson(),
-        requireAuth: false,
+      print('📝 Preparando datos para envío...');
+      final requestBody = json.encode(request.toJson());
+      print('📤 Datos a enviar: $requestBody');
+
+      print('🔗 Realizando petición HTTP POST...');
+      final response = await _client.post(
+        Uri.parse('$baseUrl/register/patient'),
+        headers: {'Content-Type': 'application/json'},
+        body: requestBody,
       );
 
-      final data = json.decode(response.body);
-      final authResponse = AuthResponse.fromJson(data);
+      print('📨 Respuesta recibida');
+      print('📊 Status Code: ${response.statusCode}');
+      print('📋 Headers: ${response.headers}');
+      print('📄 Body: ${response.body}');
 
-      // Guardar token automáticamente
-      if (authResponse.token != null) {
-        await _apiService.saveToken(authResponse.token!);
+      if (response.statusCode == 200) {
+        print('✅ Registro exitoso - Status 200');
+
+        final authResponse = AuthResponse.fromJson(json.decode(response.body));
+        print('🔑 Token extraído: ${authResponse.token.substring(0, 20)}...');
+
+        print('💾 Guardando token...');
+        await _saveToken(authResponse.token);
+        print('✅ Token guardado exitosamente');
+
+        return authResponse;
+      } else {
+        print('❌ Error del servidor - Status: ${response.statusCode}');
+
+        try {
+          final error = ApiError.fromJson(json.decode(response.body));
+          print('💬 Mensaje de error del API: ${error.message}');
+          throw Exception(error.message);
+        } catch (parseError) {
+          print('❌ Error parseando respuesta de error: $parseError');
+          print('📄 Respuesta cruda: ${response.body}');
+          throw Exception('Server error: ${response.statusCode} - ${response.body}');
+        }
       }
-
-      return authResponse;
+    } on SocketException catch (e) {
+      print('🌐 Error de conexión (SocketException): $e');
+      throw Exception('Sin conexión a internet: $e');
+    } on TimeoutException catch (e) {
+      print('⏰ Timeout de conexión: $e');
+      throw Exception('Timeout de conexión: $e');
+    } on FormatException catch (e) {
+      print('📝 Error de formato JSON: $e');
+      throw Exception('Error de formato de datos: $e');
     } catch (e) {
-      throw _handleAuthError(e);
+      print('💥 Error inesperado en registerPatient: $e');
+      print('📍 Tipo de error: ${e.runtimeType}');
+      print('📚 Stack trace: ${StackTrace.current}');
+
+      throw Exception('Error de conexión: $e');
     }
   }
 
-  /// Cerrar sesión
+  Future<AuthResponse> registerNutritionist(RegisterNutritionistRequest request) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/register/nutritionist'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(request.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        final authResponse = AuthResponse.fromJson(json.decode(response.body));
+        await _saveToken(authResponse.token);
+        return authResponse;
+      } else {
+        final error = ApiError.fromJson(json.decode(response.body));
+        throw Exception(error.message);
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
+  }
+
+  Future<User> getCurrentUser() async {
+    try {
+      final token = await getToken();
+      if (token == null) throw Exception('Token no encontrado');
+
+      final response = await _client.get(
+        Uri.parse('$baseUrl/me'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return User.fromJson(json.decode(response.body));
+      } else {
+        final error = ApiError.fromJson(json.decode(response.body));
+        throw Exception(error.message);
+      }
+    } catch (e) {
+      throw Exception('Error obteniendo perfil: $e');
+    }
+  }
+
+  Future<Patient> updatePatientProfile(UpdatePatientProfileRequest request) async {
+    try {
+      final token = await getToken();
+      if (token == null) throw Exception('Token no encontrado');
+
+      final response = await _client.put(
+        Uri.parse('$baseUrl/profile/patient'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(request.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        return Patient.fromJson(json.decode(response.body));
+      } else {
+        final error = ApiError.fromJson(json.decode(response.body));
+        throw Exception(error.message);
+      }
+    } catch (e) {
+      throw Exception('Error actualizando perfil: $e');
+    }
+  }
+
+  Future<Nutritionist> updateNutritionistProfile(UpdateNutritionistProfileRequest request) async {
+    try {
+      final token = await getToken();
+      if (token == null) throw Exception('Token no encontrado');
+
+      final response = await _client.put(
+        Uri.parse('$baseUrl/profile/nutritionist'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(request.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        return Nutritionist.fromJson(json.decode(response.body));
+      } else {
+        final error = ApiError.fromJson(json.decode(response.body));
+        throw Exception(error.message);
+      }
+    } catch (e) {
+      throw Exception('Error actualizando perfil: $e');
+    }
+  }
+
   Future<void> logout() async {
-    try {
-      // Eliminar token del almacenamiento local
-      await _apiService.removeToken();
-    } catch (e) {
-      throw AuthException('Error al cerrar sesión: $e');
-    }
+    await _removeToken();
   }
 
-  /// Verificar si el usuario está autenticado
-  Future<bool> isAuthenticated() async {
-    return await _apiService.hasToken();
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(tokenKey);
   }
 
-  /// Obtener perfil del usuario actual
-  Future<UserResponse> getProfile() async {
-    try {
-      final response = await _apiService.get('/profile');
-      final data = json.decode(response.body);
-      return UserResponse.fromJson(data);
-    } catch (e) {
-      throw _handleAuthError(e);
-    }
+  Future<bool> isLoggedIn() async {
+    final token = await getToken();
+    return token != null;
   }
 
-  /// Verificar estado de la API
-  Future<bool> checkApiHealth() async {
-    try {
-      final response = await _apiService.get('/health', requireAuth: false);
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(tokenKey, token);
   }
 
-  /// Actualizar token
-  Future<void> updateToken(String newToken) async {
-    await _apiService.saveToken(newToken);
+  Future<void> _removeToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(tokenKey);
   }
-
-  /// Obtener token actual
-  Future<String?> getCurrentToken() async {
-    return await _apiService.getToken();
-  }
-
-  /// Validar token (verificar si sigue siendo válido)
-  Future<bool> validateToken() async {
-    try {
-      final response = await _apiService.get('/profile');
-      return response.statusCode == 200;
-    } catch (e) {
-      if (e is UnauthorizedException) {
-        // Token inválido, limpiarlo
-        await logout();
-        return false;
-      }
-      return false;
-    }
-  }
-
-  /// Manejar errores de autenticación
-  AuthException _handleAuthError(dynamic error) {
-    if (error is ApiException) {
-      return AuthException(error.message);
-    } else if (error is UnauthorizedException) {
-      return AuthException('Credenciales inválidas');
-    } else if (error is ValidationException) {
-      return AuthException('Datos de entrada inválidos');
-    } else {
-      return AuthException('Error de autenticación: $error');
-    }
-  }
-}
-
-/// Excepción específica para errores de autenticación
-class AuthException implements Exception {
-  final String message;
-  AuthException(this.message);
-
-  @override
-  String toString() => 'AuthException: $message';
 }

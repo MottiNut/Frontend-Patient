@@ -22,7 +22,7 @@ class AllergiesScreen extends StatelessWidget {
         leading: Icon(icon, color: AppColors.mainOrange),
         title: Text(
           label,
-          style: AppTextStyles.descripcion.copyWith(
+          style: AppTextStyles.description.copyWith(
             letterSpacing: 0,
             fontSize: 16,
           ),
@@ -52,7 +52,7 @@ class AllergiesScreen extends StatelessWidget {
       children: [
         Text(
           '¿Tienes alergias o intolerancias?',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),
@@ -61,7 +61,7 @@ class AllergiesScreen extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Tu seguridad es primero. Evitaremos estos alimentos',
-          style: AppTextStyles.descripcion.copyWith(
+          style: AppTextStyles.description.copyWith(
             color: Colors.grey[600],
             fontSize: 14,
             letterSpacing: 0,
@@ -83,7 +83,7 @@ class AllergiesScreen extends StatelessWidget {
                 leading: const Icon(Icons.more_horiz, color: AppColors.mainOrange),
                 title: Text(
                   'Otro...',
-                  style: AppTextStyles.descripcion.copyWith(
+                  style: AppTextStyles.description.copyWith(
                     letterSpacing: 0,
                     fontSize: 16,
                   ),
@@ -104,19 +104,19 @@ class AllergiesScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: TextFormField(
                     controller: customAllergyController,
-                    style: AppTextStyles.descripcion.copyWith(
+                    style: AppTextStyles.description.copyWith(
                       fontSize: 16,
                       letterSpacing: 0,
                     ),
                     decoration: InputDecoration(
                       labelText: 'Especifica tu alergia o intolerancia',
-                      labelStyle: AppTextStyles.descripcion.copyWith(
+                      labelStyle: AppTextStyles.description.copyWith(
                         color: AppColors.darkOrange1,
                         fontSize: 14,
                         letterSpacing: 0,
                       ),
                       hintText: 'Ej: Huevos, Soja, Chocolate, etc.',
-                      hintStyle: AppTextStyles.descripcion.copyWith(
+                      hintStyle: AppTextStyles.description.copyWith(
                         color: Colors.grey[500],
                         fontSize: 14,
                         letterSpacing: 0,
@@ -154,7 +154,7 @@ class AllergiesScreen extends StatelessWidget {
             leading: const Icon(Icons.check_circle_outline, color: AppColors.mainOrange),
             title: Text(
               'Ninguna',
-              style: AppTextStyles.descripcion.copyWith(
+              style: AppTextStyles.description.copyWith(
                 letterSpacing: 0,
                 fontSize: 16,
               ),

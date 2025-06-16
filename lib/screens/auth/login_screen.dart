@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 10),
                     Text(
                       'Motti Nut',
-                      style: AppTextStyles.titulo.copyWith(
+                      style: AppTextStyles.tittle.copyWith(
                         color: AppColors.mainOrange,
                         fontSize: 32,
                       ),

@@ -20,7 +20,7 @@ class BirthDateScreen extends StatelessWidget {
       children: [
         Text(
           'Fecha de Nacimiento',
-          style: AppTextStyles.subtitulo.copyWith(
+          style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
           ),
