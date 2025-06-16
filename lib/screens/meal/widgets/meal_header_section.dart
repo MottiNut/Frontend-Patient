@@ -34,7 +34,7 @@ class MealHeaderSection extends StatelessWidget {
             // Label del tipo de comida
             Text(
               mealDetail.mealTypeLabel,
-              style: AppTextStyles.acompanamientoTitulo.copyWith(
+              style: AppTextStyles.titleAccompaniment.copyWith(
                 color: AppColors.whiteBackground,
               ),
             ),
@@ -42,7 +42,7 @@ class MealHeaderSection extends StatelessWidget {
             // Nombre del platillo
             Text(
               mealDetail.meal.name,
-              style: AppTextStyles.titulo.copyWith(
+              style: AppTextStyles.tittle.copyWith(
                 color: AppColors.whiteBackground,
                 height: 1.3
               ),

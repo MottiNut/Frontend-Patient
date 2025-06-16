@@ -1,9 +1,10 @@
 // lib/screens/patient_home/widgets/daily_meals_widget.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
-import 'package:frontendpatient/models/nutrition_plan.dart';
-import 'package:frontendpatient/models/plan_detail.dart';
-import 'package:frontendpatient/screens/meal/meal_detail_screen.dart';
+import '../../../models/nutrition_plan/daily_plan.dart';
+import '../../../models/nutrition_plan/daily_plan_response.dart';
+import '../meal_screen.dart';
 
 class DailyMealsWidget extends StatelessWidget {
   final bool isLoading;
@@ -19,38 +20,51 @@ class DailyMealsWidget extends StatelessWidget {
     required this.onRetry,
   });
 
+  // ✅ Método para convertir el Map de meals a una lista de MealData
+  List<MealData> _getMealsFromPlan(DailyPlanResponse plan) {
+    final List<MealData> meals = [];
+
+    plan.meals.forEach((mealType, mealData) {
+      if (mealData is Map<String, dynamic>) {
+        meals.add(MealData.fromJson(mealType, mealData));
+      }
+    });
+
+    // Ordenar las comidas según el tipo
+    meals.sort((a, b) {
+      const order = {
+        'breakfast': 1,
+        'snack_morning': 2,
+        'lunch': 3,
+        'snack_afternoon': 4,
+        'dinner': 5,
+        'snacks': 6,
+        'snack_evening': 7,
+      };
+      return (order[a.mealType] ?? 99).compareTo(order[b.mealType] ?? 99);
+    });
+
+    return meals;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Título de la sección
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.restaurant_menu,
-                color: Colors.orange,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Comidas del Día',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ],
+        // Texto "Hoy,"
+        Text(
+          'Hoy,',
+          style: AppTextStyles.sectionHeaderPrefix.copyWith(color: Colors.black),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+        // Texto "Comidas del Día"
+        const Text(
+          'Comidas del Día',
+          style: AppTextStyles.titleMeals,
+        ),
+
+        const SizedBox(height: 12),
 
         // Contenido
         if (isLoading)
@@ -184,82 +198,116 @@ class DailyMealsWidget extends StatelessWidget {
   }
 
   Widget _buildMealsContent(BuildContext context) {
+    final meals = _getMealsFromPlan(todayPlan!);
+
     return Column(
       children: [
-        // Información del día
-        if (todayPlan != null) _buildDayInfo(),
-
         const SizedBox(height: 16),
 
         // Lista de comidas con nuevo estilo
-        ...todayPlan!.meals.map((meal) => _buildMealCard(context, meal)),
-
+        ...meals.map((meal) => _buildMealCard(context, meal)),
       ],
     );
   }
 
-  Widget _buildDayInfo() {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.orange.withOpacity(0.05),
-              Colors.orange.withOpacity(0.1),
-            ],
-          ),
-        ),
-        child: Row(
+
+  //Card de comidas
+  Widget _buildMealCard(BuildContext context, MealData meal) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MealScreen()),
+        );
+      },
+      child: SizedBox(
+        height: 140,
+        child: Stack(
+          alignment: Alignment.centerLeft,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.today,
-                color: Colors.orange,
-                size: 20,
+            // Card alineada a la izquierda con margen a la derecha
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: screenWidth * 0.85, // Ocupa el 83% del ancho
+                height: 130,
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: AppColors.mediumOrange,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 5,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 5), // Solo hacia abajo
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Ícono de comida
+                    Container(
+                      width: 90,
+                      height: 90,
+                      padding: const EdgeInsets.all(8),
+                      child: _getMealIcon(meal.mealType),
+                    ),
+                    const SizedBox(width: 12),
+                    // Línea vertical separadora
+                    Container(
+                      width: 2,
+                      height: 60,
+                      color: Colors.white,
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // Información
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            meal.mealTypeLabel,
+                            style: AppTextStyles.mealCardTitle.copyWith(color: Colors.white),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          if (meal.calories != null)
+                            Text(
+                              '${meal.calories} kcal',
+                              style: AppTextStyles.mealCardSubtitle.copyWith(color: Colors.white),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    todayPlan!.dayName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    todayPlan!.date,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              '${todayPlan!.meals.length} comidas',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.amber,
-                fontWeight: FontWeight.w600,
+
+            // Botón circular a la derecha, fuera de la card
+            Positioned(
+              right: -11,
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(4),
+                child: SvgPicture.asset(
+                  'assets/images/right-food-button.svg',
+                  width: 30,
+                  height: 30,
+                ),
               ),
             ),
           ],
@@ -268,117 +316,39 @@ class DailyMealsWidget extends StatelessWidget {
     );
   }
 
-  // ✅ NUEVO ESTILO DE CARD IMPLEMENTADO
-  Widget _buildMealCard(BuildContext context, PlanDetailResponse meal) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MealDetailScreen(mealDetail: meal),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        height: 100,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(0),
-          image: DecorationImage(
-            image: AssetImage('assets/images/meal-card.png'),
-          ),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Ícono del tipo de comida
-              Container(
-                width: 64,
-                height: 64,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: _getMealIcon(meal.mealType),
-              ),
-              const SizedBox(width: 12),
-
-              // Información de la comida
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      meal.meal.name,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      meal.mealTypeLabel,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Botón circular con flecha
-              Container(
-                width: 36,
-                height: 36,
-                decoration: const BoxDecoration(
-                  color: Colors.orange,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.arrow_forward,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
   Widget _getMealIcon(String mealType) {
     switch (mealType) {
       case 'breakfast':
-        return Image.asset(
-          'assets/images/breakfast-icon.png',
-          width: 50,
-          height: 24,
+        return SvgPicture.asset(
+          'assets/images/breakfast-icon.svg',
+          width: 36,
+          height: 36,
           fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.breakfast_dining, color: _getMealColor(mealType), size: 24);
-          },
+          placeholderBuilder: (context) => Icon(Icons.breakfast_dining, color: _getMealColor(mealType), size: 24),
         );
       case 'lunch':
-        return Icon(Icons.lunch_dining, color: _getMealColor(mealType), size: 24);
-      case 'dinner':
-        return Icon(Icons.dinner_dining, color: _getMealColor(mealType), size: 24);
-      case 'snack_morning':
-      case 'snack_afternoon':
-      case 'snack_evening':
-        return Image.asset(
-          'assets/images/breakfast-icon.png',
-          width: 24,
-          height: 24,
+        return SvgPicture.asset(
+          'assets/images/lunch-icon.svg',
+          width: 36,
+          height: 36,
           fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.breakfast_dining, color: _getMealColor(mealType), size: 24);
-          },
+          placeholderBuilder: (context) => Icon(Icons.lunch_dining, color: _getMealColor(mealType), size: 24),
+        );
+      case 'dinner':
+        return SvgPicture.asset(
+          'assets/images/dinner-icon.svg',
+          width: 36,
+          height: 36,
+          fit: BoxFit.contain,
+          placeholderBuilder: (context) => Icon(Icons.dinner_dining, color: _getMealColor(mealType), size: 24),
+        );
+      case 'snacks':
+        return SvgPicture.asset(
+          'assets/images/snack-icon.svg',
+          width: 36,
+          height: 36,
+          fit: BoxFit.contain,
+          placeholderBuilder: (context) => Icon(Icons.fastfood, color: _getMealColor(mealType), size: 24),
         );
       default:
         return Icon(Icons.restaurant, color: _getMealColor(mealType), size: 24);
@@ -386,21 +356,11 @@ class DailyMealsWidget extends StatelessWidget {
   }
 
   Color _getMealColor(String mealType) {
-    switch (mealType) {
-      case 'breakfast':
-        return AppColors.mainOrange;
-      case 'lunch':
-        return AppColors.mainOrange;
-      case 'dinner':
-        return AppColors.mainOrange;
-      case 'snack_morning':
-        return AppColors.mainOrange;
-      case 'snack_afternoon':
-        return AppColors.mainOrange;
-      case 'snack_evening':
-        return AppColors.mainOrange;
-      default:
-        return AppColors.mainOrange;
+    // Usar AppColors.mainOrange si está disponible, si no usar Colors.orange
+    try {
+      return AppColors.mainOrange;
+    } catch (e) {
+      return Colors.orange;
     }
   }
 }
