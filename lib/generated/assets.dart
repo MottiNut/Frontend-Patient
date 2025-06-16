@@ -2,29 +2,41 @@
 class Assets {
   Assets._();
 
+  static const String assetsImagesBreakfastIcon = 'assets/images/breakfast-icon.svg';
   static const String assetsImagesMealCard = 'assets/images/meal-card.png';
+  static const String assetsImagesVectorRetrocession = 'assets/images/vector-retrocession.svg';
+  static const String authAuthResponse = 'lib/models/auth/auth_response.dart';
+  static const String authLoginRequest = 'lib/models/auth/login_request.dart';
   static const String authLoginScreen = 'lib/screens/auth/login_screen.dart';
+  static const String authRegisterNutritionistRequest = 'lib/models/auth/register_nutritionist_request.dart';
+  static const String authRegisterPatientRequest = 'lib/models/auth/register_patient_request.dart';
   static const String authRegisterScreen = 'lib/screens/auth/register_screen.dart';
+  static const String authUpdateProfile = 'lib/models/auth/update_profile.dart';
   static const String fontsMontserratLight = 'assets/fonts/Montserrat-Light.ttf';
   static const String fontsMontserratMedium = 'assets/fonts/Montserrat-Medium.ttf';
   static const String fontsMontserratRegular = 'assets/fonts/Montserrat-Regular.ttf';
   static const String fontsMontserratSemiBold = 'assets/fonts/Montserrat-SemiBold.ttf';
   static const String generatedAssets = 'lib/generated/assets.dart';
   static const String homeHomeScreen = 'lib/screens/home/home_screen.dart';
+  static const String homeMealScreen = 'lib/screens/home/meal_screen.dart';
   static const String imagesBreakfastIcon = 'assets/images/breakfast-icon.png';
+  static const String imagesDinnerIcon = 'assets/images/dinner-icon.svg';
+  static const String imagesLunchIcon = 'assets/images/lunch-icon.svg';
   static const String imagesMealCard = 'assets/images/meal-card.png';
+  static const String imagesRightFoodButton = 'assets/images/right-food-button.svg';
+  static const String imagesSnackIcon = 'assets/images/snack-icon.svg';
+  static const String imagesVectorRetrocession = 'assets/images/vector-retrocession.svg';
   static const String libApp = 'lib/app.dart';
   static const String libMain = 'lib/main.dart';
   static const String mealMealDetailScreen = 'lib/screens/meal/meal_detail_screen.dart';
   static const String modelsApiResponseModels = 'lib/models/api_response_models.dart';
-  static const String modelsAuthModels = 'lib/models/auth_models.dart';
   static const String modelsEnums = 'lib/models/enums.dart';
   static const String modelsMeal = 'lib/models/meal.dart';
   static const String modelsMedicalRecord = 'lib/models/medical_record.dart';
-  static const String modelsNutritionPlan = 'lib/models/nutrition_plan.dart';
-  static const String modelsPatientModel = 'lib/models/patient_model.dart';
   static const String modelsPlanDetail = 'lib/models/plan_detail.dart';
-  static const String modelsUserModel = 'lib/models/user_model.dart';
+  static const String nutritionPlanDailyPlan = 'lib/models/nutrition_plan/daily_plan.dart';
+  static const String nutritionPlanDailyPlanResponse = 'lib/models/nutrition_plan/daily_plan_response.dart';
+  static const String nutritionPlanNutririonPlanModel = 'lib/models/nutrition_plan/nutririon_plan_model.dart';
   static const String perfilProfileScreen = 'lib/screens/perfil/profile_screen.dart';
   static const String providersAuthProvider = 'lib/providers/auth_provider.dart';
   static const String recipesRecipesScreen = 'lib/screens/recipes/recipes_screen.dart';
@@ -38,6 +50,11 @@ class Assets {
   static const String serviceNutritionPlanService = 'lib/service/nutrition_plan_service.dart';
   static const String servicePlanDetailService = 'lib/service/plan_detail_service.dart';
   static const String themesAppTheme = 'lib/core/themes/app_theme.dart';
+  static const String userNutritionistModel = 'lib/models/user/nutritionist_model.dart';
+  static const String userPatientModel = 'lib/models/user/patient_model.dart';
+  static const String userRole = 'lib/models/user/role.dart';
+  static const String userUserModel = 'lib/models/user/user_model.dart';
+  static const String utilsApiError = 'lib/utils/ApiError.dart';
   static const String utilsExceptions = 'lib/utils/exceptions.dart';
   static const String utilsExtensions = 'lib/utils/extensions.dart';
   static const String utilsValidators = 'lib/utils/validators.dart';
@@ -53,6 +70,11 @@ class Assets {
   static const String widgetsDescriptionSection = 'lib/screens/meal/widgets/description_section.dart';
   static const String widgetsDetailRowWidget = 'lib/screens/meal/widgets/detail_row_widget.dart';
   static const String widgetsDetailsSection = 'lib/screens/meal/widgets/details_section.dart';
+<<<<<<< Updated upstream
+=======
+  static const String widgetsErrorWidget = 'lib/screens/recipes/widgets/error_widget.dart';
+  static const String widgetsGenderScreen = 'lib/screens/auth/widgets/gender_screen.dart';
+>>>>>>> Stashed changes
   static const String widgetsHeightWeightScreen = 'lib/screens/auth/widgets/height_weight_screen.dart';
   static const String widgetsInstructionsSection = 'lib/screens/meal/widgets/instructions_section.dart';
   static const String widgetsMealHeaderSection = 'lib/screens/meal/widgets/meal_header_section.dart';

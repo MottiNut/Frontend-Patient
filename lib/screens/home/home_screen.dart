@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/models/nutrition_plan.dart';
 import 'package:frontendpatient/service/date_service.dart';
-import 'package:frontendpatient/service/plan_detail_service.dart';
 import 'package:frontendpatient/widgets/app_navigation_handler.dart';
 import 'package:frontendpatient/widgets/bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
+import '../../models/nutrition_plan/daily_plan_response.dart';
+import '../../models/nutrition_plan/nutririon_plan_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/routes/route_names.dart';
+import '../../service/nutrition_plan_service.dart';
 import 'widgets/welcome_header_widget.dart';
 import 'widgets/date_selector_widget.dart';
 import 'widgets/motivational_quote_widget.dart';
 import 'widgets/daily_meals_widget.dart';
-
 class PatientHomeScreen extends StatefulWidget {
   const PatientHomeScreen({super.key});
 
@@ -20,7 +20,7 @@ class PatientHomeScreen extends StatefulWidget {
 }
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
-  final PlanService _planService = PlanService();
+  final NutritionPlanService _planService = NutritionPlanService(); // ✅ Corregido el nombre del servicio
   final AppNavigationHandler _navigationHandler = AppNavigationHandler();
 
   bool isLoadingPlans = true;
@@ -41,10 +41,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         errorMessage = null;
       });
 
-      final meals = await _planService.getTodayMeals();
+      final dailyPlan = await _planService.getTodayPlan(); // ✅ Ahora retorna DailyPlanResponse directamente
 
       setState(() {
-        todayPlan = meals;
+        todayPlan = dailyPlan;
         isLoadingPlans = false;
       });
     } catch (e) {
@@ -64,11 +64,54 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     }
   }
 
+  // ✅ Nuevo método para cargar plan de una fecha específica
+  Future<void> _loadPlanForDate(int dayNumber) async {
+    try {
+      setState(() {
+        isLoadingPlans = true;
+        errorMessage = null;
+      });
+
+      final dailyPlan = await _planService.getDayPlan(dayNumber);
+
+      setState(() {
+        todayPlan = dailyPlan;
+        isLoadingPlans = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = e.toString();
+        isLoadingPlans = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar plan del día: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _onDateSelected(int index) {
     setState(() {
       selectedDateIndex = index;
     });
-    // Aquí puedes agregar lógica para cargar las comidas de la fecha seleccionada
+
+    // ✅ Cargar las comidas de la fecha seleccionada
+    // Asumiendo que index 0 = Lunes (día 1), index 1 = Martes (día 2), etc.
+    int dayNumber = index + 1;
+    if (dayNumber <= 7) {
+      _loadPlanForDate(dayNumber);
+    }
+  }
+
+  @override
+  void dispose() {
+    _planService.dispose(); // ✅ Limpiar recursos del servicio
+    super.dispose();
   }
 
   @override
@@ -123,13 +166,14 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  WelcomeHeaderWidget(patientName: patient.firstName),
+                  WelcomeHeaderWidget(patientName: patient.firstName, patientLastName: patient.lastName),
                   const SizedBox(height: 24),
 
                   DateSelectorWidget(
-                    daysToShow: 6, // Número de días a mostrar
+                    daysToShow: 7, // ✅ Mostrar toda la semana
+                    selectedIndex: selectedDateIndex, // ✅ Añadir índice seleccionado si el widget lo soporta
                     onDateSelected: (DateItem date) {
-                      // Manejar la selección de fecha
+                      // ✅ Mejorar el manejo de selección de fecha
                       print('Seleccionaste: ${date.day} de ${date.month}');
                     },
                   ),

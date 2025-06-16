@@ -1,4 +1,3 @@
-// lib/models/meal_models.dart
 class MealCreate {
   final String name;
   final String description;

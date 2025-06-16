@@ -14,7 +14,7 @@ class SectionTitleWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: AppTextStyles.subtitulo,
+      style: AppTextStyles.subtitle,
     );
   }
 }

@@ -13,28 +13,36 @@ class AppColors {
 }
 
 class AppTextStyles {
-  static const TextStyle saludoPerfil = TextStyle(
+
+  static const TextStyle sectionHeaderPrefix = TextStyle(
     fontFamily: 'Montserrat',
-    fontWeight: FontWeight.w400,
-    fontSize: 37.21,
+    fontWeight: FontWeight.w300,
+    fontSize: 20,
     height: 1.2,
   );
 
-  static const TextStyle titulo = TextStyle(
+  static const TextStyle profileGreeting = TextStyle(
+    fontFamily: 'Montserrat',
+    fontWeight: FontWeight.w400,
+    fontSize: 35,
+    height: 1.2,
+  );
+
+  static const TextStyle tittle = TextStyle(
     fontFamily: 'Montserrat',
     fontWeight: FontWeight.w500,
     fontSize: 29,
     height: 0.42,
   );
 
-  static const TextStyle acompanamientoTitulo = TextStyle(
+  static const TextStyle titleAccompaniment = TextStyle(
     fontFamily: 'Montserrat',
     fontWeight: FontWeight.w300,
     fontSize: 22,
     height: 1.5, // Aumenta el espacio entre líneas
   );
 
-  static const TextStyle subtitulo = TextStyle(
+  static const TextStyle subtitle = TextStyle(
     fontFamily: 'Montserrat',
     fontWeight: FontWeight.w600,
     fontSize: 20,
@@ -42,7 +50,7 @@ class AppTextStyles {
     letterSpacing: 2,
   );
 
-  static const TextStyle descripcion = TextStyle(
+  static const TextStyle description = TextStyle(
     fontFamily: 'Montserrat',
     fontWeight: FontWeight.w400,
     fontSize: 18,
@@ -56,4 +64,29 @@ class AppTextStyles {
     fontSize: 15,
     height: 1.2,
   );
+
+  static const TextStyle mealCardTitle = TextStyle(
+    fontFamily: 'Montserrat',
+    fontWeight: FontWeight.w600,
+    fontSize: 20,
+    height: 1.2,
+    letterSpacing: 0.02,
+  );
+
+  static const TextStyle mealCardSubtitle = TextStyle(
+    fontFamily: 'Montserrat',
+    fontWeight: FontWeight.w400,
+    fontSize: 16,
+    height: 1.2,
+    letterSpacing: 0.02,
+  );
+
+  static const TextStyle titleMeals = TextStyle(
+    fontFamily: 'Montserrat',
+    fontWeight: FontWeight.w300,
+    fontSize: 30,
+    height: 0.50,
+  );
+
+
 }
