@@ -48,7 +48,6 @@ class Assets {
   static const String serviceMealService = 'lib/service/meal_service.dart';
   static const String serviceMedicalRecordService = 'lib/service/medical_record_service.dart';
   static const String serviceNutritionPlanService = 'lib/service/nutrition_plan_service.dart';
-  static const String servicePlanDetailService = 'lib/service/plan_detail_service.dart';
   static const String themesAppTheme = 'lib/core/themes/app_theme.dart';
   static const String userNutritionistModel = 'lib/models/user/nutritionist_model.dart';
   static const String userPatientModel = 'lib/models/user/patient_model.dart';
