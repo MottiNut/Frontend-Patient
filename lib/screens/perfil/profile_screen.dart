@@ -473,7 +473,7 @@ class _EditPatientProfileDialogState extends State<EditPatientProfileDialog> {
   String? _selectedGender;
   bool _isLoading = false;
 
-  final List<String> _genderOptions = ['male', 'female'];
+  final List<String> _genderOptions = ['Masculino', 'Femenino'];
 
   @override
   void initState() {

@@ -58,8 +58,8 @@ class GenderScreen extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
-        _buildGenderOption('Hombre', 'male', Icons.male),
-        _buildGenderOption('Mujer', 'female', Icons.female),
+        _buildGenderOption('Hombre', 'Masculino', Icons.male),
+        _buildGenderOption('Mujer', 'Femenino', Icons.female),
       ],
     );
   }

@@ -8,6 +8,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/nutrition_plan/daily_plan_response.dart';
 import '../models/nutrition_plan/nutririon_plan_model.dart';
 import '../utils/ApiError.dart';
+// Excepción personalizada para manejar casos específicos
+class NoPlanFoundException implements Exception {
+  final String message;
+  NoPlanFoundException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class NutritionPlanService {
   static const String baseUrl = 'http://10.0.2.2:5000/api/bff/patient/nutrition-plans';
@@ -77,8 +85,7 @@ class NutritionPlanService {
       throw Exception('Error respondiendo al plan: $e');
     }
   }
-
-  // Obtener plan del día de hoy
+  // Obtener plan del día de hoy - Modificado para manejar 404
   Future<DailyPlanResponse> getTodayPlan() async {
     try {
       final headers = await _getHeaders();
@@ -89,11 +96,17 @@ class NutritionPlanService {
 
       if (response.statusCode == 200) {
         return DailyPlanResponse.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 404) {
+        // Manejar específicamente el error 404
+        throw NoPlanFoundException('No tienes comidas programadas para hoy');
       } else {
         final error = ApiError.fromJson(json.decode(response.body));
         throw Exception(error.message);
       }
     } catch (e) {
+      if (e is NoPlanFoundException) {
+        rethrow; // Re-lanzar la excepción personalizada
+      }
       throw Exception('Error obteniendo plan de hoy: $e');
     }
   }

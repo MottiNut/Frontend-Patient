@@ -20,13 +20,14 @@ class PatientHomeScreen extends StatefulWidget {
 }
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
-  final NutritionPlanService _planService = NutritionPlanService(); // ✅ Corregido el nombre del servicio
+  final NutritionPlanService _planService = NutritionPlanService();
   final AppNavigationHandler _navigationHandler = AppNavigationHandler();
 
   bool isLoadingPlans = true;
   String? errorMessage;
   DailyPlanResponse? todayPlan;
   int selectedDateIndex = 2;
+  bool isNoPlanFound = false; // Nueva variable para manejar cuando no hay plan
 
   @override
   void initState() {
@@ -39,37 +40,52 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       setState(() {
         isLoadingPlans = true;
         errorMessage = null;
+        isNoPlanFound = false;
       });
 
-      final dailyPlan = await _planService.getTodayPlan(); // ✅ Ahora retorna DailyPlanResponse directamente
+      final dailyPlan = await _planService.getTodayPlan();
 
       setState(() {
         todayPlan = dailyPlan;
         isLoadingPlans = false;
+        isNoPlanFound = false;
       });
     } catch (e) {
       setState(() {
-        errorMessage = e.toString();
         isLoadingPlans = false;
-      });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar comidas: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+        // Verificar si es la excepción personalizada para plan no encontrado
+        if (e is NoPlanFoundException) {
+          isNoPlanFound = true;
+          errorMessage = e.message;
+          todayPlan = null;
+          // No mostrar SnackBar para este caso
+        } else {
+          isNoPlanFound = false;
+          errorMessage = e.toString();
+          todayPlan = null;
+
+          // Solo mostrar SnackBar para errores reales
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error al cargar comidas: ${e.toString()}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      });
     }
   }
 
-  // ✅ Nuevo método para cargar plan de una fecha específica
+  // Método para cargar plan de una fecha específica
   Future<void> _loadPlanForDate(int dayNumber) async {
     try {
       setState(() {
         isLoadingPlans = true;
         errorMessage = null;
+        isNoPlanFound = false;
       });
 
       final dailyPlan = await _planService.getDayPlan(dayNumber);
@@ -77,21 +93,34 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       setState(() {
         todayPlan = dailyPlan;
         isLoadingPlans = false;
+        isNoPlanFound = false;
       });
     } catch (e) {
       setState(() {
-        errorMessage = e.toString();
         isLoadingPlans = false;
-      });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar plan del día: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+        // Verificar si es la excepción personalizada para plan no encontrado
+        if (e is NoPlanFoundException) {
+          isNoPlanFound = true;
+          errorMessage = e.message;
+          todayPlan = null;
+          // No mostrar SnackBar para este caso
+        } else {
+          isNoPlanFound = false;
+          errorMessage = e.toString();
+          todayPlan = null;
+
+          // Solo mostrar SnackBar para errores reales
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error al cargar plan del día: ${e.toString()}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      });
     }
   }
 
@@ -100,7 +129,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       selectedDateIndex = index;
     });
 
-    // ✅ Cargar las comidas de la fecha seleccionada
+    // Cargar las comidas de la fecha seleccionada
     // Asumiendo que index 0 = Lunes (día 1), index 1 = Martes (día 2), etc.
     int dayNumber = index + 1;
     if (dayNumber <= 7) {
@@ -110,7 +139,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   @override
   void dispose() {
-    _planService.dispose(); // ✅ Limpiar recursos del servicio
+    _planService.dispose();
     super.dispose();
   }
 
@@ -170,10 +199,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   const SizedBox(height: 24),
 
                   DateSelectorWidget(
-                    daysToShow: 7, // ✅ Mostrar toda la semana
-                    selectedIndex: selectedDateIndex, // ✅ Añadir índice seleccionado si el widget lo soporta
+                    daysToShow: 7,
+                    selectedIndex: selectedDateIndex,
                     onDateSelected: (DateItem date) {
-                      // ✅ Mejorar el manejo de selección de fecha
                       print('Seleccionaste: ${date.day} de ${date.month}');
                     },
                   ),
@@ -182,12 +210,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   const MotivationalQuoteWidget(),
                   const SizedBox(height: 24),
 
-                  DailyMealsWidget(
-                    isLoading: isLoadingPlans,
-                    errorMessage: errorMessage,
-                    todayPlan: todayPlan,
-                    onRetry: _loadTodayMeals,
-                  ),
+                  // Widget personalizado para mostrar el estado del plan
+                  _buildMealsSection(),
 
                   const SizedBox(height: 32),
                 ],
@@ -200,6 +224,75 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         currentIndex: _navigationHandler.currentIndex,
         onTap: (index) => _navigationHandler.handleNavigation(context, index),
       ),
+    );
+  }
+
+  // Nuevo widget para manejar los diferentes estados
+  Widget _buildMealsSection() {
+    if (isLoadingPlans) {
+      return DailyMealsWidget(
+        isLoading: true,
+        errorMessage: null,
+        todayPlan: null,
+        onRetry: _loadTodayMeals,
+      );
+    }
+
+    if (isNoPlanFound) {
+      // Widget personalizado para mostrar mensaje amigable cuando no hay plan
+      return Container(
+        padding: const EdgeInsets.all(24.0),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.restaurant_menu_outlined,
+              size: 48,
+              color: Colors.blue.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              errorMessage ?? 'No tienes comidas programadas',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.blue.shade700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Tu nutricionista aún no ha creado un plan para este día. ¡Mantente atento!',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.blue.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _loadTodayMeals,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Actualizar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade400,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return DailyMealsWidget(
+      isLoading: false,
+      errorMessage: errorMessage,
+      todayPlan: todayPlan,
+      onRetry: _loadTodayMeals,
     );
   }
 }

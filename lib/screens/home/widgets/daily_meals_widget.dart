@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
+import 'package:frontendpatient/screens/meal/meal_detail_screen.dart';
 import '../../../models/nutrition_plan/daily_plan.dart';
 import '../../../models/nutrition_plan/daily_plan_response.dart';
-import '../meal_screen.dart';
 
 class DailyMealsWidget extends StatelessWidget {
   final bool isLoading;
@@ -219,7 +219,7 @@ class DailyMealsWidget extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const MealScreen()),
+          MaterialPageRoute(builder: (context) => MealDetailScreen(mealDetail: meal)),
         );
       },
       child: SizedBox(
@@ -251,8 +251,8 @@ class DailyMealsWidget extends StatelessWidget {
                   children: [
                     // Ícono de comida
                     Container(
-                      width: 90,
-                      height: 90,
+                      width: 80,
+                      height: 80,
                       padding: const EdgeInsets.all(8),
                       child: _getMealIcon(meal.mealType),
                     ),

@@ -18,7 +18,6 @@ class Assets {
   static const String fontsMontserratSemiBold = 'assets/fonts/Montserrat-SemiBold.ttf';
   static const String generatedAssets = 'lib/generated/assets.dart';
   static const String homeHomeScreen = 'lib/screens/home/home_screen.dart';
-  static const String homeMealScreen = 'lib/screens/home/meal_screen.dart';
   static const String imagesBreakfastIcon = 'assets/images/breakfast-icon.png';
   static const String imagesDinnerIcon = 'assets/images/dinner-icon.svg';
   static const String imagesLunchIcon = 'assets/images/lunch-icon.svg';

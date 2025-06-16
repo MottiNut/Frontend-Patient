@@ -65,13 +65,7 @@ class MealData {
       case 'dinner':
         return 'Cena';
       case 'snacks':
-        return 'Colaciones';
-      case 'snack_morning':
-        return 'Colación Mañana';
-      case 'snack_afternoon':
-        return 'Colación Tarde';
-      case 'snack_evening':
-        return 'Colación Noche';
+        return 'Snack';
       default:
         return 'Comida';
     }

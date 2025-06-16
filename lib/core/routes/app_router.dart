@@ -32,17 +32,11 @@ class AppRouter {
           settings: settings,
         );
 
-      case RouteNames.mealDetail:
-        final mealDetail = settings.arguments as PlanDetailResponse;
+      case RouteNames.recipes:
         return MaterialPageRoute(
-          builder: (context) => MealDetailScreen(mealDetail: mealDetail),
+          builder: (_) => const RecipesScreen(),
+          settings: settings,
         );
-
-      //case RouteNames.recipes:
-      //  return MaterialPageRoute(
-      //    builder: (_) => const RecipesScreen(),
-      //    settings: settings,
-      //  );
 
       case RouteNames.profile:
         return MaterialPageRoute(

@@ -35,6 +35,14 @@ class AppTextStyles {
     height: 0.42,
   );
 
+  static const TextStyle shortDescription = TextStyle(
+    fontFamily: 'Montserrat',
+    fontWeight: FontWeight.w400,
+    fontSize: 16,
+    height: 1.20,
+    letterSpacing: 0.32
+  );
+
   static const TextStyle titleAccompaniment = TextStyle(
     fontFamily: 'Montserrat',
     fontWeight: FontWeight.w300,
@@ -45,7 +53,7 @@ class AppTextStyles {
   static const TextStyle subtitle = TextStyle(
     fontFamily: 'Montserrat',
     fontWeight: FontWeight.w600,
-    fontSize: 20,
+    fontSize: 25,
     height: 1.2,
     letterSpacing: 2,
   );
