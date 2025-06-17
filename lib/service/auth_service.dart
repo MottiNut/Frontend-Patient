@@ -144,7 +144,7 @@ class AuthService {
         throw Exception(error.message);
       }
     } catch (e) {
-      throw Exception('Error obteniendo perfil: $e');
+      throw Exception('Error obteniendo profile: $e');
     }
   }
 
@@ -169,7 +169,7 @@ class AuthService {
         throw Exception(error.message);
       }
     } catch (e) {
-      throw Exception('Error actualizando perfil: $e');
+      throw Exception('Error actualizando profile: $e');
     }
   }
 
@@ -194,7 +194,7 @@ class AuthService {
         throw Exception(error.message);
       }
     } catch (e) {
-      throw Exception('Error actualizando perfil: $e');
+      throw Exception('Error actualizando profile: $e');
     }
   }
 

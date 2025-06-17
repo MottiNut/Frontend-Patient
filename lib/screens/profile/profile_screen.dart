@@ -34,7 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null || user.role != Role.patient) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Error: No se puede editar este perfil'),
+          content: Text('Error: No se puede editar este profile'),
           backgroundColor: Colors.red,
         ),
       );
@@ -78,6 +78,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
+      automaticallyImplyLeading: false,
       title: const Text('Mi Perfil'),
       backgroundColor: Colors.orange,
       foregroundColor: Colors.white,
@@ -157,8 +158,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     ),
     bottomNavigationBar: CustomBottomNavBar(
-      currentIndex: 2,
-      onTap: (index) => _navigationHandler.handleNavigation(context, index),
+      currentIndex: AppNavigationHandler.currentIndex, // Usar el handler
+      onTap: (index) => AppNavigationHandler.handleNavigation(context, index),
     ),
   );
 
@@ -171,7 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
           Text(
-            'Error al cargar el perfil',
+            'Error al cargar el profile',
             style: Theme.of(context).textTheme.headlineSmall,
             textAlign: TextAlign.center,
           ),
@@ -478,8 +479,9 @@ class _EditPatientProfileDialogState extends State<EditPatientProfileDialog> {
   @override
   void initState() {
     super.initState();
-    _initializeControllers();
+    AppNavigationHandler.setCurrentIndex(3); // Establecer índice correcto
   }
+
 
   void _initializeControllers() {
     _firstNameController = TextEditingController(text: widget.patient.firstName);
@@ -545,7 +547,7 @@ class _EditPatientProfileDialogState extends State<EditPatientProfileDialog> {
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authProvider.errorMessage ?? 'Error al actualizar el perfil'),
+            content: Text(authProvider.errorMessage ?? 'Error al actualizar el profile'),
             backgroundColor: Colors.red,
           ),
         );

@@ -1,131 +1,105 @@
-// widgets/day_plan_widget.dart
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/models/plan_detail.dart';
-import 'meal_type_section_widget.dart';
+import '../../../models/nutrition_plan/daily_plan_response.dart';
+import 'macronutrients_card.dart';
+import 'meal_card.dart';
 
 class DayPlanWidget extends StatelessWidget {
-  final String dayName;
-  final List<PlanDetailResponse> meals;
+  final DailyPlanResponse dailyPlan;
 
   const DayPlanWidget({
     super.key,
-    required this.dayName,
-    required this.meals,
+    required this.dailyPlan,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (meals.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.restaurant_menu,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No hay comidas programadas para $dayName',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Organizar las comidas por tipo
-    final mealsByType = <String, List<PlanDetailResponse>>{};
-    for (final meal in meals) {
-      final type = meal.mealType;
-      if (!mealsByType.containsKey(type)) {
-        mealsByType[type] = [];
-      }
-      mealsByType[type]!.add(meal);
-    }
-
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Información del día
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today,
-                    color: Colors.orange[600],
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          dayName,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '${meals.length} comidas programadas',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Calorías totales del día
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${_calculateDailyCalories(meals)} kcal',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange[800],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _buildDayHeader(),
           const SizedBox(height: 16),
-
-          // Lista de comidas organizadas por tipo
-          ...mealsByType.entries.map((entry) {
-            return MealTypeSectionWidget(
-              mealType: entry.key,
-              meals: entry.value,
-            );
-          }).toList(),
+          MacronutrientsCard(macronutrients: dailyPlan.macronutrients),
+          const SizedBox(height: 16),
+          ..._buildMealCards(),
         ],
       ),
     );
   }
 
-  int _calculateDailyCalories(List<PlanDetailResponse> meals) {
-    return meals.fold(0, (total, meal) => total + meal.meal.calories);
+  Widget _buildDayHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.orange.shade400, Colors.orange.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            dailyPlan.dayName,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            _formatDate(dailyPlan.date),
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.white70,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.local_fire_department, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '${dailyPlan.totalCalories} kcal',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildMealCards() {
+    return dailyPlan.meals.entries.map((entry) {
+      final mealType = entry.key;
+      final mealData = entry.value as Map<String, dynamic>;
+
+      return MealCard(
+        mealType: mealType,
+        mealData: mealData,
+      );
+    }).toList();
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      const months = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      ];
+      return '${date.day} de ${months[date.month - 1]}';
+    } catch (e) {
+      return dateString;
+    }
   }
 }

@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/nutrition_plan/daily_plan_response.dart';
 import '../models/nutrition_plan/nutririon_plan_model.dart';
 import '../utils/ApiError.dart';
-// Excepción personalizada para manejar casos específicos
 class NoPlanFoundException implements Exception {
   final String message;
   NoPlanFoundException(this.message);
@@ -39,6 +38,16 @@ class NutritionPlanService {
     };
   }
 
+  // Método auxiliar para manejar respuestas JSON de forma segura
+  dynamic _safeJsonDecode(String responseBody) {
+    try {
+      return json.decode(responseBody);
+    } catch (e) {
+      // Si no se puede decodificar como JSON, devolver el string original
+      return responseBody;
+    }
+  }
+
   // Obtener planes pendientes de aceptación por el paciente
   Future<List<PendingPatientAcceptance>> getPendingAcceptancePlans() async {
     try {
@@ -49,42 +58,79 @@ class NutritionPlanService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> jsonList = json.decode(response.body);
-        return jsonList
-            .map((json) => PendingPatientAcceptance.fromJson(json))
-            .toList();
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is List) {
+          return decodedBody
+              .map((json) => PendingPatientAcceptance.fromJson(json))
+              .toList();
+        } else {
+          throw Exception('Respuesta inesperada del servidor');
+        }
       } else {
-        final error = ApiError.fromJson(json.decode(response.body));
-        throw Exception(error.message);
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          final error = ApiError.fromJson(decodedBody);
+          throw Exception(error.message);
+        } else {
+          throw Exception('Error ${response.statusCode}: ${response.reasonPhrase ?? 'Error desconocido'}');
+        }
       }
     } catch (e) {
       throw Exception('Error obteniendo planes pendientes: $e');
     }
   }
 
-  // Responder a un plan (aceptar o rechazar)
-  Future<NutritionPlanResponse> respondToPlan(
+  // Responder a un plan (aceptar o rechazar) - MÉTODO CORREGIDO
+  Future<String> respondToPlan(
       int planId,
       PatientPlanResponseRequest request,
       ) async {
     try {
       final headers = await _getHeaders();
+
+      print('Enviando solicitud a: $baseUrl/$planId/respond');
+      print('Cuerpo: ${json.encode(request.toJson())}');
+
       final response = await _client.post(
         Uri.parse('$baseUrl/$planId/respond'),
         headers: headers,
         body: json.encode(request.toJson()),
       );
 
-      if (response.statusCode == 200) {
-        return NutritionPlanResponse.fromJson(json.decode(response.body));
+      print('Código de respuesta: ${response.statusCode}');
+      print('Cuerpo de respuesta: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // En lugar de intentar parsear como JSON, devolver el mensaje directamente
+        final decodedBody = _safeJsonDecode(response.body);
+
+        if (decodedBody is Map<String, dynamic>) {
+          // Si es un objeto JSON, extraer el mensaje
+          return decodedBody['message'] ?? 'Operación completada exitosamente';
+        } else if (decodedBody is String) {
+          // Si es un string, devolverlo directamente
+          return decodedBody;
+        } else {
+          return 'Operación completada exitosamente';
+        }
       } else {
-        final error = ApiError.fromJson(json.decode(response.body));
-        throw Exception(error.message);
+        // Manejar errores
+        final decodedBody = _safeJsonDecode(response.body);
+
+        if (decodedBody is Map<String, dynamic>) {
+          final error = ApiError.fromJson(decodedBody);
+          throw Exception(error.message);
+        } else if (decodedBody is String) {
+          throw Exception(decodedBody);
+        } else {
+          throw Exception('Error ${response.statusCode}: ${response.reasonPhrase ?? 'Error desconocido'}');
+        }
       }
     } catch (e) {
       throw Exception('Error respondiendo al plan: $e');
     }
   }
+
   // Obtener plan del día de hoy - Modificado para manejar 404
   Future<DailyPlanResponse> getTodayPlan() async {
     try {
@@ -95,17 +141,26 @@ class NutritionPlanService {
       );
 
       if (response.statusCode == 200) {
-        return DailyPlanResponse.fromJson(json.decode(response.body));
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          return DailyPlanResponse.fromJson(decodedBody);
+        } else {
+          throw Exception('Respuesta inesperada del servidor');
+        }
       } else if (response.statusCode == 404) {
-        // Manejar específicamente el error 404
         throw NoPlanFoundException('No tienes comidas programadas para hoy');
       } else {
-        final error = ApiError.fromJson(json.decode(response.body));
-        throw Exception(error.message);
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          final error = ApiError.fromJson(decodedBody);
+          throw Exception(error.message);
+        } else {
+          throw Exception('Error ${response.statusCode}: ${response.reasonPhrase ?? 'Error desconocido'}');
+        }
       }
     } catch (e) {
       if (e is NoPlanFoundException) {
-        rethrow; // Re-lanzar la excepción personalizada
+        rethrow;
       }
       throw Exception('Error obteniendo plan de hoy: $e');
     }
@@ -127,10 +182,20 @@ class NutritionPlanService {
       );
 
       if (response.statusCode == 200) {
-        return DailyPlanResponse.fromJson(json.decode(response.body));
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          return DailyPlanResponse.fromJson(decodedBody);
+        } else {
+          throw Exception('Respuesta inesperada del servidor');
+        }
       } else {
-        final error = ApiError.fromJson(json.decode(response.body));
-        throw Exception(error.message);
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          final error = ApiError.fromJson(decodedBody);
+          throw Exception(error.message);
+        } else {
+          throw Exception('Error ${response.statusCode}: ${response.reasonPhrase ?? 'Error desconocido'}');
+        }
       }
     } catch (e) {
       throw Exception('Error obteniendo plan del día: $e');
@@ -153,10 +218,20 @@ class NutritionPlanService {
       );
 
       if (response.statusCode == 200) {
-        return WeeklyPlanResponse.fromJson(json.decode(response.body));
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          return WeeklyPlanResponse.fromJson(decodedBody);
+        } else {
+          throw Exception('Respuesta inesperada del servidor');
+        }
       } else {
-        final error = ApiError.fromJson(json.decode(response.body));
-        throw Exception(error.message);
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          final error = ApiError.fromJson(decodedBody);
+          throw Exception(error.message);
+        } else {
+          throw Exception('Error ${response.statusCode}: ${response.reasonPhrase ?? 'Error desconocido'}');
+        }
       }
     } catch (e) {
       throw Exception('Error obteniendo plan semanal: $e');
@@ -173,21 +248,30 @@ class NutritionPlanService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> jsonList = json.decode(response.body);
-        return jsonList
-            .map((json) => WeeklyPlanResponse.fromJson(json))
-            .toList();
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is List) {
+          return decodedBody
+              .map((json) => WeeklyPlanResponse.fromJson(json))
+              .toList();
+        } else {
+          throw Exception('Respuesta inesperada del servidor');
+        }
       } else {
-        final error = ApiError.fromJson(json.decode(response.body));
-        throw Exception(error.message);
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          final error = ApiError.fromJson(decodedBody);
+          throw Exception(error.message);
+        } else {
+          throw Exception('Error ${response.statusCode}: ${response.reasonPhrase ?? 'Error desconocido'}');
+        }
       }
     } catch (e) {
       throw Exception('Error obteniendo historial de planes: $e');
     }
   }
 
-  // Métodos de conveniencia para las acciones del paciente
-  Future<NutritionPlanResponse> acceptPlan(int planId, {String? feedback}) async {
+  // Métodos de conveniencia para las acciones del paciente - ACTUALIZADOS
+  Future<String> acceptPlan(int planId, {String? feedback}) async {
     final request = PatientPlanResponseRequest(
       action: PatientAction.accept.value,
       feedback: feedback,
@@ -195,7 +279,7 @@ class NutritionPlanService {
     return respondToPlan(planId, request);
   }
 
-  Future<NutritionPlanResponse> rejectPlan(int planId, {String? feedback}) async {
+  Future<String> rejectPlan(int planId, {String? feedback}) async {
     final request = PatientPlanResponseRequest(
       action: PatientAction.reject.value,
       feedback: feedback,

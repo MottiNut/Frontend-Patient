@@ -22,44 +22,42 @@ class DateService {
     return dates;
   }
 
-  /// Verifica si dos fechas son el mismo día
-  static bool _isSameDay(DateTime date1, DateTime date2) {
-    return date1.year == date2.year &&
-        date1.month == date2.month &&
-        date1.day == date2.day;
+  /// Genera las fechas de la semana actual de lunes a domingo
+  static List<DateItem> getCurrentWeekDates() {
+    final now = DateTime.now();
+    final mondayOfWeek = now.subtract(Duration(days: now.weekday - 1));
+
+    return List.generate(7, (index) {
+      final date = mondayOfWeek.add(Duration(days: index));
+      return DateItem(
+        day: date.day.toString(),
+        dayName: _getDayName(date.weekday),
+        month: _getMonthName(date.month),
+        isToday: _isSameDay(date, now),
+        fullDate: date, // Si tu DateItem tiene este campo
+      );
+    });
   }
 
   /// Obtiene el nombre del día de la semana
   static String _getDayName(int weekday) {
-    switch (weekday) {
-      case DateTime.monday: return 'Lun';
-      case DateTime.tuesday: return 'Mar';
-      case DateTime.wednesday: return 'Mié';
-      case DateTime.thursday: return 'Jue';
-      case DateTime.friday: return 'Vie';
-      case DateTime.saturday: return 'Sáb';
-      case DateTime.sunday: return 'Dom';
-      default: return '';
-    }
+    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    return days[weekday - 1];
   }
 
   /// Obtiene el nombre del mes
   static String _getMonthName(int month) {
-    switch (month) {
-      case 1: return 'Ene';
-      case 2: return 'Feb';
-      case 3: return 'Mar';
-      case 4: return 'Abr';
-      case 5: return 'May';
-      case 6: return 'Jun';
-      case 7: return 'Jul';
-      case 8: return 'Ago';
-      case 9: return 'Sep';
-      case 10: return 'Oct';
-      case 11: return 'Nov';
-      case 12: return 'Dic';
-      default: return '';
-    }
+    const months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return months[month - 1];
+  }
+
+  static bool _isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 }
 

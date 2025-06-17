@@ -52,7 +52,7 @@ class AuthProvider with ChangeNotifier {
       final request = LoginRequest(email: email, password: password);
       final response = await _authService.login(request);
 
-      // Obtener el perfil completo del usuario
+      // Obtener el profile completo del usuario
       _currentUser = await _authService.getCurrentUser();
       _setState(AuthState.authenticated);
 
@@ -181,7 +181,7 @@ class AuthProvider with ChangeNotifier {
       _setState(AuthState.authenticated);
       return true;
     } catch (e) {
-      _setError('Error actualizando perfil: $e');
+      _setError('Error actualizando profile: $e');
       return false;
     }
   }
@@ -200,7 +200,7 @@ class AuthProvider with ChangeNotifier {
       _setState(AuthState.authenticated);
       return true;
     } catch (e) {
-      _setError('Error actualizando perfil: $e');
+      _setError('Error actualizando profile: $e');
       return false;
     }
   }

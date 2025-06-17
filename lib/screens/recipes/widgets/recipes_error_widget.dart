@@ -1,8 +1,7 @@
-// widgets/error_widget.dart
 import 'package:flutter/material.dart';
 
 class RecipesErrorWidget extends StatelessWidget {
-  final String? errorMessage;
+  final String errorMessage;
   final VoidCallback onRetry;
 
   const RecipesErrorWidget({
@@ -15,13 +14,13 @@ class RecipesErrorWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.error_outline,
-              size: 64,
+              size: 80,
               color: Colors.red[400],
             ),
             const SizedBox(height: 16),
@@ -29,18 +28,18 @@ class RecipesErrorWidget extends StatelessWidget {
               'Error al cargar el plan',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
                 color: Colors.red[600],
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              errorMessage ?? 'Ha ocurrido un error inesperado',
+              errorMessage,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
-              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(

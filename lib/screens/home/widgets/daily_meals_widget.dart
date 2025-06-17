@@ -20,7 +20,7 @@ class DailyMealsWidget extends StatelessWidget {
     required this.onRetry,
   });
 
-  // ✅ Método para convertir el Map de meals a una lista de MealData
+  //Método para convertir el Map de meals a una lista de MealData
   List<MealData> _getMealsFromPlan(DailyPlanResponse plan) {
     final List<MealData> meals = [];
 

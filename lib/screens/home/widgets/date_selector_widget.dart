@@ -4,15 +4,13 @@ import 'package:frontendpatient/core/themes/app_theme.dart';
 import 'package:frontendpatient/service/date_service.dart';
 
 class DateSelectorWidget extends StatefulWidget {
-  final Function(DateItem) onDateSelected;
   final int daysToShow;
-  final int? selectedIndex;
+  final bool isReadOnly;
 
   const DateSelectorWidget({
     super.key,
-    required this.onDateSelected,
-    this.daysToShow = 6,
-    this.selectedIndex,
+    this.daysToShow = 7,
+    this.isReadOnly = false,
   });
 
   @override
@@ -21,7 +19,7 @@ class DateSelectorWidget extends StatefulWidget {
 
 class _DateSelectorWidgetState extends State<DateSelectorWidget> {
   late List<DateItem> dates;
-  int? selectedIndex;
+  int? todayIndex;
 
   @override
   void initState() {
@@ -30,27 +28,47 @@ class _DateSelectorWidgetState extends State<DateSelectorWidget> {
   }
 
   void _loadDates() {
-    dates = DateService.getWeekDates(days: widget.daysToShow);
+    // Generar fechas de lunes a domingo de la semana actual
+    dates = _generateCurrentWeekDates();
 
-    // Si se pasó un índice seleccionado por parámetro, úsalo
-    if (widget.selectedIndex != null &&
-        widget.selectedIndex! >= 0 &&
-        widget.selectedIndex! < dates.length) {
-      selectedIndex = widget.selectedIndex!;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onDateSelected(dates[selectedIndex!]);
-      });
-      return;
-    }
+    // Buscar el índice del día actual
+    todayIndex = dates.indexWhere((date) => date.isToday);
+  }
 
-    // Si no, busca el día actual
-    final todayIndex = dates.indexWhere((date) => date.isToday);
-    if (todayIndex != -1) {
-      selectedIndex = todayIndex;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onDateSelected(dates[todayIndex]);
-      });
-    }
+  /// Genera las fechas de la semana actual de lunes a domingo
+  List<DateItem> _generateCurrentWeekDates() {
+    final now = DateTime.now();
+    final mondayOfWeek = now.subtract(Duration(days: now.weekday - 1));
+
+    return List.generate(7, (index) {
+      final date = mondayOfWeek.add(Duration(days: index));
+      return DateItem(
+        day: date.day.toString(),
+        dayName: _getDayName(date.weekday),
+        month: _getMonthName(date.month),
+        isToday: _isSameDay(date, now),
+        fullDate: date,
+      );
+    });
+  }
+
+  String _getDayName(int weekday) {
+    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    return days[weekday - 1];
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return months[month - 1];
+  }
+
+  bool _isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 
   @override
@@ -74,7 +92,7 @@ class _DateSelectorWidgetState extends State<DateSelectorWidget> {
         ),
         const SizedBox(height: 8),
 
-        // Lista horizontal de fechas
+        // Lista horizontal de fechas (solo informativa)
         SizedBox(
           height: 90,
           child: ListView.builder(
@@ -83,66 +101,81 @@ class _DateSelectorWidgetState extends State<DateSelectorWidget> {
             itemCount: dates.length,
             itemBuilder: (context, index) {
               final date = dates[index];
-              final isSelected = index == selectedIndex;
+              final isToday = date.isToday;
 
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedIndex = index;
-                    });
-                    widget.onDateSelected(date);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.whiteBackground,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.whiteBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Día de la semana (ej: LUN)
+                      Text(
+                        date.dayName.substring(0, 3).toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isToday
+                              ? AppColors.darkestOrange
+                              : Colors.grey[600],
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Día de la semana (ej: LUN)
-                        Text(
-                          date.dayName.substring(0, 3).toUpperCase(),
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Día del mes dentro de un círculo
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isToday
+                              ? AppColors.mainOrange
+                              : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: isToday
+                              ? Border.all(color: AppColors.darkestOrange, width: 2)
+                              : null,
+                        ),
+                        child: Text(
+                          date.day,
                           style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected
-                                ? AppColors.darkestOrange
-                                : Colors.grey[800],
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: isToday ? Colors.white : Colors.grey[700],
                           ),
                         ),
-                        const SizedBox(height: 6),
+                      ),
 
-                        // Día del mes dentro de un círculo pequeño
+                      // Indicador adicional para "HOY"
+                      if (isToday) ...[
+                        const SizedBox(height: 3),
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.mainOrange
-                                : Colors.orange[100],
-                            borderRadius: BorderRadius.circular(12),
+                            color: AppColors.darkestOrange,
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            date.day,
+                            'HOY',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 8,
                               fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white : Colors.black,
+                              color: Colors.white,
                             ),
                           ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
               );
