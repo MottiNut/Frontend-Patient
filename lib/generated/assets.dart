@@ -28,11 +28,6 @@ class Assets {
   static const String libApp = 'lib/app.dart';
   static const String libMain = 'lib/main.dart';
   static const String mealMealDetailScreen = 'lib/screens/meal/meal_detail_screen.dart';
-  static const String modelsApiResponseModels = 'lib/models/api_response_models.dart';
-  static const String modelsEnums = 'lib/models/enums.dart';
-  static const String modelsMeal = 'lib/models/meal.dart';
-  static const String modelsMedicalRecord = 'lib/models/medical_record.dart';
-  static const String modelsPlanDetail = 'lib/models/plan_detail.dart';
   static const String nutritionPlanDailyPlan = 'lib/models/nutrition_plan/daily_plan.dart';
   static const String nutritionPlanDailyPlanResponse = 'lib/models/nutrition_plan/daily_plan_response.dart';
   static const String nutritionPlanNutririonPlanModel = 'lib/models/nutrition_plan/nutririon_plan_model.dart';
@@ -45,9 +40,6 @@ class Assets {
   static const String serviceApiService = 'lib/service/api_service.dart';
   static const String serviceAuthService = 'lib/service/auth_service.dart';
   static const String serviceDateService = 'lib/service/date_service.dart';
-  static const String serviceMealService = 'lib/service/meal_service.dart';
-  static const String serviceMedicalRecordService = 'lib/service/medical_record_service.dart';
-  static const String serviceNutritionPlanController = 'lib/service/nutrition_plan_controller.dart';
   static const String serviceNutritionPlanService = 'lib/service/nutrition_plan_service.dart';
   static const String themesAppTheme = 'lib/core/themes/app_theme.dart';
   static const String userNutritionistModel = 'lib/models/user/nutritionist_model.dart';
@@ -69,24 +61,15 @@ class Assets {
   static const String widgetsDailyMealsWidget = 'lib/screens/home/widgets/daily_meals_widget.dart';
   static const String widgetsDateSelectorWidget = 'lib/screens/home/widgets/date_selector_widget.dart';
   static const String widgetsDayPlanWidget = 'lib/screens/recipes/widgets/day_plan_widget.dart';
-  static const String widgetsDescriptionSection = 'lib/screens/meal/widgets/description_section.dart';
-  static const String widgetsDetailRowWidget = 'lib/screens/meal/widgets/detail_row_widget.dart';
-  static const String widgetsDetailsSection = 'lib/screens/meal/widgets/details_section.dart';
   static const String widgetsGenderScreen = 'lib/screens/auth/widgets/gender_screen.dart';
   static const String widgetsHeightWeightScreen = 'lib/screens/auth/widgets/height_weight_screen.dart';
-  static const String widgetsInstructionsSection = 'lib/screens/meal/widgets/instructions_section.dart';
   static const String widgetsMacronutrientsCard = 'lib/screens/recipes/widgets/macronutrients_card.dart';
   static const String widgetsMealCard = 'lib/screens/recipes/widgets/meal_card.dart';
-  static const String widgetsMealHeaderSection = 'lib/screens/meal/widgets/meal_header_section.dart';
-  static const String widgetsMealIconWidget = 'lib/screens/meal/widgets/meal_icon_widget.dart';
   static const String widgetsMedicalConditionScreen = 'lib/screens/auth/widgets/medical_condition_screen.dart';
   static const String widgetsMotivationalQuoteWidget = 'lib/screens/home/widgets/motivational_quote_widget.dart';
   static const String widgetsNoPlanWidget = 'lib/screens/recipes/widgets/no_plan_widget.dart';
-  static const String widgetsNutritionItemWidget = 'lib/screens/meal/widgets/nutrition_item_widget.dart';
-  static const String widgetsNutritionSection = 'lib/screens/meal/widgets/nutrition_section.dart';
   static const String widgetsPersonalInfoScreen = 'lib/screens/auth/widgets/personal_info_screen.dart';
   static const String widgetsRecipesErrorWidget = 'lib/screens/recipes/widgets/recipes_error_widget.dart';
-  static const String widgetsSectionTitleWidget = 'lib/screens/meal/widgets/section_title_widget.dart';
   static const String widgetsWelcomeHeaderWidget = 'lib/screens/home/widgets/welcome_header_widget.dart';
 
 }

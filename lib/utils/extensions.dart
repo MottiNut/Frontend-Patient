@@ -1,5 +1,4 @@
 // lib/models/extensions.dart
-import 'package:frontendpatient/models/enums.dart';
 
 extension DateTimeExtensions on DateTime {
   /// Obtiene el lunes de la semana actual
@@ -18,10 +17,6 @@ extension DateTimeExtensions on DateTime {
   /// Obtiene el día de la semana como número (1-7)
   int get dayOfWeekNumber => weekday;
 
-  /// Obtiene el nombre del día en español
-  String get dayNameSpanish {
-    return DayOfWeek.fromNumber(weekday).name;
-  }
 }
 
 extension StringExtensions on String {
