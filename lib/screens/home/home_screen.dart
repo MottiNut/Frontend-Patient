@@ -1,11 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/widgets/app_navigation_handler.dart';
-import 'package:frontendpatient/widgets/bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
 import '../../models/nutrition_plan/daily_plan_response.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/routes/route_names.dart';
 import '../../service/nutrition_plan_service.dart';
+import '../../shared/widgets/app_navigation_handler.dart';
+import '../../shared/widgets/bottom_nav_bar.dart';
+import '../../shared/widgets/custom_app_bar.dart';
 import 'widgets/welcome_header_widget.dart';
 import 'widgets/date_selector_widget.dart';
 import 'widgets/motivational_quote_widget.dart';
@@ -93,12 +95,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   void dispose() {
     _planService.dispose();
     super.dispose();
+    AppNavigationHandler.setCurrentIndex(0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: const CustomAppBar(),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           final patient = authProvider.currentUser;
@@ -142,49 +145,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         },
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: AppNavigationHandler.currentIndex, // Usar el handler
+        currentIndex: AppNavigationHandler.currentIndex,
         onTap: (index) => AppNavigationHandler.handleNavigation(context, index),
       ),
     );
-  }
-
-  /// AppBar extraído para mejor organización
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      title: const Text('Bienvenido'),
-      backgroundColor: Colors.orange,
-      foregroundColor: Colors.white,
-      actions: [
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Colors.white),
-          onSelected: _handleMenuSelection,
-          itemBuilder: (BuildContext context) => [
-            const PopupMenuItem<String>(
-              value: 'logout',
-              child: Row(
-                children: [
-                  Icon(Icons.logout, color: Colors.grey),
-                  SizedBox(width: 8),
-                  Text('Cerrar sesión'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// Manejar selección del menú
-  Future<void> _handleMenuSelection(String value) async {
-    if (value == 'logout') {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.logout();
-      if (context.mounted) {
-        Navigator.pushReplacementNamed(context, RouteNames.login);
-      }
-    }
   }
 
   /// Selector de widgets según el estado actual

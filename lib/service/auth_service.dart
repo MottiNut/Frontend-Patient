@@ -9,9 +9,10 @@ import 'package:frontendpatient/models/auth/update_profile.dart';
 import 'package:frontendpatient/models/user/nutritionist_model.dart';
 import 'package:frontendpatient/models/user/patient_model.dart';
 import 'package:frontendpatient/models/user/user_model.dart';
-import 'package:frontendpatient/utils/ApiError.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../shared/utils/ApiError.dart';
 
 class AuthService {
   static const String baseUrl = 'http://10.0.2.2:5000/api/bff/auth'; // Reemplaza con tu URL

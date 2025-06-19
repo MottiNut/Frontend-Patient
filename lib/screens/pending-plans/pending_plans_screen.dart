@@ -4,9 +4,9 @@ import 'package:frontendpatient/screens/pending-plans/widgets/error_state_widget
 import 'package:frontendpatient/screens/pending-plans/widgets/plan_card.dart';
 import 'package:frontendpatient/screens/pending-plans/widgets/plan_details_dialog.dart';
 import 'package:provider/provider.dart';
-import '../../core/themes/app_theme.dart';
-import '../../widgets/app_navigation_handler.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../shared/widgets/app_navigation_handler.dart';
+import '../../shared/widgets/bottom_nav_bar.dart';
+import '../../shared/widgets/custom_app_bar.dart';
 import 'controllers/pending_plans_controller.dart';
 
 
@@ -98,18 +98,7 @@ class _PendingPlansScreenState extends State<PendingPlansScreen> {
     return ChangeNotifierProvider.value(
       value: _controller,
       child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: const Text('Planes Pendientes'),
-          backgroundColor: AppColors.mainOrange,
-          foregroundColor: Colors.white,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _controller.loadPendingPlans,
-            ),
-          ],
-        ),
+        appBar: const CustomAppBar(),
         bottomNavigationBar: CustomBottomNavBar(
           currentIndex: AppNavigationHandler.currentIndex,
           onTap: (index) => AppNavigationHandler.handleNavigation(context, index),

@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:frontendpatient/screens/recipes/widgets/day_plan_widget.dart';
 import 'package:frontendpatient/screens/recipes/widgets/no_plan_widget.dart';
 import 'package:frontendpatient/screens/recipes/widgets/recipes_error_widget.dart';
-import 'package:frontendpatient/widgets/app_navigation_handler.dart';
-import 'package:frontendpatient/widgets/bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
 import '../../models/nutrition_plan/nutririon_plan_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/routes/route_names.dart';
 import '../../service/nutrition_plan_service.dart';
+import '../../shared/widgets/app_navigation_handler.dart';
+import '../../shared/widgets/bottom_nav_bar.dart';
+import '../../shared/widgets/custom_app_bar.dart';
 
 class RecipesScreen extends StatefulWidget {
   const RecipesScreen({super.key});
@@ -69,7 +70,7 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: const CustomAppBar(),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           final user = authProvider.currentUser;
@@ -110,53 +111,6 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: AppNavigationHandler.currentIndex, // Usar el handler
         onTap: (index) => AppNavigationHandler.handleNavigation(context, index),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      title: const Text('Plan Semanal'),
-      backgroundColor: Colors.orange,
-      foregroundColor: Colors.white,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: _loadWeeklyPlan,
-        ),
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Colors.white),
-          onSelected: (value) async {
-            if (value == 'logout') {
-              final authProvider = Provider.of<AuthProvider>(context, listen: false);
-              await authProvider.logout();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, RouteNames.login);
-              }
-            }
-          },
-          itemBuilder: (BuildContext context) => [
-            const PopupMenuItem<String>(
-              value: 'logout',
-              child: Row(
-                children: [
-                  Icon(Icons.logout, color: Colors.grey),
-                  SizedBox(width: 8),
-                  Text('Cerrar sesión'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-      bottom: TabBar(
-        controller: _tabController,
-        isScrollable: true,
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.white70,
-        indicatorColor: Colors.white,
-        tabs: dayNames.map((day) => Tab(text: day)).toList(),
       ),
     );
   }

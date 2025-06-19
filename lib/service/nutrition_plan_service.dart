@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/nutrition_plan/daily_plan_response.dart';
 import '../models/nutrition_plan/nutririon_plan_model.dart';
-import '../utils/ApiError.dart';
+import '../shared/utils/ApiError.dart';
 class NoPlanFoundException implements Exception {
   final String message;
   NoPlanFoundException(this.message);

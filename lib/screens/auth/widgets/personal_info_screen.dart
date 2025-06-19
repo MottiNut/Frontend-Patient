@@ -1,7 +1,8 @@
 // personal_info_screen.dart
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
-import 'package:frontendpatient/utils/validators.dart';
+
+import '../../../shared/utils/validators.dart';
 
 class PersonalInfoScreen extends StatelessWidget {
   final TextEditingController firstNameController;

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/themes/app_theme.dart';
 import '../../providers/auth_provider.dart';
-import '../../utils/validators.dart';
+import '../../shared/utils/validators.dart';
 import '../../core/routes/route_names.dart';
 
 class LoginScreen extends StatefulWidget {
