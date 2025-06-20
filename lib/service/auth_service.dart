@@ -12,7 +12,9 @@ import 'package:frontendpatient/models/user/user_model.dart';
 import 'package:frontendpatient/shared/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:mime/mime.dart';
+import 'dart:typed_data';
+import 'package:http_parser/http_parser.dart';
 import '../shared/utils/ApiError.dart';
 
 class AuthService {
@@ -43,7 +45,6 @@ class AuthService {
   }
 
   Future<AuthResponse> registerPatient(RegisterPatientRequest request) async {
-
     try {
       final requestBody = json.encode(request.toJson());
 
@@ -54,17 +55,12 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
-
-
         final authResponse = AuthResponse.fromJson(json.decode(response.body));
-
         print('💾 Guardando token...');
         await _saveToken(authResponse.token);
-
         return authResponse;
       } else {
         print('❌ Error del servidor - Status: ${response.statusCode}');
-
         try {
           final error = ApiError.fromJson(json.decode(response.body));
           throw Exception(error.message);
@@ -101,6 +97,86 @@ class AuthService {
       }
     } catch (e) {
       throw Exception('Error de conexión: $e');
+    }
+  }
+
+  // MÉTODO CORREGIDO - Detecta automáticamente el content-type
+  Future<Patient> updatePatientProfileImage(File? imageFile) async {
+    try {
+      final token = await getToken();
+      if (token == null) throw Exception('Token no encontrado');
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/profile/patient/image'),
+      );
+
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // Solo agregar el archivo si no es null
+      if (imageFile != null) {
+        // Detectar el MIME type automáticamente
+        final mimeType = lookupMimeType(imageFile.path);
+
+        // Validar que sea una imagen
+        if (mimeType == null || !mimeType.startsWith('image/')) {
+          throw Exception('El archivo seleccionado no es una imagen válida');
+        }
+
+        // Crear el MultipartFile con el content-type correcto
+        final multipartFile = await http.MultipartFile.fromPath(
+          'image',
+          imageFile.path,
+          contentType: MediaType.parse(mimeType), // Especificar el content-type
+        );
+
+        request.files.add(multipartFile);
+
+        print('📤 Subiendo imagen con content-type: $mimeType');
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('📨 Respuesta del servidor: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        print('✅ Imagen actualizada exitosamente');
+        return Patient.fromJson(json.decode(response.body));
+      } else {
+        print('❌ Error del servidor: ${response.body}');
+        final error = ApiError.fromJson(json.decode(response.body));
+        throw Exception(error.message);
+      }
+    } catch (e) {
+      print('💥 Error en updatePatientProfileImage: $e');
+      throw Exception('Error actualizando imagen de perfil: $e');
+    }
+  }
+
+  // Nuevo método para obtener imagen
+  Future<Uint8List?> getPatientProfileImage(int userId) async {
+    try {
+      final token = await getToken();
+      if (token == null) throw Exception('Token no encontrado');
+
+      final response = await _client.get(
+        Uri.parse('$baseUrl/profile/patient/$userId/image'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else if (response.statusCode == 404) {
+        return null; // No tiene imagen
+      } else {
+        throw Exception('Error obteniendo imagen');
+      }
+    } catch (e) {
+      throw Exception('Error obteniendo imagen: $e');
     }
   }
 
@@ -175,35 +251,6 @@ class AuthService {
       }
     } catch (e) {
       throw Exception('Error actualizando profile: $e');
-    }
-  }
-
-  Future<Patient> updatePatientProfileImage(String profileImageUrl) async {
-    try {
-      final token = await getToken();
-      if (token == null) throw Exception('Token no encontrado');
-
-      final request = {
-        'profileImageUrl': profileImageUrl,
-      };
-
-      final response = await _client.put(
-        Uri.parse('$baseUrl/profile/patient/image'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: json.encode(request),
-      );
-
-      if (response.statusCode == 200) {
-        return Patient.fromJson(json.decode(response.body));
-      } else {
-        final error = ApiError.fromJson(json.decode(response.body));
-        throw Exception(error.message);
-      }
-    } catch (e) {
-      throw Exception('Error actualizando imagen de perfil: $e');
     }
   }
 

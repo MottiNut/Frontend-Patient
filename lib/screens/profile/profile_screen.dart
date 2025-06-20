@@ -9,6 +9,9 @@ import '../../shared/widgets/app_navigation_handler.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../shared/widgets/custom_app_bar.dart';
 import 'edit_profile_screen.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,7 +21,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final AppNavigationHandler _navigationHandler = AppNavigationHandler();
   bool _isRefreshing = false;
 
   @override
@@ -40,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null || user.role != Role.patient) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Error: No se puede editar este profile'),
+          content: Text('Error: No se puede editar este perfil'),
           backgroundColor: Colors.red,
         ),
       );
@@ -80,6 +82,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     },
   );
+
+  ImageProvider? _getProfileImage(User user) {
+    if (user is Patient && user.profileImageBase64 != null && user.profileImageBase64!.isNotEmpty) {
+      try {
+        final bytes = base64Decode(user.profileImageBase64!);
+        return MemoryImage(bytes);
+      } catch (e) {
+        print('Error decodificando imagen base64: $e');
+        return null;
+      }
+    }
+    return null;
+  }
+
+  void _showImageOptions() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // No mostrar opciones si se está actualizando la imagen
+    if (authProvider.isUpdatingImage) return;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Tomar foto'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Seleccionar de galería'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        await _updateProfileImage(File(image.path));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al seleccionar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _updateProfileImage(File imageFile) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    try {
+      // Usar AuthProvider en lugar de AuthService
+      final success = await authProvider.updatePatientProfileImage(imageFile);
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Imagen actualizada exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al actualizar imagen: ${authProvider.errorMessage}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al actualizar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -145,7 +258,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
           Text(
-            'Error al cargar el profile',
+            'Error al cargar el perfil',
             style: Theme.of(context).textTheme.headlineSmall,
             textAlign: TextAlign.center,
           ),
@@ -192,49 +305,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ),
     child: Column(
       children: [
-        CircleAvatar(
-          radius: 50,
-          backgroundColor: Colors.white,
-          child: Text(
-            '${user.firstName[0]}${user.lastName[0]}',
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.orange,
-            ),
+        GestureDetector(
+          onTap: user.role == Role.patient ? _showImageOptions : null,
+          child: Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              return Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.white,
+                    backgroundImage: _getProfileImage(user),
+                    child: _getProfileImage(user) == null
+                        ? Text(
+                      '${user.firstName[0]}${user.lastName[0]}',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    )
+                        : null,
+                  ),
+                  // Mostrar loading overlay cuando se está actualizando la imagen
+                  if (authProvider.isUpdatingImage)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (user.role == Role.patient && !authProvider.isUpdatingImage)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 20,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ),
         const SizedBox(height: 16),
         Text(
-          user.fullName,
+          '${user.firstName} ${user.lastName}',
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Text(
-          user.role == Role.patient ? 'Paciente' : 'Nutricionista',
-          style: const TextStyle(fontSize: 16, color: Colors.white70),
-        ),
-        if (user.birthDate != null) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '${_calculateAge(user.birthDate!)} años',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+          user.email,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.white70,
           ),
-        ],
+        ),
       ],
     ),
   );
@@ -268,7 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (patient.birthDate != null)
             _buildInfoRow(Icons.cake, 'Fecha de Nacimiento', _formatDate(patient.birthDate!)),
           if (patient.emergencyContact != null)
-            _buildInfoRow(Icons.emergency , 'Contacto de emergencia', patient.emergencyContact!),
+            _buildInfoRow(Icons.emergency, 'Contacto de emergencia', patient.emergencyContact!),
         ],
       ),
     ),

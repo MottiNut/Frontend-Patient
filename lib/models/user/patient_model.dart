@@ -10,6 +10,8 @@ class Patient extends User {
   final String? dietaryPreferences;
   final String? emergencyContact;
   final String? gender;
+  final String? profileImageBase64;
+  final String? imageContentType;
 
   Patient({
     required super.userId,
@@ -27,6 +29,8 @@ class Patient extends User {
     this.dietaryPreferences,
     this.emergencyContact,
     this.gender,
+    this.profileImageBase64,
+    this.imageContentType,
   }) : super(role: Role.patient);
 
   double? calculateBMI() {
@@ -53,6 +57,8 @@ class Patient extends User {
       dietaryPreferences: json['dietaryPreferences'],
       emergencyContact: json['emergencyContact'],
       gender: json['gender'],
+      profileImageBase64: json['profileImageBase64'],
+      imageContentType: json['imageContentType'],
     );
   }
 
@@ -90,6 +96,8 @@ class Patient extends User {
     String? firstName,
     String? lastName,
     String? phone,
+    String? profileImageBase64,
+    String? imageContentType,
   }) {
     return Patient(
       userId: userId,
@@ -107,6 +115,8 @@ class Patient extends User {
       dietaryPreferences: dietaryPreferences ?? this.dietaryPreferences,
       emergencyContact: emergencyContact ?? this.emergencyContact,
       gender: gender ?? this.gender,
+      profileImageBase64: profileImageBase64 ?? this.profileImageBase64,
+      imageContentType: imageContentType ?? this.imageContentType,
     );
   }
 }

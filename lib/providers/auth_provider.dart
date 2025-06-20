@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:frontendpatient/models/auth/login_request.dart';
 import 'package:frontendpatient/models/auth/register_nutritionist_request.dart';
@@ -21,12 +23,14 @@ class AuthProvider with ChangeNotifier {
   AuthState _state = AuthState.initial;
   User? _currentUser;
   String? _errorMessage;
+  bool _isUpdatingImage = false; // Para controlar el estado de carga de imagen
 
   AuthState get state => _state;
   User? get currentUser => _currentUser;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _state == AuthState.authenticated;
   bool get isLoading => _state == AuthState.loading;
+  bool get isUpdatingImage => _isUpdatingImage;
 
   Future<void> checkAuthStatus() async {
     _setState(AuthState.loading);
@@ -43,6 +47,11 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       _setError('Error verificando autenticación: $e');
     }
+  }
+
+  void updateCurrentUser(User updatedUser) {
+    _currentUser = updatedUser;
+    notifyListeners();
   }
 
   Future<bool> login(String email, String password) async {
@@ -205,6 +214,42 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // NUEVOS MÉTODOS PARA MANEJAR IMÁGENES DE PERFIL
+
+  /// Actualiza la imagen de perfil del paciente
+  Future<bool> updatePatientProfileImage(File? imageFile) async {
+    if (_currentUser == null || _currentUser!.role != Role.patient) {
+      _setError('Usuario no es paciente');
+      return false;
+    }
+
+    _setImageUpdating(true);
+
+    try {
+      final updatedPatient = await _authService.updatePatientProfileImage(imageFile);
+      _currentUser = updatedPatient;
+      _setImageUpdating(false);
+
+      // Notificar que el usuario se actualizó pero mantener el estado authenticated
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setImageUpdating(false);
+      _setError('Error actualizando imagen de perfil: $e');
+      return false;
+    }
+  }
+
+  /// Obtiene la imagen de perfil del paciente
+  Future<Uint8List?> getPatientProfileImage(int userId) async {
+    try {
+      return await _authService.getPatientProfileImage(userId);
+    } catch (e) {
+      print('Error obteniendo imagen de perfil: $e');
+      return null;
+    }
+  }
+
   Future<void> logout() async {
     _setState(AuthState.loading);
 
@@ -231,6 +276,11 @@ class AuthProvider with ChangeNotifier {
   void _setError(String error) {
     _state = AuthState.error;
     _errorMessage = error;
+    notifyListeners();
+  }
+
+  void _setImageUpdating(bool updating) {
+    _isUpdatingImage = updating;
     notifyListeners();
   }
 }
