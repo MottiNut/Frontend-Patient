@@ -12,6 +12,7 @@ class Assets {
   static const String authRegisterPatientRequest = 'lib/models/auth/register_patient_request.dart';
   static const String authRegisterScreen = 'lib/screens/auth/register_screen.dart';
   static const String authUpdateProfile = 'lib/models/auth/update_profile.dart';
+  static const String constantsApiConstants = 'lib/shared/constants/api_constants.dart';
   static const String controllersPendingPlansController = 'lib/screens/pending-plans/controllers/pending_plans_controller.dart';
   static const String fontsMontserratLight = 'assets/fonts/Montserrat-Light.ttf';
   static const String fontsMontserratMedium = 'assets/fonts/Montserrat-Medium.ttf';
@@ -41,7 +42,6 @@ class Assets {
   static const String recipesRecipesScreen = 'lib/screens/recipes/recipes_screen.dart';
   static const String routesAppRouter = 'lib/core/routes/app_router.dart';
   static const String routesRouteNames = 'lib/core/routes/route_names.dart';
-  static const String serviceApiService = 'lib/service/api_service.dart';
   static const String serviceAuthService = 'lib/service/auth_service.dart';
   static const String serviceDateService = 'lib/service/date_service.dart';
   static const String serviceNutritionPlanService = 'lib/service/nutrition_plan_service.dart';
@@ -63,6 +63,7 @@ class Assets {
   static const String widgetsBottomNavBar = 'lib/shared/widgets/bottom_nav_bar.dart';
   static const String widgetsChronicDiseaseScreen = 'lib/screens/auth/widgets/chronic_disease_screen.dart';
   static const String widgetsCredentialsScreen = 'lib/screens/auth/widgets/credentials_screen.dart';
+  static const String widgetsCustomAppBar = 'lib/shared/widgets/custom_app_bar.dart';
   static const String widgetsDailyMealsWidget = 'lib/screens/home/widgets/daily_meals_widget.dart';
   static const String widgetsDateSelectorWidget = 'lib/screens/home/widgets/date_selector_widget.dart';
   static const String widgetsDayPlanWidget = 'lib/screens/recipes/widgets/day_plan_widget.dart';

@@ -37,7 +37,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   @override
   void initState() {
     super.initState();
-    AppNavigationHandler.setCurrentIndex(0);
     _loadTodayPlan();
   }
 
@@ -95,7 +94,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   void dispose() {
     _planService.dispose();
     super.dispose();
-    AppNavigationHandler.setCurrentIndex(0);
   }
 
   @override

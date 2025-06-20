@@ -5,7 +5,6 @@ import 'package:frontendpatient/screens/recipes/widgets/recipes_error_widget.dar
 import 'package:provider/provider.dart';
 import '../../models/nutrition_plan/nutririon_plan_model.dart';
 import '../../providers/auth_provider.dart';
-import '../../core/routes/route_names.dart';
 import '../../service/nutrition_plan_service.dart';
 import '../../shared/widgets/app_navigation_handler.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
@@ -34,7 +33,6 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
-    AppNavigationHandler.setCurrentIndex(1); // Establecer índice correcto
     _tabController = TabController(length: 7, vsync: this);
     _loadWeeklyPlan();
   }

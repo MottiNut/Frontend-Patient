@@ -1,11 +1,11 @@
 class MealData {
   final String mealType;
   final String mealTypeLabel;
-  final String name; // Este será el nombre combinado de los alimentos
+  final String name;
   final String? description;
   final int? calories;
-  final List<FoodItem>? foods; // Agregar lista de alimentos
-  final Map<String, dynamic>? nutritionalInfo;
+  final String? ingredients;
+  final String? preparationTime;
 
   MealData({
     required this.mealType,
@@ -13,89 +13,67 @@ class MealData {
     required this.name,
     this.description,
     this.calories,
-    this.foods,
-    this.nutritionalInfo,
+    this.ingredients,
+    this.preparationTime,
   });
 
-  factory MealData.fromJson(String mealType, Map<String, dynamic> json) {
-    // Extraer los alimentos del array "foods"
-    List<FoodItem> foodsList = [];
-    String combinedName = 'Comida sin nombre';
-    int totalCalories = 0;
-
-    if (json['foods'] != null && json['foods'] is List) {
-      foodsList = (json['foods'] as List)
-          .map((food) => FoodItem.fromJson(food))
-          .toList();
-
-      // Crear nombre combinado de los primeros alimentos
-      if (foodsList.isNotEmpty) {
-        if (foodsList.length == 1) {
-          combinedName = foodsList.first.name;
-        } else if (foodsList.length == 2) {
-          combinedName = '${foodsList[0].name} + ${foodsList[1].name}';
-        } else {
-          combinedName = '${foodsList[0].name} + ${foodsList[1].name} y más';
-        }
-      }
+}
+class MealTypeMapper {
+  static String toKey(String type) {
+    switch (type.toLowerCase()) {
+      case 'desayuno':
+        return 'breakfast';
+      case 'media mañana':
+        return 'snack_morning';
+      case 'almuerzo':
+        return 'lunch';
+      case 'merienda':
+        return 'snack_afternoon';
+      case 'cena':
+        return 'dinner';
+      case 'cena tardia':
+        return 'snack_evening';
+      default:
+        return _normalize(type);
     }
-
-    // Obtener calorías totales
-    if (json['total_calories'] != null) {
-      totalCalories = json['total_calories'] as int;
-    }
-
-    return MealData(
-      mealType: mealType,
-      mealTypeLabel: _getMealTypeLabel(mealType),
-      name: combinedName,
-      description: json['description'],
-      calories: totalCalories,
-      foods: foodsList,
-      nutritionalInfo: json['nutritionalInfo'],
-    );
   }
 
-  static String _getMealTypeLabel(String mealType) {
-    switch (mealType) {
+  static String toLabel(String key) {
+    switch (key) {
       case 'breakfast':
         return 'Desayuno';
+      case 'snack_morning':
+        return 'Media Mañana';
       case 'lunch':
         return 'Almuerzo';
+      case 'snack_afternoon':
+        return 'Merienda';
       case 'dinner':
         return 'Cena';
-      case 'snacks':
-        return 'Snack';
+      case 'snack_dinner':
+        return 'Cena Tardía';
       default:
-        return 'Comida';
+        return _capitalizeWords(key.replaceAll('_', ' '));
     }
   }
-}
 
-class FoodItem {
-  final String name;
-  final String quantity;
-  final int calories;
-
-  FoodItem({
-    required this.name,
-    required this.quantity,
-    required this.calories,
-  });
-
-  factory FoodItem.fromJson(Map<String, dynamic> json) {
-    return FoodItem(
-      name: json['name'] ?? 'Alimento sin nombre',
-      quantity: json['quantity'] ?? '',
-      calories: json['calories'] ?? 0,
-    );
+  static String _normalize(String input) {
+    return input
+        .toLowerCase()
+        .replaceAll(' ', '_')
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ñ', 'n');
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'quantity': quantity,
-      'calories': calories,
-    };
+  static String _capitalizeWords(String text) {
+    return text.split(' ').map((word) {
+      if (word.isEmpty) return '';
+      return word[0].toUpperCase() + word.substring(1);
+    }).join(' ');
   }
 }
+

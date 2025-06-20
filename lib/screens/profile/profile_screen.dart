@@ -24,8 +24,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // ¡IMPORTANTE! Establecer el índice correcto para el perfil (índice 3)
-    AppNavigationHandler.setCurrentIndex(3);
   }
 
   Future<void> _refreshProfile() async {

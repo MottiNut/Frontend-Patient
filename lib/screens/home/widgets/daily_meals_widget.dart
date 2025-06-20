@@ -22,15 +22,21 @@ class DailyMealsWidget extends StatelessWidget {
 
   //Método para convertir el Map de meals a una lista de MealData
   List<MealData> _getMealsFromPlan(DailyPlanResponse plan) {
-    final List<MealData> meals = [];
+    final List<MealData> meals = plan.meals.map((meal) {
+      final internalKey = MealTypeMapper.toKey(meal.type);  // Mapear "Desayuno" -> "breakfast"
 
-    plan.meals.forEach((mealType, mealData) {
-      if (mealData is Map<String, dynamic>) {
-        meals.add(MealData.fromJson(mealType, mealData));
-      }
-    });
+      return MealData(
+        mealType: internalKey,
+        mealTypeLabel: meal.type,
+        name: meal.name,
+        description: meal.description,
+        calories: meal.calories,
+        ingredients: meal.ingredients,
+        preparationTime: meal.preparationTime,
+      );
+    }).toList();
 
-    // Ordenar las comidas según el tipo
+    // Ordenar según orden estándar
     meals.sort((a, b) {
       const order = {
         'breakfast': 1,
@@ -219,7 +225,9 @@ class DailyMealsWidget extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MealDetailScreen(mealDetail: meal)),
+          MaterialPageRoute(
+            builder: (context) => MealDetailScreen(meal: meal),
+          ),
         );
       },
       child: SizedBox(
@@ -342,7 +350,23 @@ class DailyMealsWidget extends StatelessWidget {
           fit: BoxFit.contain,
           placeholderBuilder: (context) => Icon(Icons.dinner_dining, color: _getMealColor(mealType), size: 24),
         );
-      case 'snacks':
+      case 'snack_morning':
+        return SvgPicture.asset(
+          'assets/images/snack-icon.svg',
+          width: 36,
+          height: 36,
+          fit: BoxFit.contain,
+          placeholderBuilder: (context) => Icon(Icons.fastfood, color: _getMealColor(mealType), size: 24),
+        );
+      case 'snack_afternoon':
+        return SvgPicture.asset(
+          'assets/images/snack-icon.svg',
+          width: 36,
+          height: 36,
+          fit: BoxFit.contain,
+          placeholderBuilder: (context) => Icon(Icons.fastfood, color: _getMealColor(mealType), size: 24),
+        );
+      case 'snack_dinner':
         return SvgPicture.asset(
           'assets/images/snack-icon.svg',
           width: 36,

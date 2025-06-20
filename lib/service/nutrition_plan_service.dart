@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:frontendpatient/shared/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,7 +18,7 @@ class NoPlanFoundException implements Exception {
 }
 
 class NutritionPlanService {
-  static const String baseUrl = 'http://10.0.2.2:5000/api/bff/patient/nutrition-plans';
+  static const String baseUrl = ApiConstants.nutrition;
   static const String tokenKey = 'auth_token';
   final http.Client _client = http.Client();
 

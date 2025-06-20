@@ -79,15 +79,7 @@ class DayPlanWidget extends StatelessWidget {
   }
 
   List<Widget> _buildMealCards() {
-    return dailyPlan.meals.entries.map((entry) {
-      final mealType = entry.key;
-      final mealData = entry.value as Map<String, dynamic>;
-
-      return MealCard(
-        mealType: mealType,
-        mealData: mealData,
-      );
-    }).toList();
+    return dailyPlan.meals.map((meal) => MealCard(meal: meal)).toList();
   }
 
   String _formatDate(String dateString) {

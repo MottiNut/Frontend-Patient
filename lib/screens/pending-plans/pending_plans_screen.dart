@@ -23,7 +23,6 @@ class _PendingPlansScreenState extends State<PendingPlansScreen> {
   @override
   void initState() {
     super.initState();
-    AppNavigationHandler.setCurrentIndex(2);
     _controller = PendingPlansController();
     _controller.loadPendingPlans();
   }

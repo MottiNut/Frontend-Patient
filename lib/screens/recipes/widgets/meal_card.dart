@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../../models/nutrition_plan/daily_plan_response.dart';// Asegúrate de tener esta clase importada
 
 class MealCard extends StatelessWidget {
-  final String mealType;
-  final Map<String, dynamic> mealData;
+  final Meal meal;
 
   const MealCard({
     super.key,
-    required this.mealType,
-    required this.mealData,
+    required this.meal,
   });
 
   @override
   Widget build(BuildContext context) {
-    final foods = mealData['foods'] as List<dynamic>? ?? [];
-    final totalCalories = mealData['total_calories'] as int? ?? 0;
-
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -23,20 +19,45 @@ class MealCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildMealHeader(totalCalories),
-            const SizedBox(height: 16),
-            ..._buildFoodList(foods),
+            _buildMealHeader(meal.calories),
+            const SizedBox(height: 12),
+            if (meal.name.isNotEmpty)
+              Text(
+                meal.name,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            const SizedBox(height: 8),
+            if (meal.description.isNotEmpty)
+              Text(
+                meal.description,
+                style: const TextStyle(fontSize: 14),
+              ),
+            const SizedBox(height: 8),
+            if (meal.ingredients.isNotEmpty)
+              Text(
+                'Ingredientes: ${meal.ingredients}',
+                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+              ),
+            const SizedBox(height: 8),
+            if (meal.preparationTime.isNotEmpty)
+              Text(
+                'Tiempo de preparación: ${meal.preparationTime}',
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMealHeader(int totalCalories) {
+  Widget _buildMealHeader(int calories) {
     return Row(
       children: [
         Icon(
-          _getMealIcon(mealType),
+          _getMealIcon(meal.type),
           color: Colors.orange,
           size: 24,
         ),
@@ -46,14 +67,14 @@ class MealCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _getMealLabel(mealType),
+                meal.type,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                '$totalCalories kcal',
+                '$calories kcal',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[600],
@@ -66,89 +87,21 @@ class MealCard extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildFoodList(List<dynamic> foods) {
-    return foods.map((food) {
-      final name = food['name'] as String? ?? '';
-      final quantity = food['quantity'] as String? ?? '';
-      final calories = food['calories'] as int? ?? 0;
-
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.only(top: 6, right: 12),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade300,
-                shape: BoxShape.circle,
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (quantity.isNotEmpty)
-                    Text(
-                      quantity,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Text(
-              '${calories} kcal',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.orange.shade700,
-              ),
-            ),
-          ],
-        ),
-      );
-    }).toList();
-  }
-
   IconData _getMealIcon(String mealType) {
     switch (mealType.toLowerCase()) {
-      case 'breakfast':
+      case 'desayuno':
         return Icons.free_breakfast;
-      case 'lunch':
+      case 'almuerzo':
         return Icons.lunch_dining;
-      case 'dinner':
+      case 'cena':
         return Icons.dinner_dining;
-      case 'snacks':
+      case 'media mañana':
+      case 'merienda':
+      case 'media tarde':
+      case 'snack':
         return Icons.cookie;
       default:
         return Icons.restaurant;
-    }
-  }
-
-  String _getMealLabel(String mealType) {
-    switch (mealType.toLowerCase()) {
-      case 'breakfast':
-        return 'Desayuno';
-      case 'lunch':
-        return 'Almuerzo';
-      case 'dinner':
-        return 'Cena';
-      case 'snacks':
-        return 'Snacks';
-      default:
-        return 'Comida';
     }
   }
 }

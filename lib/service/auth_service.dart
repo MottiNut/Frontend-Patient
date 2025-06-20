@@ -9,13 +9,14 @@ import 'package:frontendpatient/models/auth/update_profile.dart';
 import 'package:frontendpatient/models/user/nutritionist_model.dart';
 import 'package:frontendpatient/models/user/patient_model.dart';
 import 'package:frontendpatient/models/user/user_model.dart';
+import 'package:frontendpatient/shared/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../shared/utils/ApiError.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://10.0.2.2:5000/api/bff/auth'; // Reemplaza con tu URL
+  static const String baseUrl = ApiConstants.auth;
   static const String tokenKey = 'auth_token';
 
   final http.Client _client = http.Client();
@@ -42,35 +43,23 @@ class AuthService {
   }
 
   Future<AuthResponse> registerPatient(RegisterPatientRequest request) async {
-    print('🌐 AuthService.registerPatient iniciado');
-    print('📍 URL: $baseUrl/register/patient');
 
     try {
-      print('📝 Preparando datos para envío...');
       final requestBody = json.encode(request.toJson());
-      print('📤 Datos a enviar: $requestBody');
 
-      print('🔗 Realizando petición HTTP POST...');
       final response = await _client.post(
         Uri.parse('$baseUrl/register/patient'),
         headers: {'Content-Type': 'application/json'},
         body: requestBody,
       );
 
-      print('📨 Respuesta recibida');
-      print('📊 Status Code: ${response.statusCode}');
-      print('📋 Headers: ${response.headers}');
-      print('📄 Body: ${response.body}');
-
       if (response.statusCode == 200) {
-        print('✅ Registro exitoso - Status 200');
+
 
         final authResponse = AuthResponse.fromJson(json.decode(response.body));
-        print('🔑 Token extraído: ${authResponse.token.substring(0, 20)}...');
 
         print('💾 Guardando token...');
         await _saveToken(authResponse.token);
-        print('✅ Token guardado exitosamente');
 
         return authResponse;
       } else {
@@ -78,28 +67,18 @@ class AuthService {
 
         try {
           final error = ApiError.fromJson(json.decode(response.body));
-          print('💬 Mensaje de error del API: ${error.message}');
           throw Exception(error.message);
         } catch (parseError) {
-          print('❌ Error parseando respuesta de error: $parseError');
-          print('📄 Respuesta cruda: ${response.body}');
           throw Exception('Server error: ${response.statusCode} - ${response.body}');
         }
       }
     } on SocketException catch (e) {
-      print('🌐 Error de conexión (SocketException): $e');
       throw Exception('Sin conexión a internet: $e');
     } on TimeoutException catch (e) {
-      print('⏰ Timeout de conexión: $e');
       throw Exception('Timeout de conexión: $e');
     } on FormatException catch (e) {
-      print('📝 Error de formato JSON: $e');
       throw Exception('Error de formato de datos: $e');
     } catch (e) {
-      print('💥 Error inesperado en registerPatient: $e');
-      print('📍 Tipo de error: ${e.runtimeType}');
-      print('📚 Stack trace: ${StackTrace.current}');
-
       throw Exception('Error de conexión: $e');
     }
   }
@@ -196,6 +175,35 @@ class AuthService {
       }
     } catch (e) {
       throw Exception('Error actualizando profile: $e');
+    }
+  }
+
+  Future<Patient> updatePatientProfileImage(String profileImageUrl) async {
+    try {
+      final token = await getToken();
+      if (token == null) throw Exception('Token no encontrado');
+
+      final request = {
+        'profileImageUrl': profileImageUrl,
+      };
+
+      final response = await _client.put(
+        Uri.parse('$baseUrl/profile/patient/image'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(request),
+      );
+
+      if (response.statusCode == 200) {
+        return Patient.fromJson(json.decode(response.body));
+      } else {
+        final error = ApiError.fromJson(json.decode(response.body));
+        throw Exception(error.message);
+      }
+    } catch (e) {
+      throw Exception('Error actualizando imagen de perfil: $e');
     }
   }
 
