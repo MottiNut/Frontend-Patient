@@ -137,13 +137,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: source,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 80,
+        maxWidth: 600,        // Reducido de 800 a 600
+        maxHeight: 600,       // Reducido de 800 a 600
+        imageQuality: 60,     // Reducido de 80 a 60 para menor tamaño
       );
 
       if (image != null) {
-        await _updateProfileImage(File(image.path));
+        // Verificar y comprimir la imagen antes de enviarla
+        final compressedImage = await _compressImage(File(image.path));
+        if (compressedImage != null) {
+          await _updateProfileImage(compressedImage);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -156,6 +160,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     }
   }
+
+  Future<File?> _compressImage(File imageFile) async {
+    try {
+      // Leer el archivo original
+      final bytes = await imageFile.readAsBytes();
+
+      // Si la imagen ya es menor a 5MB, no hace falta comprimirla más
+      if (bytes.length <= 5 * 1024 * 1024) {
+        return imageFile;
+      }
+
+      // Mostrar indicador de carga
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Text('Comprimiendo imagen...'),
+              ],
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+
+      // Comprimir la imagen usando ImagePicker con calidad más baja
+      final ImagePicker picker = ImagePicker();
+      final XFile? compressedImage = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 400,        // Aún más pequeño si es necesario
+        maxHeight: 400,
+        imageQuality: 40,     // Calidad muy baja para garantizar tamaño pequeño
+      );
+
+      if (compressedImage != null) {
+        final compressedFile = File(compressedImage.path);
+        final compressedBytes = await compressedFile.readAsBytes();
+
+        // Verificar que el archivo comprimido sea menor a 5MB
+        if (compressedBytes.length <= 5 * 1024 * 1024) {
+          return compressedFile;
+        } else {
+          // Si aún es muy grande, comprimir más agresivamente
+          return await _aggressiveCompress(imageFile);
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('Error comprimiendo imagen: $e');
+      return null;
+    }
+  }
+
+  // Método de compresión agresiva como último recurso
+  Future<File?> _aggressiveCompress(File imageFile) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? ultraCompressed = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 300,
+        maxHeight: 300,
+        imageQuality: 25,     // Calidad muy baja
+      );
+
+      if (ultraCompressed != null) {
+        final file = File(ultraCompressed.path);
+        final bytes = await file.readAsBytes();
+
+        if (bytes.length <= 5 * 1024 * 1024) {
+          return file;
+        } else {
+          // Si todavía es muy grande, mostrar error
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('La imagen es demasiado grande. Por favor, selecciona una imagen más pequeña.'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+          return null;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('Error en compresión agresiva: $e');
+      return null;
+    }
+  }
+
+
 
   Future<void> _updateProfileImage(File imageFile) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
