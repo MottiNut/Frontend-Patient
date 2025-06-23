@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontendpatient/models/nutrition_plan/daily_plan.dart';
 import '../../core/themes/app_theme.dart';
 import '../../models/nutrition_plan/daily_plan_response.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class MealDetailScreen extends StatelessWidget {
   final MealData meal;
@@ -18,111 +19,184 @@ class MealDetailScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Header naranja
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.mainOrange,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(100),
-                bottomRight: Radius.circular(100),
-              ),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      meal.mealTypeLabel,
-                      style: AppTextStyles.tittle.copyWith(color: Colors.white),
-                    ),
-                    const SizedBox(height: 15),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 150,
-                            height: 150,
-                            padding: const EdgeInsets.only(top: 10),
-                            child: _getMealIcon(meal.mealType),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildBenefitItem(
-                                  '${meal.calories} kcal',
-                                  Icons.local_fire_department,
-                                  isOrangeSection: true,
-                                ),
-                                const SizedBox(height: 15),
-                                _buildBenefitItem(
-                                  meal.preparationTime!,
-                                  Icons.timer,
-                                  isOrangeSection: true,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Header con imagen de fondo
+          _buildHeaderSection(context),
+          // Sección de información
+          _buildInfoSection(),
+        ],
+      ),
+    );
+  }
 
-          // Sección blanca
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24.0),
-              color: Colors.white,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (meal.name.isNotEmpty) ...[
-                      const Text('Nombre:', style: AppTextStyles.subtitle),
-                      const SizedBox(height: 8),
-                      Text(meal.name, style: AppTextStyles.description),
-                      const SizedBox(height: 16),
-                    ],
-                    if (meal.description!.isNotEmpty) ...[
-                      const Text('Descripción:', style: AppTextStyles.subtitle),
-                      const SizedBox(height: 8),
-                      Text(meal.description!, style: AppTextStyles.description),
-                      const SizedBox(height: 16),
-                    ],
-                    if (meal.ingredients!.isNotEmpty) ...[
-                      const Text('Ingredientes:', style: AppTextStyles.subtitle),
-                      const SizedBox(height: 8),
-                      Text(meal.ingredients!, style: AppTextStyles.description),
-                      const SizedBox(height: 16),
-                    ],
-                  ],
-                ),
-              ),
+  Widget _buildHeaderSection(BuildContext context) {
+    return Container(
+      height: 500, // Altura fija para mostrar más de la imagen de fondo
+      decoration: BoxDecoration(
+        image: const DecorationImage(
+          image: AssetImage('assets/images/food-background.png'),
+          fit: BoxFit.cover, // Esto asegura que la imagen cubra todo el contenedor
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0), // Padding normal para el contenido
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildBackButton(context),
+              const SizedBox(height: 4),
+              _buildMealTitle(),
+              const SizedBox(height: 15),
+              _buildMealSummary(),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _buildBackButton(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: SvgPicture.asset(
+            'assets/images/vector-retrocession.svg',
+            height: 30,
+            width: 30,
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMealTitle() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          meal.mealTypeLabel,
+          style: AppTextStyles.titleAccompaniment.copyWith(color: AppColors.whiteBackground),
+        ),
+        if (meal.name.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            meal.name,
+            style: AppTextStyles.tittle.copyWith(
+              color: AppColors.whiteBackground,
             ),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildMealSummary() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: SizedBox(
+        height: 200, // Altura fija para el Stack
+        child: Stack(
+          clipBehavior: Clip.none, // Permite que los elementos se salgan del Stack
+          children: [
+            // Ícono posicionado
+            Positioned(
+              left: -20, // Más a la izquierda
+              bottom: -30, // Más abajo
+              child: Container(
+                width: 200,
+                height: 200,
+                padding: const EdgeInsets.only(top: 10),
+                child: _getMealIcon(meal.mealType),
+              ),
+            ),
+            // Información nutricional posicionada
+            Positioned(
+              right: -80, // Ahora funcionará correctamente
+              top: 20,
+              child: SizedBox(
+                width: 180, // Ancho fijo para la información
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildBenefitItem(
+                      '${meal.calories} kcal',
+                      Icons.local_fire_department,
+                      isOrangeSection: true,
+                    ),
+                    const SizedBox(height: 15),
+                    _buildBenefitItem(
+                      meal.preparationTime!,
+                      Icons.timer,
+                      isOrangeSection: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+  Widget _buildInfoSection() {
+    return Expanded(
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(top: 10.0),
+        padding: const EdgeInsets.all(24.0),
+        decoration: BoxDecoration(
+          color: Colors.transparent, // Completamente transparente
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(0),
+            topRight: Radius.circular(0),
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildMealDescription(),
+              _buildMealIngredients(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildMealDescription() {
+    if (meal.description == null || meal.description!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Descripción:', style: AppTextStyles.subtitle),
+        const SizedBox(height: 8),
+        Text(meal.description!, style: AppTextStyles.description),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildMealIngredients() {
+    if (meal.ingredients == null || meal.ingredients!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Ingredientes:', style: AppTextStyles.subtitle),
+        const SizedBox(height: 8),
+        Text(meal.ingredients!, style: AppTextStyles.description),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
