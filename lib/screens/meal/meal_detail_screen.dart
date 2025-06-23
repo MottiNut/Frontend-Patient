@@ -189,12 +189,41 @@ class MealDetailScreen extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    // Separar los ingredientes por coma y limpiar espacios
+    List<String> ingredientsList = meal.ingredients!
+        .split(',')
+        .map((ingredient) => ingredient.trim())
+        .where((ingredient) => ingredient.isNotEmpty)
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Ingredientes:', style: AppTextStyles.subtitle),
         const SizedBox(height: 8),
-        Text(meal.ingredients!, style: AppTextStyles.description),
+        ...ingredientsList.map((ingredient) => Padding(
+          padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 6.0, right: 8.0),
+                width: 6.0,
+                height: 6.0,
+                decoration: BoxDecoration(
+                  color: AppColors.mainOrange,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  ingredient,
+                  style: AppTextStyles.description,
+                ),
+              ),
+            ],
+          ),
+        )),
         const SizedBox(height: 16),
       ],
     );
