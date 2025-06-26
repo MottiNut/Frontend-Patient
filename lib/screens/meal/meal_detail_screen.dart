@@ -46,7 +46,6 @@ class MealDetailScreen extends StatelessWidget {
               _buildBackButton(context),
               const SizedBox(height: 4),
               _buildMealTitle(),
-              const SizedBox(height: 15),
               _buildMealSummary(),
               const SizedBox(height: 20),
             ],
@@ -55,6 +54,7 @@ class MealDetailScreen extends StatelessWidget {
       ),
     );
   }
+
   Widget _buildBackButton(BuildContext context) {
     return Row(
       children: [
@@ -83,8 +83,12 @@ class MealDetailScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             meal.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            softWrap: true,
             style: AppTextStyles.tittle.copyWith(
               color: AppColors.whiteBackground,
+              height: 1.3, // Añade espacio entre líneas
             ),
           ),
         ],
@@ -103,10 +107,10 @@ class MealDetailScreen extends StatelessWidget {
             // Ícono posicionado
             Positioned(
               left: -20, // Más a la izquierda
-              bottom: -30, // Más abajo
+              bottom: -25, // Más abajo
               child: Container(
-                width: 200,
-                height: 200,
+                width: 180,
+                height: 180,
                 padding: const EdgeInsets.only(top: 10),
                 child: _getMealIcon(meal.mealType),
               ),
