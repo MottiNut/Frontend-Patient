@@ -1,4 +1,3 @@
-
 import 'daily_plan_response.dart';
 
 enum PlanStatus {

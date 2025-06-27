@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontendpatient/models/nutrition_plan/daily_plan.dart';
 import '../../core/themes/app_theme.dart';
-import '../../models/nutrition_plan/daily_plan_response.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class MealDetailScreen extends StatelessWidget {
   final MealData meal;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/models/auth/update_profile.dart';
-import 'package:frontendpatient/models/user/patient_model.dart';
-import 'package:frontendpatient/providers/auth_provider.dart';
+import 'package:frontendpatient/features/auth/domain/models/update_profile.dart';
+import 'package:frontendpatient/features/auth/data/entities/patient.dart';
+import 'package:frontendpatient/features/auth/presentation/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../shared/widgets/app_navigation_handler.dart';

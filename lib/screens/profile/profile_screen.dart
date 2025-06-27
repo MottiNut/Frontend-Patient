@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/core/routes/route_names.dart';
-import 'package:frontendpatient/models/user/patient_model.dart';
-import 'package:frontendpatient/models/user/role.dart';
-import 'package:frontendpatient/models/user/user_model.dart';
-import 'package:frontendpatient/providers/auth_provider.dart';
+import 'package:frontendpatient/features/auth/data/entities/patient.dart';
+import 'package:frontendpatient/features/auth/data/value_objects/role.dart';
+import 'package:frontendpatient/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontendpatient/features/auth/data/entities/user.dart';
 import 'package:provider/provider.dart';
 import '../../shared/widgets/app_navigation_handler.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';

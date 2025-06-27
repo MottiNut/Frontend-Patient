@@ -1,11 +1,11 @@
 // core/routes/app_router.dart
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/providers/auth_provider.dart';
+import 'package:frontendpatient/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontendpatient/screens/recipes/recipes_screen.dart';
 import 'package:provider/provider.dart';
-import '../../screens/auth/login_screen.dart';
-import '../../screens/auth/register_screen.dart';
-import '../../screens/home/home_screen.dart';
+import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/home/presentation/screens/home_screen.dart';
 import '../../screens/pending-plans/pending_plans_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import 'route_names.dart';

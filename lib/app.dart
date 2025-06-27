@@ -1,6 +1,7 @@
 // lib/app.dart
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/providers/auth_provider.dart';
+import 'package:frontendpatient/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontendpatient/core/di/service_locator.dart';
 import 'package:provider/provider.dart';
 import 'core/themes/app_theme.dart';
 import 'core/routes/app_router.dart';
@@ -13,7 +14,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => sl<AuthProvider>()),
+        // Aquí puedes agregar más providers cuando los necesites
       ],
       child: MaterialApp(
         title: 'NutriApp - Pacientes',

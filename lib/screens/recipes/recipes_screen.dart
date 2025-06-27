@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontendpatient/screens/recipes/widgets/day_plan_widget.dart';
 import 'package:frontendpatient/screens/recipes/widgets/no_plan_widget.dart';
 import 'package:frontendpatient/screens/recipes/widgets/recipes_error_widget.dart';
 import 'package:provider/provider.dart';
 import '../../models/nutrition_plan/nutririon_plan_model.dart';
-import '../../providers/auth_provider.dart';
 import '../../service/nutrition_plan_service.dart';
 import '../../shared/widgets/app_navigation_handler.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';

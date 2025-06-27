@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontendpatient/features/auth/presentation/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../core/routes/route_names.dart';
-import '../../providers/auth_provider.dart';
 import 'app_navigation_handler.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
