@@ -1,18 +1,17 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontendpatient/shared/widgets/notification_screen.dart';
 import 'package:provider/provider.dart';
 import '../../core/routes/route_names.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
 import 'app_navigation_handler.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final VoidCallback? onNotificationPressed;
 
-  const CustomAppBar({
-    super.key,
-    this.onNotificationPressed,
-  });
+  const CustomAppBar({super.key, this.onNotificationPressed});
 
   @override
   State<CustomAppBar> createState() => _CustomAppBarState();
@@ -33,17 +32,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   Future<void> _loadProfileImage() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
     if (authProvider.currentUser != null) {
       setState(() {
         _isLoadingImage = true;
       });
-
       try {
         final imageBytes = await authProvider.getPatientProfileImage(
-          authProvider.currentUser!.userId,
+            authProvider.currentUser!.userId
         );
-
         if (mounted) {
           setState(() {
             _profileImageBytes = imageBytes;
@@ -72,7 +68,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Logo izquierdo
+              // Logo
               SizedBox(
                 height: 40,
                 width: 40,
@@ -82,7 +78,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                 ),
               ),
 
-              // Perfil central con imagen del usuario
+              // Perfil
               GestureDetector(
                 onTap: () => _showProfileMenu(context),
                 child: Container(
@@ -102,24 +98,66 @@ class _CustomAppBarState extends State<CustomAppBar> {
                 ),
               ),
 
-              // Icono de notificaciones derecho
-              GestureDetector(
-                onTap: widget.onNotificationPressed ?? () {
-                  debugPrint('Notificaciones presionadas');
+              // Botón de notificaciones con badge
+              Consumer<NotificationProvider>(
+                builder: (context, notificationProvider, child) {
+                  return GestureDetector(
+                    onTap: widget.onNotificationPressed ?? () {
+                      _navigateToNotifications(context);
+                    },
+                    child: Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: Icon(
+                              Icons.notifications_outlined,
+                              color: Colors.orange[600],
+                              size: 24,
+                            ),
+                          ),
+                          // Badge con número de notificaciones no leídas
+                          if (notificationProvider.unreadCount > 0)
+                            Positioned(
+                              right: 6,
+                              top: 6,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1,
+                                  ),
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  notificationProvider.unreadCount > 99
+                                      ? '99+'
+                                      : notificationProvider.unreadCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
                 },
-                child: Container(
-                  height: 40,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.orange[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.orange[600],
-                    size: 24,
-                  ),
-                ),
               ),
             ],
           ),
@@ -177,7 +215,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
     );
   }
 
-  /// Mostrar menú de perfil
+  void _navigateToNotifications(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NotificationsScreen(),
+      ),
+    );
+  }
+
   void _showProfileMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -189,7 +235,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Indicador del modal
             Container(
               width: 40,
               height: 4,
@@ -199,8 +244,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Opciones del menú
             ListTile(
               leading: const Icon(Icons.person_outline, color: Colors.blue),
               title: const Text('Ver Perfil'),
@@ -212,7 +255,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+              title: const Text(
+                'Cerrar Sesión',
+                style: TextStyle(color: Colors.red),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _handleLogout(context);
@@ -225,7 +271,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
     );
   }
 
-  /// Manejar cierre de sesión
   Future<void> _handleLogout(BuildContext context) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     await authProvider.logout();

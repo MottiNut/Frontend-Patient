@@ -9,6 +9,7 @@ import 'package:frontendpatient/models/auth/update_profile.dart';
 import 'package:frontendpatient/models/user/nutritionist_model.dart';
 import 'package:frontendpatient/models/user/patient_model.dart';
 import 'package:frontendpatient/models/user/user_model.dart';
+
 import 'package:frontendpatient/shared/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,6 +35,7 @@ class AuthService {
       if (response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(json.decode(response.body));
         await _saveToken(authResponse.token);
+
         return authResponse;
       } else {
         final error = ApiError.fromJson(json.decode(response.body));
@@ -255,6 +257,7 @@ class AuthService {
   }
 
   Future<void> logout() async {
+
     await _removeToken();
   }
 
