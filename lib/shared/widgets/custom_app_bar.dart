@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:frontendpatient/shared/widgets/notification_screen.dart';
+import 'package:frontendpatient/screens/notifications/screens/notification_screen.dart';
 import 'package:provider/provider.dart';
 import '../../core/routes/route_names.dart';
 import '../../providers/auth_provider.dart';

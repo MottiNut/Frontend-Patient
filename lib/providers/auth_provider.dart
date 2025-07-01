@@ -7,7 +7,7 @@ import 'package:frontendpatient/models/auth/update_profile.dart';
 import 'package:frontendpatient/models/user/role.dart';
 import 'package:frontendpatient/models/user/user_model.dart';
 import 'package:frontendpatient/providers/notification_provider.dart';
-import 'package:frontendpatient/service/auth_service.dart';
+import 'package:frontendpatient/services/auth_service.dart';
 import 'package:frontendpatient/shared/widgets/app_navigation_handler.dart';
 
 enum AuthState {
@@ -278,12 +278,12 @@ class AuthProvider with ChangeNotifier {
       await _authService.logout().timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          debugPrint('⏰ Auth service logout timeout');
+          debugPrint('⏰ Auth services logout timeout');
           throw Exception('Logout timeout');
         },
       );
 
-      debugPrint('✅ Auth service logout completed');
+      debugPrint('✅ Auth services logout completed');
     } catch (e) {
       debugPrint('⚠️ Error in logout process: $e');
     } finally {

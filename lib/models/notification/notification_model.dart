@@ -1,11 +1,6 @@
 // lib/models/notification_model.dart
 import 'package:firebase_messaging/firebase_messaging.dart';
-
-enum NotificationType {
-  planApproved,
-  planRejected,
-  unknown,
-}
+import 'package:frontendpatient/models/notification/notification_type.dart';
 
 class NotificationModel {
   final String id;

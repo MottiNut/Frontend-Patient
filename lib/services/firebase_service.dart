@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/notification_model.dart';
+import '../models/notification/notification_model.dart';
+import '../models/notification/notification_type.dart';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();

@@ -5,7 +5,7 @@ import 'package:frontendpatient/screens/recipes/widgets/recipes_error_widget.dar
 import 'package:provider/provider.dart';
 import '../../models/nutrition_plan/nutririon_plan_model.dart';
 import '../../providers/auth_provider.dart';
-import '../../service/nutrition_plan_service.dart';
+import '../../services/nutrition_plan_service.dart';
 import '../../shared/widgets/app_navigation_handler.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../shared/widgets/custom_app_bar.dart';

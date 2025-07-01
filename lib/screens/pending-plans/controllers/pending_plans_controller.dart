@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/models/nutrition_plan/nutririon_plan_model.dart';
-import 'package:frontendpatient/service/nutrition_plan_service.dart';
+import 'package:frontendpatient/services/nutrition_plan_service.dart';
 
 class PendingPlansController extends ChangeNotifier {
   final NutritionPlanService _planService = NutritionPlanService();
