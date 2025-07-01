@@ -30,7 +30,6 @@ class _RegisterFlowState extends State<RegisterFlow> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _repeatPasswordController = TextEditingController();
-  final _genderController = TextEditingController();
   final _ageController = TextEditingController();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();

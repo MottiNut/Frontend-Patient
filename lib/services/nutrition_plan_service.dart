@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:frontendpatient/shared/constants/api_constants.dart';
 import 'package:http/http.dart' as http;

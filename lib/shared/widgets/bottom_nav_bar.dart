@@ -1,7 +1,5 @@
 // lib/widgets/common/custom_bottom_nav_bar.dart
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/core/themes/app_theme.dart';
-
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
