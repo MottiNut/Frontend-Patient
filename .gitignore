@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+*.yaml
+pubspec.lock
+*.yaml
+pubspec.yaml
