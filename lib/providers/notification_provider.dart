@@ -10,7 +10,10 @@ class NotificationProvider with ChangeNotifier {
   List<NotificationModel> _notifications = [];
   bool _isLoading = false;
   String? _error;
+  String? _currentUserId;
+  bool _isInitialized = false; // ✅ NUEVO: Control de inicialización
 
+  // Getters
   List<NotificationModel> get notifications => List.unmodifiable(_notifications);
   List<NotificationModel> get unreadNotifications =>
       _notifications.where((n) => !n.isRead).toList();
@@ -19,39 +22,124 @@ class NotificationProvider with ChangeNotifier {
   String? get error => _error;
   bool get hasUnreadNotifications => unreadCount > 0;
 
+  // ✅ SIMPLIFICADO: Inicialización una sola vez
   Future<void> initialize() async {
+    if (_isInitialized) {
+      debugPrint('⚠️ NotificationProvider already initialized');
+      return;
+    }
+
+    debugPrint('🔄 NotificationProvider.initialize()');
     _setLoading(true);
+
     try {
       await _firebaseService.initialize();
-      _loadNotifications();
-      _setupNotificationListener();
       _clearError();
+      _isInitialized = true;
+      debugPrint('✅ NotificationProvider initialized successfully');
     } catch (e) {
       _setError('Error inicializando notificaciones: $e');
-      debugPrint('Error in NotificationProvider.initialize: $e');
+      debugPrint('❌ Error in NotificationProvider.initialize: $e');
     } finally {
       _setLoading(false);
     }
   }
 
+  Future<void> onUserLoggedIn(String userId) async {
+    if (_currentUserId == userId) {
+      debugPrint('⚠️ Same user already logged in: $userId');
+      return;
+    }
+
+    debugPrint('👤 NotificationProvider: User logged in: $userId');
+    _currentUserId = userId;
+    _setLoading(true);
+
+    try {
+      // ✅ PASO 1: Configurar Firebase Service
+      await _firebaseService.onUserLoggedIn(userId);
+
+      // ✅ PASO 2: Cargar notificaciones
+      _loadNotifications();
+
+      // ✅ PASO 3: Configurar listener
+      _setupNotificationListener();
+
+      _clearError();
+      debugPrint('✅ User configured with ${_notifications.length} notifications');
+    } catch (e) {
+      _setError('Error al configurar notificaciones para el usuario: $e');
+      debugPrint('❌ Error in onUserLoggedIn: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> onUserLoggedOut() async {
+    if (_currentUserId == null) {
+      debugPrint('⚠️ No user currently logged in');
+      return;
+    }
+
+    debugPrint('👋 NotificationProvider: User logged out: $_currentUserId');
+
+    try {
+      // ✅ CANCELAR: Listener primero
+      _notificationSubscription?.cancel();
+      _notificationSubscription = null;
+
+      // ✅ NOTIFICAR: Firebase Service
+      await _firebaseService.onUserLoggedOut();
+
+      // ✅ LIMPIAR: Datos locales
+      _currentUserId = null;
+      _notifications.clear();
+      _clearError();
+
+      notifyListeners();
+      debugPrint('✅ User logged out successfully');
+    } catch (e) {
+      _setError('Error al cerrar sesión: $e');
+      debugPrint('❌ Error in onUserLoggedOut: $e');
+    }
+  }
+
   void _setupNotificationListener() {
+    // ✅ CANCELAR: Listener anterior
     _notificationSubscription?.cancel();
+
     _notificationSubscription = _firebaseService.onNotificationReceived.listen(
           (notification) {
-        _notifications.insert(0, notification);
-        notifyListeners();
+        debugPrint('📨 New notification received: ${notification.title}');
+
+        if (_currentUserId != null) {
+          // ✅ VERIFICAR: Duplicados
+          final exists = _notifications.any((n) => n.id == notification.id);
+          if (!exists) {
+            _notifications.insert(0, notification);
+            notifyListeners();
+            debugPrint('✅ Notification added. Total: ${_notifications.length}');
+          }
+        }
       },
       onError: (error) {
         _setError('Error recibiendo notificación: $error');
+        debugPrint('❌ Error in notification listener: $error');
       },
     );
+
+    debugPrint('👂 Notification listener configured');
   }
 
   void _loadNotifications() {
-    _notifications = List.from(_firebaseService.notifications);
+    debugPrint('📋 Loading notifications from FirebaseService...');
+    final firebaseNotifications = _firebaseService.notifications;
+    _notifications = List.from(firebaseNotifications);
+    debugPrint('✅ Loaded ${_notifications.length} notifications');
     notifyListeners();
   }
 
+  // ✅ SIMPLIFICADO: Métodos de manipulación
   void markAsRead(String notificationId) {
     final index = _notifications.indexWhere((n) => n.id == notificationId);
     if (index != -1 && !_notifications[index].isRead) {
@@ -84,15 +172,16 @@ class NotificationProvider with ChangeNotifier {
     }
   }
 
-  // Método que faltaba en tu código original
   void deleteNotification(String notificationId) {
     final index = _notifications.indexWhere((n) => n.id == notificationId);
     if (index != -1) {
       _notifications.removeAt(index);
+      _firebaseService.removeNotification(notificationId);
       notifyListeners();
     }
   }
 
+  // ✅ MÉTODOS DE FILTRADO
   List<NotificationModel> getNotificationsByType(NotificationType type) {
     return _notifications.where((n) => n.type == type).toList();
   }
@@ -108,14 +197,10 @@ class NotificationProvider with ChangeNotifier {
     ).toList();
   }
 
-  List<NotificationModel> getWeekNotifications() {
-    final now = DateTime.now();
-    final weekAgo = now.subtract(const Duration(days: 7));
-    return _notifications.where((n) => n.timestamp.isAfter(weekAgo)).toList();
-  }
-
   Future<void> refresh() async {
+    debugPrint('🔄 Refreshing notifications...');
     _setLoading(true);
+
     try {
       _loadNotifications();
       _clearError();
@@ -126,14 +211,7 @@ class NotificationProvider with ChangeNotifier {
     }
   }
 
-  void removeNotification(String notificationId) {
-    final index = _notifications.indexWhere((n) => n.id == notificationId);
-    if (index != -1) {
-      _notifications.removeAt(index);
-      notifyListeners();
-    }
-  }
-
+  // ✅ MÉTODOS PRIVADOS
   void _setLoading(bool loading) {
     if (_isLoading != loading) {
       _isLoading = loading;
@@ -155,6 +233,7 @@ class NotificationProvider with ChangeNotifier {
 
   @override
   void dispose() {
+    debugPrint('🧹 Disposing NotificationProvider');
     _notificationSubscription?.cancel();
     super.dispose();
   }

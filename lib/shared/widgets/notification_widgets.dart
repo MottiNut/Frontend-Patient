@@ -237,7 +237,6 @@ class NotificationFilterTabs extends StatelessWidget implements PreferredSizeWid
           Tab(text: 'Todas'),
           Tab(text: 'No leídas'),
           Tab(text: 'Hoy'),
-          Tab(text: 'Esta semana'),
         ],
       ),
     );

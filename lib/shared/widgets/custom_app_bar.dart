@@ -260,8 +260,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                 style: TextStyle(color: Colors.red),
               ),
               onTap: () {
-                Navigator.pop(context);
-                _handleLogout(context);
+                Navigator.pop(context); // Cerrar modal primero
+                _showLogoutDialog();
               },
             ),
             const SizedBox(height: 20),
@@ -271,11 +271,30 @@ class _CustomAppBarState extends State<CustomAppBar> {
     );
   }
 
-  Future<void> _handleLogout(BuildContext context) async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.logout();
-    if (context.mounted) {
-      Navigator.pushReplacementNamed(context, RouteNames.login);
-    }
-  }
+  void _showLogoutDialog() => showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Cerrar Sesión'),
+        content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              await authProvider.logout();
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(context, RouteNames.login);
+              }
+            },
+            child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+          )
+        ],
+      );
+    },
+  );
 }

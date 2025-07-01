@@ -1,5 +1,6 @@
 // lib/app.dart
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/core/routes/app_wrapper.dart';
 import 'package:frontendpatient/providers/auth_provider.dart';
 import 'package:frontendpatient/providers/notification_provider.dart';
 import 'package:provider/provider.dart';
@@ -14,103 +15,54 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (context) => NotificationProvider()..initialize()),
-      ],
-      child: MaterialApp(
-        title: 'NutriApp - Pacientes',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppColors.mainOrange,
-            primary: AppColors.mainOrange,
-            secondary: AppColors.mediumOrange,
-          ),
-          fontFamily: 'Montserrat',
-          appBarTheme: const AppBarTheme(
-            backgroundColor: AppColors.mainOrange,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: true,
-            titleTextStyle: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.mainOrange,
-              foregroundColor: Colors.white,
-              elevation: 2,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.mainOrange,
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: AppColors.mainOrange,
-                width: 2,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 2),
-            ),
-            labelStyle: TextStyle(color: Colors.grey[700]),
-            hintStyle: TextStyle(color: Colors.grey[500]),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
-          ),
-          cardTheme: CardTheme(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            color: Colors.white,
-          ),
-          scaffoldBackgroundColor: AppColors.whiteBackground,
-          iconTheme: const IconThemeData(color: AppColors.mainOrange),
-          dividerTheme: DividerThemeData(
-            color: Colors.grey[300],
-            thickness: 1,
-            space: 1,
-          ),
+        // ✅ NotificationProvider sin inicialización inmediata
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider(),
         ),
-        initialRoute: RouteNames.login,
-        onGenerateRoute: AppRouter.generateRoute,
+
+        // ✅ AuthProvider maneja toda la inicialización
+        ChangeNotifierProvider(
+          create: (context) {
+            final authProvider = AuthProvider();
+            final notificationProvider = context.read<NotificationProvider>();
+
+            // ✅ CONFIGURAR: Dependencia una sola vez
+            authProvider.setNotificationProvider(notificationProvider);
+
+            // ✅ INICIALIZAR: Todo desde AuthProvider
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              authProvider.initializeApp();
+            });
+
+            return authProvider;
+          },
+        ),
+      ],
+      child: Consumer<AuthProvider>(
+        builder: (context, authProvider, child) {
+          return MaterialApp(
+            title: 'NutriApp',
+            theme: AppTheme.lightTheme,
+            debugShowCheckedModeBanner: false,
+
+            // ✅ CLAVE: Usar AppWrapper como home Y configurar rutas
+            home: const AppWrapper(),
+
+            // ✅ CRÍTICO: Configurar rutas para navegación programática
+            onGenerateRoute: AppRouter.generateRoute,
+
+            // ✅ GLOBAL: Builder para escalado de texto
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+                child: child ?? const SizedBox.shrink(),
+              );
+            },
+
+            // ✅ NAVEGACIÓN: Configurar navegación global
+            navigatorKey: GlobalKey<NavigatorState>(),
+          );
+        },
       ),
     );
   }
