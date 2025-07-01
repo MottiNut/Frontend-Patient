@@ -1,4 +1,3 @@
-// lib/app.dart
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/core/routes/app_wrapper.dart';
 import 'package:frontendpatient/providers/auth_provider.dart';
@@ -6,7 +5,6 @@ import 'package:frontendpatient/providers/notification_provider.dart';
 import 'package:provider/provider.dart';
 import 'core/themes/app_theme.dart';
 import 'core/routes/app_router.dart';
-import 'core/routes/route_names.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -15,25 +13,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // ✅ NotificationProvider sin inicialización inmediata
+        // Proveedor de notificaciones independiente
         ChangeNotifierProvider(
           create: (_) => NotificationProvider(),
         ),
-
-        // ✅ AuthProvider maneja toda la inicialización
-        ChangeNotifierProvider(
-          create: (context) {
-            final authProvider = AuthProvider();
-            final notificationProvider = context.read<NotificationProvider>();
-
-            // ✅ CONFIGURAR: Dependencia una sola vez
+        // Proveedor de autenticación con inyección de dependencias mejorada
+        ChangeNotifierProxyProvider<NotificationProvider, AuthProvider>(
+          create: (context) => AuthProvider(),
+          update: (context, notificationProvider, authProvider) {
+            // Inyectar el proveedor de notificaciones de forma reactiva
+            authProvider ??= AuthProvider();
             authProvider.setNotificationProvider(notificationProvider);
-
-            // ✅ INICIALIZAR: Todo desde AuthProvider
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              authProvider.initializeApp();
-            });
-
             return authProvider;
           },
         ),
@@ -44,22 +34,17 @@ class MyApp extends StatelessWidget {
             title: 'NutriApp',
             theme: AppTheme.lightTheme,
             debugShowCheckedModeBanner: false,
-
-            // ✅ CLAVE: Usar AppWrapper como home Y configurar rutas
             home: const AppWrapper(),
-
-            // ✅ CRÍTICO: Configurar rutas para navegación programática
             onGenerateRoute: AppRouter.generateRoute,
-
-            // ✅ GLOBAL: Builder para escalado de texto
             builder: (context, child) {
               return MediaQuery(
-                data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+                data: MediaQuery.of(context).copyWith(
+                  textScaleFactor: 1.0, // Consistencia en el tamaño de texto
+                ),
                 child: child ?? const SizedBox.shrink(),
               );
             },
-
-            // ✅ NAVEGACIÓN: Configurar navegación global
+            // Navigator key para navegación programática si es necesario
             navigatorKey: GlobalKey<NavigatorState>(),
           );
         },

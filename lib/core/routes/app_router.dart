@@ -1,8 +1,5 @@
-// core/routes/app_router.dart
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/providers/auth_provider.dart';
 import 'package:frontendpatient/screens/recipes/recipes_screen.dart';
-import 'package:provider/provider.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/home/home_screen.dart';
@@ -11,85 +8,71 @@ import '../../screens/profile/profile_screen.dart';
 import 'route_names.dart';
 
 class AppRouter {
+  // Mapa de rutas para mejor rendimiento
+  static final Map<String, Widget Function(BuildContext)> _routes = {
+    RouteNames.login: (_) => const LoginScreen(),
+    RouteNames.register: (_) => const RegisterFlow(),
+    RouteNames.home: (_) => const PatientHomeScreen(),
+    RouteNames.recipes: (_) => const RecipesScreen(),
+    RouteNames.pendingPlans: (_) => const PendingPlansScreen(),
+    RouteNames.profile: (_) => const ProfileScreen(),
+  };
+
   static Route<dynamic>? generateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case RouteNames.login:
-        return MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-          settings: settings,
-        );
+    final routeName = settings.name;
+    final builder = _routes[routeName];
 
-      case RouteNames.register:
-        return MaterialPageRoute(
-          builder: (_) => const RegisterFlow(),
-          settings: settings,
-        );
-
-      case RouteNames.home:
-        return MaterialPageRoute(
-          builder: (_) => const PatientHomeScreen(),
-          settings: settings,
-        );
-
-      case RouteNames.recipes:
-        return MaterialPageRoute(
-          builder: (_) => const RecipesScreen(),
-          settings: settings,
-        );
-
-      case RouteNames.pendingPlans:
-        return MaterialPageRoute(
-          builder: (_) => const PendingPlansScreen(),
-          settings: settings,
-        );
-
-      case RouteNames.profile:
-        return MaterialPageRoute(
-          builder: (_) => const ProfileScreen(),
-          settings: settings,
-        );
-
-      default:
-        return MaterialPageRoute(
-          builder: (_) => const _NotFoundScreen(),
-          settings: settings,
-        );
+    if (builder != null) {
+      return _createRoute(builder, settings);
     }
+
+    // Ruta por defecto si no se encuentra
+    return _createRoute(
+          (_) => const _NotFoundScreen(),
+      settings,
+    );
   }
 
-  // Widget para manejar la ruta inicial basada en el estado de autenticación
-  static Widget initialRoute() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        if (authProvider.isLoading) {
-          return const _LoadingScreen();
-        }
+  // Método auxiliar para crear rutas con configuración consistente
+  static Route<dynamic> _createRoute(
+      Widget Function(BuildContext) builder,
+      RouteSettings settings,
+      ) {
+    return MaterialPageRoute(
+      builder: builder,
+      settings: settings,
+    );
+  }
 
-        if (authProvider.isAuthenticated) {
-          return const PatientHomeScreen();
-        }
+  // Método para rutas con animaciones personalizadas (opcional)
+  static Route<dynamic> _createAnimatedRoute(
+      Widget Function(BuildContext) builder,
+      RouteSettings settings, {
+        Duration duration = const Duration(milliseconds: 300),
+      }) {
+    return PageRouteBuilder(
+      settings: settings,
+      pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+      transitionDuration: duration,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.ease;
 
-        return const LoginScreen();
+        var tween = Tween(begin: begin, end: end).chain(
+          CurveTween(curve: curve),
+        );
+
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
       },
     );
   }
 }
 
-// Pantalla de carga
-class _LoadingScreen extends StatelessWidget {
-  const _LoadingScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-  }
-}
-
-// Pantalla de error 404
+// Pantalla optimizada para rutas no encontradas
 class _NotFoundScreen extends StatelessWidget {
   const _NotFoundScreen();
 
@@ -98,20 +81,45 @@ class _NotFoundScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Página no encontrada'),
+        centerTitle: true,
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.grey,
+              color: Colors.grey[400],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'Página no encontrada',
-              style: TextStyle(fontSize: 18),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                // Navegar al home o hacer pop
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pushReplacementNamed(context, RouteNames.home);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Volver al inicio'),
             ),
           ],
         ),

@@ -1,54 +1,60 @@
-// lib/core/app_wrapper.dart
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/providers/auth_provider.dart';
 import 'package:frontendpatient/screens/auth/login_screen.dart';
 import 'package:frontendpatient/screens/home/home_screen.dart';
 import 'package:provider/provider.dart';
 
-class AppWrapper extends StatelessWidget {
+class AppWrapper extends StatefulWidget {
   const AppWrapper({super.key});
 
   @override
+  State<AppWrapper> createState() => _AppWrapperState();
+}
+
+class _AppWrapperState extends State<AppWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar la app de forma más segura
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().initializeApp();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        debugPrint('🔄 AppWrapper - Current AuthState: ${authProvider.state}');
+    return Selector<AuthProvider, AuthState>(
+      selector: (context, authProvider) => authProvider.state,
+      builder: (context, authState, child) {
+        switch (authState) {
+          case AuthState.initial:
+          case AuthState.loading:
+          case AuthState.loggingOut:
+            return const _LoadingScreen();
 
-        // ✅ LOADING: Mostrar splash durante inicialización
-        if (authProvider.state == AuthState.initial ||
-            authProvider.state == AuthState.loading) {
-          return const AppLoadingScreen();
+          case AuthState.authenticated:
+            return const PatientHomeScreen();
+
+          case AuthState.error:
+            return _ErrorScreen(
+              onRetry: () {
+                final authProvider = context.read<AuthProvider>();
+                authProvider.clearError(); // Limpiar error antes de reintentar
+                authProvider.checkAuthStatus();
+              },
+            );
+
+          case AuthState.unauthenticated:
+            return const LoginScreen();
         }
-
-        // ✅ LOGOUT: Mostrar loading específico durante logout
-        if (authProvider.state == AuthState.loggingOut) {
-          return const LogoutLoadingScreen();
-        }
-
-        // ✅ AUTHENTICATED: Mostrar app principal
-        if (authProvider.state == AuthState.authenticated) {
-          return const PatientHomeScreen();
-        }
-
-        // ✅ ERROR: Mostrar error pero con opción de retry
-        if (authProvider.state == AuthState.error) {
-          return AppErrorScreen(
-            error: authProvider.errorMessage ?? 'Error desconocido',
-            onRetry: () => authProvider.checkAuthStatus(),
-          );
-        }
-
-        // ✅ UNAUTHENTICATED: Mostrar login - SIEMPRE DEBE LLEGAR AQUÍ DESPUÉS DE LOGOUT
-        debugPrint('✅ AppWrapper - Showing LoginScreen');
-        return const LoginScreen();
       },
     );
   }
 }
 
-// ✅ Pantalla de carga general
-class AppLoadingScreen extends StatelessWidget {
-  const AppLoadingScreen({super.key});
+// Widget de loading unificado y optimizado
+class _LoadingScreen extends StatelessWidget {
+  const _LoadingScreen();
 
   @override
   Widget build(BuildContext context) {
@@ -56,9 +62,8 @@ class AppLoadingScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Logo de la app
             Container(
               width: 80,
               height: 80,
@@ -92,47 +97,11 @@ class AppLoadingScreen extends StatelessWidget {
   }
 }
 
-// ✅ Pantalla específica para logout
-class LogoutLoadingScreen extends StatelessWidget {
-  const LogoutLoadingScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Cerrando sesión...',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ✅ Pantalla de error con opción de reintentar
-class AppErrorScreen extends StatelessWidget {
-  final String error;
+// Widget de error optimizado
+class _ErrorScreen extends StatelessWidget {
   final VoidCallback onRetry;
 
-  const AppErrorScreen({
-    super.key,
-    required this.error,
-    required this.onRetry,
-  });
+  const _ErrorScreen({required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +111,7 @@ class AppErrorScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 Icons.error_outline,
@@ -159,13 +128,18 @@ class AppErrorScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                error,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+              Selector<AuthProvider, String?>(
+                selector: (context, authProvider) => authProvider.errorMessage,
+                builder: (context, errorMessage, child) {
+                  return Text(
+                    errorMessage ?? 'Error desconocido',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 32),
               ElevatedButton(
