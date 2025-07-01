@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
-import 'package:frontendpatient/screens/auth/widgets/age_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/allergies_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/birth_date_screen.dart';
 import 'package:frontendpatient/screens/auth/widgets/chronic_disease_screen.dart';
@@ -110,17 +109,14 @@ class _RegisterFlowState extends State<RegisterFlow> {
       case 3: // BirthDateScreen
         return formData['birthDate'] != null;
 
-      case 4: // AgeScreen
-        return _ageController.text.trim().isNotEmpty;
-
-      case 5: // HeightWeightScreen
+      case 4: // HeightWeightScreen
         return _heightController.text.trim().isNotEmpty &&
             _weightController.text.trim().isNotEmpty;
 
-      case 6: // MedicalConditionScreen
+      case 5: // MedicalConditionScreen
         return true; // Esta página siempre es válida (tiene valor por defecto)
 
-      case 7: // ChronicDiseaseScreen
+      case 6: // ChronicDiseaseScreen
         if (formData['hasMedicalCondition'] == true) {
           // Si tiene condición médica, debe seleccionar algo
           return formData['chronicDisease'] != null && formData['chronicDisease'] != '' ||
@@ -128,7 +124,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
         }
         return true; // Si no tiene condición médica, es válido
 
-      case 8: // AllergiesScreen
+      case 7: // AllergiesScreen
         return formData['allergies'] != null && formData['allergies'] != '' ||
             _allergiesController.text.trim().isNotEmpty;
 
@@ -147,7 +143,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
   void _nextPage() {
     if (_validateCurrentPage()) {
-      if (_currentPage < 8) {
+      if (_currentPage < 7) {
         setState(() => _currentPage++);
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
@@ -377,8 +373,6 @@ class _RegisterFlowState extends State<RegisterFlow> {
           onDateChanged: (date) => setState(() => formData['birthDate'] = date),
         );
       case 4:
-        return AgeScreen(ageController: _ageController);
-      case 5:
         return HeightWeightScreen(
           initialHeight: _heightController.text.isNotEmpty
               ? double.tryParse(_heightController.text)! / 100
@@ -395,18 +389,18 @@ class _RegisterFlowState extends State<RegisterFlow> {
             });
           },
         );
-      case 6:
+      case 5:
         return MedicalConditionScreen(
           hasMedicalCondition: formData['hasMedicalCondition'],
           onConditionChanged: (value) => setState(() => formData['hasMedicalCondition'] = value),
         );
-      case 7:
+      case 6:
         return ChronicDiseaseScreen(
           selectedDisease: formData['chronicDisease'],
           customDiseaseController: _chronicDiseaseController,
           onDiseaseChanged: (disease) => setState(() => formData['chronicDisease'] = disease),
         );
-      case 8:
+      case 7:
         return AllergiesScreen(
           selectedAllergy: formData['allergies'],
           customAllergyController: _allergiesController,
@@ -473,7 +467,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
                               ),
                             )
                                 : Icon(
-                              _currentPage == 8 ? Icons.check : Icons.arrow_forward,
+                              _currentPage == 7 ? Icons.check : Icons.arrow_forward,
                               color: iconColor,
                             ),
                           ),

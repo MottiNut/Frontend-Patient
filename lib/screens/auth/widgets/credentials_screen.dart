@@ -1,10 +1,8 @@
-// credentials_screen.dart
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
-
 import '../../../shared/utils/validators.dart';
 
-class CredentialsScreen extends StatelessWidget {
+class CredentialsScreen extends StatefulWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController repeatPasswordController;
@@ -15,6 +13,14 @@ class CredentialsScreen extends StatelessWidget {
     required this.passwordController,
     required this.repeatPasswordController,
   });
+
+  @override
+  State<CredentialsScreen> createState() => _CredentialsScreenState();
+}
+
+class _CredentialsScreenState extends State<CredentialsScreen> {
+  bool _obscurePassword = true;
+  bool _obscureRepeatPassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +37,7 @@ class CredentialsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         TextFormField(
-          controller: emailController,
+          controller: widget.emailController,
           keyboardType: TextInputType.emailAddress,
           decoration: const InputDecoration(
             hintText: 'Example@gmail.com',
@@ -51,12 +57,22 @@ class CredentialsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         TextFormField(
-          controller: passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(
+          controller: widget.passwordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
             hintText: 'Ingresa tu contraseña',
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
           ),
           validator: Validators.validatePassword,
         ),
@@ -71,16 +87,26 @@ class CredentialsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         TextFormField(
-          controller: repeatPasswordController,
-          obscureText: true,
-          decoration: const InputDecoration(
+          controller: widget.repeatPasswordController,
+          obscureText: _obscureRepeatPassword,
+          decoration: InputDecoration(
             hintText: 'Ingresa nuevamente tu contraseña',
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureRepeatPassword ? Icons.visibility_off : Icons.visibility,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscureRepeatPassword = !_obscureRepeatPassword;
+                });
+              },
+            ),
           ),
           validator: (value) => Validators.validateConfirmPassword(
             value,
-            passwordController.text,
+            widget.passwordController.text,
           ),
         ),
       ],
