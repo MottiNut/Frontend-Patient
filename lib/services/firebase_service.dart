@@ -26,7 +26,7 @@ class FirebaseService {
   final Set<String> _processedMessages = <String>{};
   bool _isInitialized = false;
 
-  static const String _baseUrl = 'http://192.168.1.2:5000';
+  static const String _baseUrl = 'https://mottinut-backend-2025-djf0f5c0hjckhpgp.centralus-01.azurewebsites.net';
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -234,7 +234,7 @@ class FirebaseService {
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         debugPrint('✅ Device token sent to server successfully for user: $_currentUserId');
       } else {
         debugPrint('❌ Error sending device token: ${response.statusCode} - ${response.body}');
@@ -257,7 +257,7 @@ class FirebaseService {
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 204) {
         debugPrint('✅ Device token removed from server successfully');
       } else {
         debugPrint('❌ Error removing device token: ${response.statusCode}');
