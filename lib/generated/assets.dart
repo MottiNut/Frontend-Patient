@@ -12,6 +12,7 @@ class Assets {
   static const String imagesBreakfastIcon = 'assets/images/breakfast-icon.png';
   static const String imagesDinnerIcon = 'assets/images/dinner-icon.svg';
   static const String imagesFoodBackground = 'assets/images/food-background.png';
+  static const String imagesLogo = 'assets/images/logo.png';
   static const String imagesLunchIcon = 'assets/images/lunch-icon.svg';
   static const String imagesMealCard = 'assets/images/meal-card.png';
   static const String imagesPerfil = 'assets/images/perfil.jpg';
