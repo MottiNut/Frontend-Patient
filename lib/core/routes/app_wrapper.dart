@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontendpatient/providers/auth_provider.dart';
 import 'package:frontendpatient/screens/auth/login_screen.dart';
 import 'package:frontendpatient/screens/home/home_screen.dart';
@@ -53,6 +54,7 @@ class _AppWrapperState extends State<AppWrapper> {
 }
 
 // Widget de loading unificado y optimizado
+
 class _LoadingScreen extends StatelessWidget {
   const _LoadingScreen();
 
@@ -71,10 +73,12 @@ class _LoadingScreen extends StatelessWidget {
                 color: Colors.orange[50],
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(
-                Icons.restaurant_menu,
-                size: 40,
-                color: Colors.orange[600],
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: SvgPicture.asset(
+                  'assets/images/logo.svg', // Asegúrate que esté bien en pubspec.yaml
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
             const SizedBox(height: 24),

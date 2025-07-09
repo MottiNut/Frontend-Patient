@@ -1,5 +1,6 @@
 // screens/auth/login_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import '../../core/themes/app_theme.dart';
 import '../../providers/auth_provider.dart';
@@ -53,11 +54,14 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 40),
-
                 // Logo + Nombre
                 Column(
                   children: [
-                    const Icon(Icons.restaurant_menu, size: 80, color: AppColors.mainOrange),
+                    SvgPicture.asset(
+                      'assets/images/logo.svg',
+                      width: 80,
+                      height: 80,
+                    ),
                     const SizedBox(height: 10),
                     Text(
                       'Motti Nut',
@@ -69,7 +73,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 40),
-
                 // Pestañas Login / Registro
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

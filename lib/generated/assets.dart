@@ -3,6 +3,7 @@ class Assets {
   Assets._();
 
   static const String assetsImagesBreakfastIcon = 'assets/images/breakfast-icon.svg';
+  static const String assetsImagesLogo = 'assets/images/logo.svg';
   static const String assetsImagesMealCard = 'assets/images/meal-card.png';
   static const String assetsImagesVectorRetrocession = 'assets/images/vector-retrocession.svg';
   static const String fontsMontserratLight = 'assets/fonts/Montserrat-Light.ttf';

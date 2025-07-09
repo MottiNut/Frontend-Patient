@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/nutrition_plan/daily_plan_response.dart';
 import '../models/nutrition_plan/nutririon_plan_model.dart';
 import '../shared/utils/ApiError.dart';
+import '../shared/utils/response_error.dart';
 class NoPlanFoundException implements Exception {
   final String message;
   NoPlanFoundException(this.message);
@@ -204,37 +205,22 @@ class NutritionPlanService {
 
   // Obtener plan semanal
   Future<WeeklyPlanResponse> getWeeklyPlan({String? date}) async {
-    try {
-      final headers = await _getHeaders();
+    String url = '$baseUrl/weekly';
+    if (date != null) {
+      url += '?date=$date';
+    }
 
-      String url = '$baseUrl/weekly';
-      if (date != null) {
-        url += '?date=$date';
-      }
+    final headers = await _getHeaders();
+    final response = await _client.get(
+      Uri.parse(url),
+      headers: headers,
+    );
 
-      final response = await _client.get(
-        Uri.parse(url),
-        headers: headers,
-      );
-
-      if (response.statusCode == 200) {
-        final decodedBody = _safeJsonDecode(response.body);
-        if (decodedBody is Map<String, dynamic>) {
-          return WeeklyPlanResponse.fromJson(decodedBody);
-        } else {
-          throw Exception('Respuesta inesperada del servidor');
-        }
-      } else {
-        final decodedBody = _safeJsonDecode(response.body);
-        if (decodedBody is Map<String, dynamic>) {
-          final error = ApiError.fromJson(decodedBody);
-          throw Exception(error.message);
-        } else {
-          throw Exception('Error ${response.statusCode}: ${response.reasonPhrase ?? 'Error desconocido'}');
-        }
-      }
-    } catch (e) {
-      throw Exception('Error obteniendo plan semanal: $e');
+    if (response.statusCode == 200) {
+      return WeeklyPlanResponse.fromJson(json.decode(response.body));
+    } else {
+      handleResponseError(response);
+      throw Exception('Error inesperado');
     }
   }
 

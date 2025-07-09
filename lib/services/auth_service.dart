@@ -17,6 +17,7 @@ import 'package:mime/mime.dart';
 import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
 import '../shared/utils/ApiError.dart';
+import '../shared/utils/response_error.dart';
 
 class AuthService {
   static const String baseUrl = ApiConstants.auth;
@@ -24,25 +25,21 @@ class AuthService {
 
   final http.Client _client = http.Client();
 
+
   Future<AuthResponse> login(LoginRequest request) async {
-    try {
-      final response = await _client.post(
-        Uri.parse('$baseUrl/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(request.toJson()),
-      );
+    final response = await _client.post(
+      Uri.parse('$baseUrl/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(request.toJson()),
+    );
 
-      if (response.statusCode == 200) {
-        final authResponse = AuthResponse.fromJson(json.decode(response.body));
-        await _saveToken(authResponse.token);
-
-        return authResponse;
-      } else {
-        final error = ApiError.fromJson(json.decode(response.body));
-        throw Exception(error.message);
-      }
-    } catch (e) {
-      throw Exception('Error de conexión: $e');
+    if (response.statusCode == 200) {
+      final authResponse = AuthResponse.fromJson(json.decode(response.body));
+      await _saveToken(authResponse.token);
+      return authResponse;
+    } else {
+      handleResponseError(response);
+      throw Exception('Error inesperado');
     }
   }
 
