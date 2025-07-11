@@ -1,5 +1,6 @@
 // lib/widgets/common/custom_bottom_nav_bar.dart
 import 'package:flutter/material.dart';
+
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -14,7 +15,7 @@ class CustomBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.orange[600], // Color de respaldo si AppColors falla
+        color: Colors.orange[600], // Mantén tu color original
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -24,9 +25,9 @@ class CustomBottomNavBar extends StatelessWidget {
         ],
       ),
       child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
         currentIndex: currentIndex.clamp(0, 3),
         onTap: onTap,
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.transparent, // Transparente para mostrar el Container
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white.withOpacity(0.6),

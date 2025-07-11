@@ -140,10 +140,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           );
         },
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: AppNavigationHandler.currentIndex,
-        onTap: (index) => AppNavigationHandler.handleNavigation(context, index),
-      ),
     );
   }
 

@@ -6,7 +6,6 @@ import 'package:frontendpatient/models/user/user_model.dart';
 import 'package:frontendpatient/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../shared/widgets/app_navigation_handler.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../shared/widgets/custom_app_bar.dart';
 import 'edit_profile_screen.dart';
 import 'dart:io';
@@ -346,10 +345,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
-    ),
-    bottomNavigationBar: CustomBottomNavBar(
-      currentIndex: AppNavigationHandler.currentIndex,
-      onTap: (index) => AppNavigationHandler.handleNavigation(context, index),
     ),
   );
 

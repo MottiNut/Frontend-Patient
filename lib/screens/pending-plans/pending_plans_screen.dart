@@ -5,7 +5,6 @@ import 'package:frontendpatient/screens/pending-plans/widgets/plan_card.dart';
 import 'package:frontendpatient/screens/pending-plans/widgets/plan_details_dialog.dart';
 import 'package:provider/provider.dart';
 import '../../shared/widgets/app_navigation_handler.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../shared/widgets/custom_app_bar.dart';
 import 'controllers/pending_plans_controller.dart';
 
@@ -98,10 +97,6 @@ class _PendingPlansScreenState extends State<PendingPlansScreen> {
       value: _controller,
       child: Scaffold(
         appBar: const CustomAppBar(),
-        bottomNavigationBar: CustomBottomNavBar(
-          currentIndex: AppNavigationHandler.currentIndex,
-          onTap: (index) => AppNavigationHandler.handleNavigation(context, index),
-        ),
         body: Consumer<PendingPlansController>(
           builder: (context, controller, _) {
             if (controller.isLoading) {
