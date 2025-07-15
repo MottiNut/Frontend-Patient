@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/nutrition_plan/domain/models/pending_patient_acceptance.dart';
-import '../../../shared/utils/date_formatter.dart';
+import '../../../commons/utils/date_formatter.dart';
 
 class PlanCard extends StatelessWidget {
   final PendingPatientAcceptance plan;

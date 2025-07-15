@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/core/themes/app_theme.dart';
-import '../../../shared/utils/validators.dart';
+import 'package:frontendpatient/commons/themes/app_theme.dart';
+import '../../../commons/utils/validators.dart';
 
 class CredentialsScreen extends StatefulWidget {
   final TextEditingController emailController;

@@ -4,7 +4,7 @@ import 'package:frontendpatient/nutrition_plan/presentation/widgets/error_state_
 import 'package:frontendpatient/nutrition_plan/presentation/widgets/plan_card.dart';
 import 'package:frontendpatient/nutrition_plan/presentation/widgets/plan_details_dialog.dart';
 import 'package:provider/provider.dart';
-import '../../../shared/widgets/custom_app_bar.dart';
+import '../../../commons/widgets/custom_app_bar.dart';
 import '../controllers/pending_plans_controller.dart';
 
 class PendingPlansScreen extends StatefulWidget {

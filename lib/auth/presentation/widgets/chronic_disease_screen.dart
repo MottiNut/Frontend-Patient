@@ -1,6 +1,6 @@
 // chronic_disease_screen.dart
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/core/themes/app_theme.dart';
+import 'package:frontendpatient/commons/themes/app_theme.dart';
 
 class ChronicDiseaseScreen extends StatelessWidget {
   final String? selectedDisease;

@@ -8,7 +8,7 @@ import 'package:frontendpatient/auth/domain/models/role.dart';
 import 'package:frontendpatient/auth/domain/models/user.dart';
 import 'package:frontendpatient/providers/notification_provider.dart';
 import 'package:frontendpatient/auth/application/services/auth_service.dart';
-import 'package:frontendpatient/shared/widgets/app_navigation_handler.dart';
+import 'package:frontendpatient/commons/widgets/app_navigation_handler.dart';
 
 enum AuthState {
   initial,

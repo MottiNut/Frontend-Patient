@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/core/themes/app_theme.dart';
+import 'package:frontendpatient/commons/themes/app_theme.dart';
 
 class HeightWeightScreen extends StatefulWidget {
   final double? initialHeight; // Altura inicial en metros

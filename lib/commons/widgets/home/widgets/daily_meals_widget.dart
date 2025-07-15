@@ -1,7 +1,7 @@
 // lib/screens/patient_home/widgets/daily_meals_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:frontendpatient/core/themes/app_theme.dart';
+import 'package:frontendpatient/commons/themes/app_theme.dart';
 import 'package:frontendpatient/nutrition_plan/domain/models/daily_plan.dart';
 import 'package:frontendpatient/nutrition_plan/domain/models/meal.dart';
 import 'package:frontendpatient/nutrition_plan/domain/models/meal_type_mapper.dart';

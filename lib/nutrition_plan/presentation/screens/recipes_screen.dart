@@ -6,7 +6,7 @@ import 'package:frontendpatient/nutrition_plan/presentation/widgets/recipes_erro
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../application/services/nutrition_plan_service.dart';
-import '../../../shared/widgets/custom_app_bar.dart';
+import '../../../commons/widgets/custom_app_bar.dart';
 
 class RecipesScreen extends StatefulWidget {
   const RecipesScreen({super.key});

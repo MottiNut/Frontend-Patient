@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:frontendpatient/nutrition_plan/domain/models/enums.dart';
-import 'package:frontendpatient/shared/constants/api_constants.dart';
-import 'package:frontendpatient/shared/utils/ApiError.dart';
+import 'package:frontendpatient/commons/constants/api_constants.dart';
+import 'package:frontendpatient/commons/utils/api_error.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontendpatient/nutrition_plan/data/dtos/daily_plan_dto.dart';

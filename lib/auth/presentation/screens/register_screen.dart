@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:frontendpatient/core/themes/app_theme.dart';
+import 'package:frontendpatient/commons/themes/app_theme.dart';
 import 'package:frontendpatient/auth/presentation/widgets/allergies_screen.dart';
 import 'package:frontendpatient/auth/presentation/widgets/birth_date_screen.dart';
 import 'package:frontendpatient/auth/presentation/widgets/chronic_disease_screen.dart';

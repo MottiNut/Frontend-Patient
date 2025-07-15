@@ -1,6 +1,6 @@
 // shared/widgets/app_navigation_handler.dart
 import 'package:flutter/material.dart';
-import '../../core/routes/route_names.dart';
+import '../routes/route_names.dart';
 
 class AppNavigationHandler {
   static int _currentIndex = 0;

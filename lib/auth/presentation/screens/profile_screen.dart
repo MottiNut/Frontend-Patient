@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/core/routes/route_names.dart';
+import 'package:frontendpatient/commons/routes/route_names.dart';
 import 'package:frontendpatient/auth/domain/models/patient.dart';
 import 'package:frontendpatient/auth/domain/models/role.dart';
 import 'package:frontendpatient/auth/domain/models/user.dart';
 import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-import '../../../shared/widgets/app_navigation_handler.dart';
-import '../../../shared/widgets/custom_app_bar.dart';
+import '../../../commons/widgets/app_navigation_handler.dart';
+import '../../../commons/widgets/custom_app_bar.dart';
 import 'edit_profile_screen.dart';
 import 'dart:io';
 import 'dart:convert';

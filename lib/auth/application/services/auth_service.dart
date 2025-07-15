@@ -9,14 +9,14 @@ import 'package:frontendpatient/auth/data/dtos/update_profile.dart';
 import 'package:frontendpatient/auth/domain/models/nutritionist.dart';
 import 'package:frontendpatient/auth/domain/models/patient.dart';
 import 'package:frontendpatient/auth/domain/models/user.dart';
-import 'package:frontendpatient/shared/constants/api_constants.dart';
+import 'package:frontendpatient/commons/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mime/mime.dart';
 import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
-import '../../../shared/utils/ApiError.dart';
-import '../../../shared/utils/response_error.dart';
+import '../../../commons/utils/api_error.dart';
+import '../../../commons/utils/response_error.dart';
 
 class AuthService {
   static const String baseUrl = ApiConstants.auth;

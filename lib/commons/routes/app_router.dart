@@ -1,6 +1,6 @@
 // core/routes/app_router.dart
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/core/routes/swipe_navigation_wrapper.dart';
+import 'package:frontendpatient/commons/routes/swipe_navigation_wrapper.dart';
 import '../../auth/presentation/screens/login_screen.dart';
 import '../../auth/presentation/screens/register_screen.dart';
 import 'route_names.dart';

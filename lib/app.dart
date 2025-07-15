@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/core/routes/app_wrapper.dart';
+import 'package:frontendpatient/commons/routes/app_wrapper.dart';
 import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
 import 'package:frontendpatient/providers/notification_provider.dart';
 import 'package:provider/provider.dart';
-import 'core/themes/app_theme.dart';
-import 'core/routes/app_router.dart';
+import 'commons/themes/app_theme.dart';
+import 'commons/routes/app_router.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

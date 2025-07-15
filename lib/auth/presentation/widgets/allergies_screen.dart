@@ -1,6 +1,6 @@
 // allergies_screen.dart
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/core/themes/app_theme.dart';
+import 'package:frontendpatient/commons/themes/app_theme.dart';
 
 class AllergiesScreen extends StatelessWidget {
   final String? selectedAllergy;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/themes/app_theme.dart';
+import '../../../commons/themes/app_theme.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   const EmptyStateWidget({super.key});

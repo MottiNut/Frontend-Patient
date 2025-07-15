@@ -1,10 +1,10 @@
 // shared/widgets/swipe_navigation_wrapper.dart
 import 'package:flutter/material.dart';
-import '../../screens/home/home_screen.dart';
+import '../widgets/home/home_screen.dart';
 import '../../nutrition_plan/presentation/screens/recipes_screen.dart';
 import '../../nutrition_plan/presentation/screens/pending_plans_screen.dart';
 import '../../auth/presentation/screens/profile_screen.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class SwipeNavigationWrapper extends StatefulWidget {
   final int initialIndex;
