@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
-import 'package:frontendpatient/screens/auth/widgets/allergies_screen.dart';
-import 'package:frontendpatient/screens/auth/widgets/birth_date_screen.dart';
-import 'package:frontendpatient/screens/auth/widgets/chronic_disease_screen.dart';
-import 'package:frontendpatient/screens/auth/widgets/credentials_screen.dart';
-import 'package:frontendpatient/screens/auth/widgets/gender_screen.dart';
-import 'package:frontendpatient/screens/auth/widgets/height_weight_screen.dart';
-import 'package:frontendpatient/screens/auth/widgets/medical_condition_screen.dart';
-import 'package:frontendpatient/screens/auth/widgets/personal_info_screen.dart';
+import 'package:frontendpatient/auth/presentation/widgets/allergies_screen.dart';
+import 'package:frontendpatient/auth/presentation/widgets/birth_date_screen.dart';
+import 'package:frontendpatient/auth/presentation/widgets/chronic_disease_screen.dart';
+import 'package:frontendpatient/auth/presentation/widgets/credentials_screen.dart';
+import 'package:frontendpatient/auth/presentation/widgets/gender_screen.dart';
+import 'package:frontendpatient/auth/presentation/widgets/height_weight_screen.dart';
+import 'package:frontendpatient/auth/presentation/widgets/medical_condition_screen.dart';
+import 'package:frontendpatient/auth/presentation/widgets/personal_info_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:frontendpatient/providers/auth_provider.dart';
+import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
 
 class RegisterFlow extends StatefulWidget {
   const RegisterFlow({super.key});

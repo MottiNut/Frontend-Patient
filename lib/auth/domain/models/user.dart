@@ -1,6 +1,6 @@
-import 'package:frontendpatient/models/user/nutritionist_model.dart';
-import 'package:frontendpatient/models/user/patient_model.dart';
-import 'package:frontendpatient/models/user/role.dart';
+import 'package:frontendpatient/auth/domain/models/nutritionist.dart';
+import 'package:frontendpatient/auth/domain/models/patient.dart';
+import 'package:frontendpatient/auth/domain/models/role.dart';
 
 abstract class User {
   final int userId;

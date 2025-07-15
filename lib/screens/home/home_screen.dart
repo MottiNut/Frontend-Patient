@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/nutrition_plan/daily_plan_response.dart';
-import '../../providers/auth_provider.dart';
+import '../../auth/presentation/providers/auth_provider.dart';
 import '../../services/nutrition_plan_service.dart';
 import '../../shared/widgets/app_navigation_handler.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/models/auth/update_profile.dart';
-import 'package:frontendpatient/models/user/patient_model.dart';
-import 'package:frontendpatient/providers/auth_provider.dart';
+import 'package:frontendpatient/auth/data/dtos/update_profile.dart';
+import 'package:frontendpatient/auth/domain/models/patient.dart';
+import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
-import '../../shared/widgets/app_navigation_handler.dart';
+import '../../../shared/widgets/app_navigation_handler.dart';
 
 class EditPatientProfileDialog extends StatefulWidget {
   final Patient patient;

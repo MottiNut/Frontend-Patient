@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/recipes/recipes_screen.dart';
 import '../../screens/pending-plans/pending_plans_screen.dart';
-import '../../screens/profile/profile_screen.dart';
+import '../../auth/presentation/screens/profile_screen.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 
 class SwipeNavigationWrapper extends StatefulWidget {

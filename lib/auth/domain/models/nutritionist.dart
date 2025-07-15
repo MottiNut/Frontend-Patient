@@ -1,5 +1,5 @@
-import 'package:frontendpatient/models/user/role.dart';
-import 'package:frontendpatient/models/user/user_model.dart';
+import 'package:frontendpatient/auth/domain/models/role.dart';
+import 'package:frontendpatient/auth/domain/models/user.dart';
 
 class Nutritionist extends User {
   final String licenseNumber;

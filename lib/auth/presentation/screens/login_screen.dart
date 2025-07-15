@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
-import '../../core/themes/app_theme.dart';
-import '../../providers/auth_provider.dart';
-import '../../shared/utils/validators.dart';
-import '../../core/routes/route_names.dart';
+import '../../../core/themes/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../../../shared/utils/validators.dart';
+import '../../../core/routes/route_names.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

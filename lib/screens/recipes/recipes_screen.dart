@@ -4,7 +4,7 @@ import 'package:frontendpatient/screens/recipes/widgets/no_plan_widget.dart';
 import 'package:frontendpatient/screens/recipes/widgets/recipes_error_widget.dart';
 import 'package:provider/provider.dart';
 import '../../models/nutrition_plan/nutririon_plan_model.dart';
-import '../../providers/auth_provider.dart';
+import '../../auth/presentation/providers/auth_provider.dart';
 import '../../services/nutrition_plan_service.dart';
 import '../../shared/widgets/custom_app_bar.dart';
 

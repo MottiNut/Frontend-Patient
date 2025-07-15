@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:frontendpatient/models/auth/login_request.dart';
-import 'package:frontendpatient/models/auth/register_nutritionist_request.dart';
-import 'package:frontendpatient/models/auth/register_patient_request.dart';
-import 'package:frontendpatient/models/auth/update_profile.dart';
-import 'package:frontendpatient/models/user/role.dart';
-import 'package:frontendpatient/models/user/user_model.dart';
+import 'package:frontendpatient/auth/data/dtos/login_request.dart';
+import 'package:frontendpatient/auth/data/dtos/register_nutritionist_request.dart';
+import 'package:frontendpatient/auth/data/dtos/register_patient_request.dart';
+import 'package:frontendpatient/auth/data/dtos/update_profile.dart';
+import 'package:frontendpatient/auth/domain/models/role.dart';
+import 'package:frontendpatient/auth/domain/models/user.dart';
 import 'package:frontendpatient/providers/notification_provider.dart';
-import 'package:frontendpatient/services/auth_service.dart';
+import 'package:frontendpatient/auth/application/services/auth_service.dart';
 import 'package:frontendpatient/shared/widgets/app_navigation_handler.dart';
 
 enum AuthState {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:frontendpatient/core/routes/swipe_navigation_wrapper.dart';
-import 'package:frontendpatient/providers/auth_provider.dart';
-import 'package:frontendpatient/screens/auth/login_screen.dart';
+import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
+import 'package:frontendpatient/auth/presentation/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/services.dart';
