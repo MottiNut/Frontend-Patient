@@ -4,7 +4,6 @@ import 'package:frontendpatient/screens/pending-plans/widgets/error_state_widget
 import 'package:frontendpatient/screens/pending-plans/widgets/plan_card.dart';
 import 'package:frontendpatient/screens/pending-plans/widgets/plan_details_dialog.dart';
 import 'package:provider/provider.dart';
-import '../../shared/widgets/app_navigation_handler.dart';
 import '../../shared/widgets/custom_app_bar.dart';
 import 'controllers/pending_plans_controller.dart';
 
