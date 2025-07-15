@@ -1,14 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:frontendpatient/nutrition_plan/domain/models/enums.dart';
 import 'package:frontendpatient/shared/constants/api_constants.dart';
+import 'package:frontendpatient/shared/utils/ApiError.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontendpatient/nutrition_plan/data/dtos/daily_plan_dto.dart';
+import 'package:frontendpatient/nutrition_plan/data/dtos/weekly_plan_dto.dart';
+import 'package:frontendpatient/nutrition_plan/data/dtos/pending_patient_acceptance_dto.dart';
+import 'package:frontendpatient/nutrition_plan/data/dtos/patient_plan_response_request_dto.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/daily_plan.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/weekly_plan.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/pending_patient_acceptance.dart';
 
-import '../models/nutrition_plan/daily_plan_response.dart';
-import '../models/nutrition_plan/nutririon_plan_model.dart';
-import '../shared/utils/ApiError.dart';
-import '../shared/utils/response_error.dart';
 class NoPlanFoundException implements Exception {
   final String message;
   NoPlanFoundException(this.message);
@@ -44,7 +48,6 @@ class NutritionPlanService {
     try {
       return json.decode(responseBody);
     } catch (e) {
-      // Si no se puede decodificar como JSON, devolver el string original
       return responseBody;
     }
   }
@@ -62,7 +65,8 @@ class NutritionPlanService {
         final decodedBody = _safeJsonDecode(response.body);
         if (decodedBody is List) {
           return decodedBody
-              .map((json) => PendingPatientAcceptance.fromJson(json))
+              .map((json) => PendingPatientAcceptanceDto.fromJson(json))
+              .map((dto) => dto.toDomain())
               .toList();
         } else {
           throw Exception('Respuesta inesperada del servidor');
@@ -81,21 +85,26 @@ class NutritionPlanService {
     }
   }
 
-  // Responder a un plan (aceptar o rechazar) - MÉTODO CORREGIDO
+  // Responder a un plan (aceptar o rechazar)
   Future<String> respondToPlan(
       int planId,
-      PatientPlanResponseRequest request,
+      PatientAction action,
+      {String? feedback}
       ) async {
     try {
       final headers = await _getHeaders();
+      final requestDto = PatientPlanResponseRequestDto(
+        action: action.value,
+        feedback: feedback,
+      );
 
       print('Enviando solicitud a: $baseUrl/$planId/respond');
-      print('Cuerpo: ${json.encode(request.toJson())}');
+      print('Cuerpo: ${json.encode(requestDto.toJson())}');
 
       final response = await _client.post(
         Uri.parse('$baseUrl/$planId/respond'),
         headers: headers,
-        body: json.encode(request.toJson()),
+        body: json.encode(requestDto.toJson()),
       );
 
       print('Código de respuesta: ${response.statusCode}');
@@ -132,8 +141,8 @@ class NutritionPlanService {
     }
   }
 
-  // Obtener plan del día de hoy - Modificado para manejar 404
-  Future<DailyPlanResponse> getTodayPlan() async {
+  // Obtener plan del día de hoy
+  Future<DailyPlan> getTodayPlan() async {
     try {
       final headers = await _getHeaders();
       final response = await _client.get(
@@ -144,7 +153,8 @@ class NutritionPlanService {
       if (response.statusCode == 200) {
         final decodedBody = _safeJsonDecode(response.body);
         if (decodedBody is Map<String, dynamic>) {
-          return DailyPlanResponse.fromJson(decodedBody);
+          final dto = DailyPlanDto.fromJson(decodedBody);
+          return dto.toDomain();
         } else {
           throw Exception('Respuesta inesperada del servidor');
         }
@@ -168,7 +178,7 @@ class NutritionPlanService {
   }
 
   // Obtener plan de un día específico
-  Future<DailyPlanResponse> getDayPlan(int dayNumber, {String? date}) async {
+  Future<DailyPlan> getDayPlan(int dayNumber, {String? date}) async {
     try {
       final headers = await _getHeaders();
 
@@ -185,7 +195,8 @@ class NutritionPlanService {
       if (response.statusCode == 200) {
         final decodedBody = _safeJsonDecode(response.body);
         if (decodedBody is Map<String, dynamic>) {
-          return DailyPlanResponse.fromJson(decodedBody);
+          final dto = DailyPlanDto.fromJson(decodedBody);
+          return dto.toDomain();
         } else {
           throw Exception('Respuesta inesperada del servidor');
         }
@@ -204,28 +215,43 @@ class NutritionPlanService {
   }
 
   // Obtener plan semanal
-  Future<WeeklyPlanResponse> getWeeklyPlan({String? date}) async {
-    String url = '$baseUrl/weekly';
-    if (date != null) {
-      url += '?date=$date';
-    }
+  Future<WeeklyPlan> getWeeklyPlan({String? date}) async {
+    try {
+      String url = '$baseUrl/weekly';
+      if (date != null) {
+        url += '?date=$date';
+      }
 
-    final headers = await _getHeaders();
-    final response = await _client.get(
-      Uri.parse(url),
-      headers: headers,
-    );
+      final headers = await _getHeaders();
+      final response = await _client.get(
+        Uri.parse(url),
+        headers: headers,
+      );
 
-    if (response.statusCode == 200) {
-      return WeeklyPlanResponse.fromJson(json.decode(response.body));
-    } else {
-      handleResponseError(response);
-      throw Exception('Error inesperado');
+      if (response.statusCode == 200) {
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          final dto = WeeklyPlanDto.fromJson(decodedBody);
+          return dto.toDomain();
+        } else {
+          throw Exception('Respuesta inesperada del servidor');
+        }
+      } else {
+        final decodedBody = _safeJsonDecode(response.body);
+        if (decodedBody is Map<String, dynamic>) {
+          final error = ApiError.fromJson(decodedBody);
+          throw Exception(error.message);
+        } else {
+          throw Exception('Error ${response.statusCode}: ${response.reasonPhrase ?? 'Error desconocido'}');
+        }
+      }
+    } catch (e) {
+      throw Exception('Error obteniendo plan semanal: $e');
     }
   }
 
   // Obtener historial de planes
-  Future<List<WeeklyPlanResponse>> getPlanHistory() async {
+  Future<List<WeeklyPlan>> getPlanHistory() async {
     try {
       final headers = await _getHeaders();
       final response = await _client.get(
@@ -237,7 +263,8 @@ class NutritionPlanService {
         final decodedBody = _safeJsonDecode(response.body);
         if (decodedBody is List) {
           return decodedBody
-              .map((json) => WeeklyPlanResponse.fromJson(json))
+              .map((json) => WeeklyPlanDto.fromJson(json))
+              .map((dto) => dto.toDomain())
               .toList();
         } else {
           throw Exception('Respuesta inesperada del servidor');
@@ -256,31 +283,23 @@ class NutritionPlanService {
     }
   }
 
-  // Métodos de conveniencia para las acciones del paciente - ACTUALIZADOS
+  // Métodos de conveniencia para las acciones del paciente
   Future<String> acceptPlan(int planId, {String? feedback}) async {
-    final request = PatientPlanResponseRequest(
-      action: PatientAction.accept.value,
-      feedback: feedback,
-    );
-    return respondToPlan(planId, request);
+    return respondToPlan(planId, PatientAction.accept, feedback: feedback);
   }
 
   Future<String> rejectPlan(int planId, {String? feedback}) async {
-    final request = PatientPlanResponseRequest(
-      action: PatientAction.reject.value,
-      feedback: feedback,
-    );
-    return respondToPlan(planId, request);
+    return respondToPlan(planId, PatientAction.reject, feedback: feedback);
   }
 
   // Obtener plan por día de la semana (1=Lunes, 7=Domingo)
-  Future<DailyPlanResponse> getMondayPlan({String? date}) => getDayPlan(1, date: date);
-  Future<DailyPlanResponse> getTuesdayPlan({String? date}) => getDayPlan(2, date: date);
-  Future<DailyPlanResponse> getWednesdayPlan({String? date}) => getDayPlan(3, date: date);
-  Future<DailyPlanResponse> getThursdayPlan({String? date}) => getDayPlan(4, date: date);
-  Future<DailyPlanResponse> getFridayPlan({String? date}) => getDayPlan(5, date: date);
-  Future<DailyPlanResponse> getSaturdayPlan({String? date}) => getDayPlan(6, date: date);
-  Future<DailyPlanResponse> getSundayPlan({String? date}) => getDayPlan(7, date: date);
+  Future<DailyPlan> getMondayPlan({String? date}) => getDayPlan(1, date: date);
+  Future<DailyPlan> getTuesdayPlan({String? date}) => getDayPlan(2, date: date);
+  Future<DailyPlan> getWednesdayPlan({String? date}) => getDayPlan(3, date: date);
+  Future<DailyPlan> getThursdayPlan({String? date}) => getDayPlan(4, date: date);
+  Future<DailyPlan> getFridayPlan({String? date}) => getDayPlan(5, date: date);
+  Future<DailyPlan> getSaturdayPlan({String? date}) => getDayPlan(6, date: date);
+  Future<DailyPlan> getSundayPlan({String? date}) => getDayPlan(7, date: date);
 
   // Verificar si el token es válido
   Future<bool> isTokenValid() async {

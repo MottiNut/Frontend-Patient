@@ -1,23 +1,3 @@
-class MealData {
-  final String mealType;
-  final String mealTypeLabel;
-  final String name;
-  final String? description;
-  final int? calories;
-  final String? ingredients;
-  final String? preparationTime;
-
-  MealData({
-    required this.mealType,
-    required this.mealTypeLabel,
-    required this.name,
-    this.description,
-    this.calories,
-    this.ingredients,
-    this.preparationTime,
-  });
-
-}
 class MealTypeMapper {
   static String toKey(String type) {
     switch (type.toLowerCase()) {
@@ -76,4 +56,3 @@ class MealTypeMapper {
     }).join(' ');
   }
 }
-

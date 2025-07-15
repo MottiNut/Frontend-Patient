@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:frontendpatient/models/nutrition_plan/daily_plan.dart';
-import '../../core/themes/app_theme.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/meal.dart';
+import '../../../core/themes/app_theme.dart';
 
 class MealDetailScreen extends StatelessWidget {
-  final MealData meal;
+  final Meal meal;
 
   const MealDetailScreen({
     super.key,
@@ -74,7 +74,7 @@ class MealDetailScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          meal.mealTypeLabel,
+          meal.typeLabel,
           style: AppTextStyles.titleAccompaniment.copyWith(color: AppColors.whiteBackground),
         ),
         if (meal.name.isNotEmpty) ...[
@@ -110,7 +110,7 @@ class MealDetailScreen extends StatelessWidget {
                 width: 180,
                 height: 180,
                 padding: const EdgeInsets.only(top: 10),
-                child: _getMealIcon(meal.mealType),
+                child: _getMealIcon(meal.type),
               ),
             ),
             // Información nutricional posicionada

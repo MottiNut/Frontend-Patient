@@ -1,8 +1,8 @@
 // shared/widgets/swipe_navigation_wrapper.dart
 import 'package:flutter/material.dart';
 import '../../screens/home/home_screen.dart';
-import '../../screens/recipes/recipes_screen.dart';
-import '../../screens/pending-plans/pending_plans_screen.dart';
+import '../../nutrition_plan/presentation/screens/recipes_screen.dart';
+import '../../nutrition_plan/presentation/screens/pending_plans_screen.dart';
 import '../../auth/presentation/screens/profile_screen.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 

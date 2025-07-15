@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../../models/nutrition_plan/daily_plan_response.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/daily_plan.dart';
 import 'macronutrients_card.dart';
 import 'meal_card.dart';
 
 class DayPlanWidget extends StatelessWidget {
-  final DailyPlanResponse dailyPlan;
+  final DailyPlan dailyPlan;
 
   const DayPlanWidget({
     super.key,

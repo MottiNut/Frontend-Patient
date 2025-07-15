@@ -1,5 +1,4 @@
 // lib/services/date_service.dart
-
 class DateService {
   static DateTime get today => DateTime.now();
 

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/daily_plan.dart';
 import 'package:provider/provider.dart';
-import '../../models/nutrition_plan/daily_plan_response.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
-import '../../services/nutrition_plan_service.dart';
+import '../../nutrition_plan/application/services/nutrition_plan_service.dart';
 import '../../shared/widgets/app_navigation_handler.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../shared/widgets/custom_app_bar.dart';
 import 'widgets/welcome_header_widget.dart';
 import 'widgets/date_selector_widget.dart';
@@ -30,7 +29,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   final AppNavigationHandler _navigationHandler = AppNavigationHandler();
   MealPlanState _currentState = MealPlanState.loading;
   String? _errorMessage;
-  DailyPlanResponse? _currentPlan;
+  DailyPlan? _currentPlan;
 
   @override
   void initState() {
@@ -43,7 +42,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     try {
       _setState(MealPlanState.loading);
 
-      final DailyPlanResponse dailyPlan = await _planService.getTodayPlan();
+      final DailyPlan dailyPlan = await _planService.getTodayPlan();
 
       _setState(MealPlanState.success, plan: dailyPlan);
 
@@ -59,7 +58,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   /// Método helper para actualizar estado
   void _setState(MealPlanState state, {
-    DailyPlanResponse? plan,
+    DailyPlan? plan,
     String? errorMessage,
   }) {
     if (mounted) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../models/nutrition_plan/nutririon_plan_model.dart';
-import '../utils/date_formatter.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/pending_patient_acceptance.dart';
+import '../../../shared/utils/date_formatter.dart';
 
 class PlanCard extends StatelessWidget {
   final PendingPatientAcceptance plan;
@@ -131,7 +131,7 @@ class PlanCard extends StatelessWidget {
           if (plan.reviewedAt != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Revisado el: ${DateFormatter.formatDateTime(plan.reviewedAt!)}',
+              'Revisado el: ${DateFormatter.formatDateTime(plan.reviewedAt! as String)}',
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],

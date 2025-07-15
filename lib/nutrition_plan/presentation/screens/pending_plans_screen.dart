@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/screens/pending-plans/widgets/empty_state_widget.dart';
-import 'package:frontendpatient/screens/pending-plans/widgets/error_state_widget.dart';
-import 'package:frontendpatient/screens/pending-plans/widgets/plan_card.dart';
-import 'package:frontendpatient/screens/pending-plans/widgets/plan_details_dialog.dart';
+import 'package:frontendpatient/nutrition_plan/presentation/widgets/empty_state_widget.dart';
+import 'package:frontendpatient/nutrition_plan/presentation/widgets/error_state_widget.dart';
+import 'package:frontendpatient/nutrition_plan/presentation/widgets/plan_card.dart';
+import 'package:frontendpatient/nutrition_plan/presentation/widgets/plan_details_dialog.dart';
 import 'package:provider/provider.dart';
-import '../../shared/widgets/custom_app_bar.dart';
-import 'controllers/pending_plans_controller.dart';
-
+import '../../../shared/widgets/custom_app_bar.dart';
+import '../controllers/pending_plans_controller.dart';
 
 class PendingPlansScreen extends StatefulWidget {
   const PendingPlansScreen({super.key});

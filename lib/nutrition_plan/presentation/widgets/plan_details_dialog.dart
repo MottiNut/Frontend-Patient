@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../models/nutrition_plan/nutririon_plan_model.dart';
-import '../utils/date_formatter.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/pending_patient_acceptance.dart';
+import '../../../shared/utils/date_formatter.dart';
 
 class PlanDetailsDialog extends StatefulWidget {
   final PendingPatientAcceptance plan;
@@ -158,7 +158,7 @@ class _PlanDetailsDialogState extends State<PlanDetailsDialog> {
           if (widget.plan.reviewedAt != null) ...[
             const SizedBox(height: 8),
             Text(
-              'Revisado el: ${DateFormatter.formatDateTime(widget.plan.reviewedAt!)}',
+              'Revisado el: ${DateFormatter.formatDateTime(widget.plan.reviewedAt! as String)}',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey[600],

@@ -2,14 +2,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:frontendpatient/core/themes/app_theme.dart';
-import 'package:frontendpatient/screens/meal/meal_detail_screen.dart';
-import '../../../models/nutrition_plan/daily_plan.dart';
-import '../../../models/nutrition_plan/daily_plan_response.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/daily_plan.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/meal.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/meal_type_mapper.dart';
+import 'package:frontendpatient/nutrition_plan/presentation/screens/meal_detail_screen.dart';
 
 class DailyMealsWidget extends StatelessWidget {
   final bool isLoading;
   final String? errorMessage;
-  final DailyPlanResponse? todayPlan;
+  final DailyPlan? todayPlan;
   final VoidCallback onRetry;
 
   const DailyMealsWidget({
@@ -21,13 +22,12 @@ class DailyMealsWidget extends StatelessWidget {
   });
 
   //Método para convertir el Map de meals a una lista de MealData
-  List<MealData> _getMealsFromPlan(DailyPlanResponse plan) {
-    final List<MealData> meals = plan.meals.map((meal) {
+  List<Meal> _getMealsFromPlan(DailyPlan plan) {
+    final List<Meal> meals = plan.meals.map((meal) {
       final internalKey = MealTypeMapper.toKey(meal.type);  // Mapear "Desayuno" -> "breakfast"
 
-      return MealData(
-        mealType: internalKey,
-        mealTypeLabel: meal.type,
+      return Meal(
+        type: internalKey,
         name: meal.name,
         description: meal.description,
         calories: meal.calories,
@@ -47,7 +47,7 @@ class DailyMealsWidget extends StatelessWidget {
         'snacks': 6,
         'snack_evening': 7,
       };
-      return (order[a.mealType] ?? 99).compareTo(order[b.mealType] ?? 99);
+      return (order[a.typeLabel] ?? 99).compareTo(order[b.type] ?? 99);
     });
 
     return meals;
@@ -218,7 +218,7 @@ class DailyMealsWidget extends StatelessWidget {
 
 
   //Card de comidas
-  Widget _buildMealCard(BuildContext context, MealData meal) {
+  Widget _buildMealCard(BuildContext context, Meal meal) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return GestureDetector(
@@ -262,7 +262,7 @@ class DailyMealsWidget extends StatelessWidget {
                       width: 80,
                       height: 80,
                       padding: const EdgeInsets.all(8),
-                      child: _getMealIcon(meal.mealType),
+                      child: _getMealIcon(meal.type),
                     ),
                     const SizedBox(width: 12),
                     // Línea vertical separadora
@@ -281,7 +281,7 @@ class DailyMealsWidget extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            meal.mealTypeLabel,
+                            meal.typeLabel,
                             style: AppTextStyles.mealCardTitle.copyWith(color: Colors.white),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

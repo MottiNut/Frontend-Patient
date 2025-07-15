@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:frontendpatient/screens/recipes/widgets/day_plan_widget.dart';
-import 'package:frontendpatient/screens/recipes/widgets/no_plan_widget.dart';
-import 'package:frontendpatient/screens/recipes/widgets/recipes_error_widget.dart';
+import 'package:frontendpatient/nutrition_plan/domain/models/weekly_plan.dart';
+import 'package:frontendpatient/nutrition_plan/presentation/widgets/day_plan_widget.dart';
+import 'package:frontendpatient/nutrition_plan/presentation/widgets/no_plan_widget.dart';
+import 'package:frontendpatient/nutrition_plan/presentation/widgets/recipes_error_widget.dart';
 import 'package:provider/provider.dart';
-import '../../models/nutrition_plan/nutririon_plan_model.dart';
-import '../../auth/presentation/providers/auth_provider.dart';
-import '../../services/nutrition_plan_service.dart';
-import '../../shared/widgets/custom_app_bar.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../application/services/nutrition_plan_service.dart';
+import '../../../shared/widgets/custom_app_bar.dart';
 
 class RecipesScreen extends StatefulWidget {
   const RecipesScreen({super.key});
@@ -30,7 +30,7 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
 
   bool isLoadingWeeklyPlan = true;
   String? errorMessage;
-  WeeklyPlanResponse? weeklyPlan;
+  WeeklyPlan? weeklyPlan;
   int currentDayIndex = 0;
 
   final List<String> dayNames = [
