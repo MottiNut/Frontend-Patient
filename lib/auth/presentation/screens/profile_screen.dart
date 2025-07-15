@@ -5,8 +5,8 @@ import 'package:frontendpatient/auth/domain/models/role.dart';
 import 'package:frontendpatient/auth/domain/models/user.dart';
 import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-import '../../../commons/widgets/app_navigation_handler.dart';
 import '../../../commons/widgets/custom_app_bar.dart';
+import '../../../commons/widgets/settings_drawer.dart';
 import 'edit_profile_screen.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -25,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    // Removido _loadStats() ya que estaba vacío
   }
 
   Future<void> _refreshProfile() async {
@@ -98,7 +99,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showImageOptions() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // No mostrar opciones si se está actualizando la imagen
     if (authProvider.isUpdatingImage) return;
 
     showModalBottomSheet(
@@ -136,17 +136,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: source,
-        maxWidth: 600,        // Reducido de 800 a 600
-        maxHeight: 600,       // Reducido de 800 a 600
-        imageQuality: 60,     // Reducido de 80 a 60 para menor tamaño
+        maxWidth: 600,
+        maxHeight: 600,
+        imageQuality: 60,
       );
 
       if (image != null) {
-        // Verificar y comprimir la imagen antes de enviarla
-        final compressedImage = await _compressImage(File(image.path));
-        if (compressedImage != null) {
-          await _updateProfileImage(compressedImage);
+        final imageFile = File(image.path);
+        final bytes = await imageFile.readAsBytes();
+
+        // Verificar tamaño (5MB máximo)
+        if (bytes.length > 5 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('La imagen es demasiado grande. Por favor, selecciona una imagen más pequeña.'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+          return;
         }
+
+        await _updateProfileImage(imageFile);
       }
     } catch (e) {
       if (mounted) {
@@ -160,111 +173,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<File?> _compressImage(File imageFile) async {
-    try {
-      // Leer el archivo original
-      final bytes = await imageFile.readAsBytes();
-
-      // Si la imagen ya es menor a 5MB, no hace falta comprimirla más
-      if (bytes.length <= 5 * 1024 * 1024) {
-        return imageFile;
-      }
-
-      // Mostrar indicador de carga
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                SizedBox(width: 12),
-                Text('Comprimiendo imagen...'),
-              ],
-            ),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-
-      // Comprimir la imagen usando ImagePicker con calidad más baja
-      final ImagePicker picker = ImagePicker();
-      final XFile? compressedImage = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 400,        // Aún más pequeño si es necesario
-        maxHeight: 400,
-        imageQuality: 40,     // Calidad muy baja para garantizar tamaño pequeño
-      );
-
-      if (compressedImage != null) {
-        final compressedFile = File(compressedImage.path);
-        final compressedBytes = await compressedFile.readAsBytes();
-
-        // Verificar que el archivo comprimido sea menor a 5MB
-        if (compressedBytes.length <= 5 * 1024 * 1024) {
-          return compressedFile;
-        } else {
-          // Si aún es muy grande, comprimir más agresivamente
-          return await _aggressiveCompress(imageFile);
-        }
-      }
-
-      return null;
-    } catch (e) {
-      print('Error comprimiendo imagen: $e');
-      return null;
-    }
-  }
-
-  // Método de compresión agresiva como último recurso
-  Future<File?> _aggressiveCompress(File imageFile) async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? ultraCompressed = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 300,
-        maxHeight: 300,
-        imageQuality: 25,     // Calidad muy baja
-      );
-
-      if (ultraCompressed != null) {
-        final file = File(ultraCompressed.path);
-        final bytes = await file.readAsBytes();
-
-        if (bytes.length <= 5 * 1024 * 1024) {
-          return file;
-        } else {
-          // Si todavía es muy grande, mostrar error
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('La imagen es demasiado grande. Por favor, selecciona una imagen más pequeña.'),
-                backgroundColor: Colors.red,
-                duration: Duration(seconds: 4),
-              ),
-            );
-          }
-          return null;
-        }
-      }
-
-      return null;
-    } catch (e) {
-      print('Error en compresión agresiva: $e');
-      return null;
-    }
-  }
-
-
-
   Future<void> _updateProfileImage(File imageFile) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      // Usar AuthProvider en lugar de AuthService
       final success = await authProvider.updatePatientProfileImage(imageFile);
 
       if (mounted) {
@@ -296,10 +208,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.grey.shade100,
     appBar: const CustomAppBar(),
+    drawer: SizedBox(
+      width: MediaQuery.of(context).size.width * 0.85, // 85% del ancho de la pantalla
+      child: const SettingsDrawer(),
+    ),
     body: Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         if (authProvider.isLoading || _isRefreshing) {
@@ -321,25 +237,141 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
 
+        final patient = user as Patient;
+
         return RefreshIndicator(
           onRefresh: _refreshProfile,
+          color: Colors.orange,
+          backgroundColor: Colors.white,
           child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProfileHeader(user),
-                const SizedBox(height: 20),
-                _buildPersonalInfoCard(user as Patient),
-                const SizedBox(height: 16),
-                if (user.role == Role.patient) ...[
-                  _buildHealthInfoCard(user),
-                  const SizedBox(height: 16),
-                ],
-                _buildAccountInfoCard(user),
-                const SizedBox(height: 20),
-                _buildActionButtons(),
+                // Header del perfil
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.orange,
+                        Colors.orange.withOpacity(0.8),
+                        Colors.orange.shade300,
+                      ],
+                      stops: const [0.0, 0.7, 1.0],
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      // FOTO DE PERFIL
+                      Stack(
+                        children: [
+                          Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                            ),
+                            child: ClipOval(
+                              child: _buildProfileImage(user),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: _showImageOptions,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (authProvider.isUpdatingImage)
+                            Positioned.fill(
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      // Nombre
+                      Text(
+                        '${user.firstName} ${user.lastName}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Paciente',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Botón de editar en el header
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: _buildHeaderButton(
+                          icon: Icons.edit,
+                          label: 'Editar',
+                          onPressed: _showEditDialog,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+
+                // CONTENIDO DEL PERFIL
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPersonalInfoSection(patient),
+                      const SizedBox(height: 12),
+                      _buildHealthInfoSection(patient),
+                      const SizedBox(height: 12),
+                      _buildAccountInfoSection(user),
+                      const SizedBox(height: 20),
+                      _buildActionButtons(),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -347,6 +379,350 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     ),
   );
+
+  Widget _buildHeaderButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileImage(User user) {
+    final imageProvider = _getProfileImage(user);
+
+    if (imageProvider != null) {
+      return Image(
+        image: imageProvider,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildDefaultAvatar(user);
+        },
+      );
+    }
+
+    return _buildDefaultAvatar(user);
+  }
+
+  Widget _buildDefaultAvatar(User user) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.orange.withOpacity(0.7),
+            Colors.orange,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          '${user.firstName[0]}${user.lastName[0]}',
+          style: const TextStyle(
+            fontSize: 45,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfoSection(Patient patient) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.person_outline,
+                  color: Colors.orange,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Información Personal',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildInfoRow(Icons.email_outlined, 'Email', patient.email),
+          if (patient.phone != null) ...[
+            const SizedBox(height: 16),
+            _buildInfoRow(Icons.phone_outlined, 'Teléfono', patient.phone!),
+          ],
+          if (patient.birthDate != null) ...[
+            const SizedBox(height: 16),
+            _buildInfoRow(Icons.cake_outlined, 'Fecha de Nacimiento', _formatDate(patient.birthDate!)),
+          ],
+          if (patient.gender != null && patient.gender!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildInfoRow(Icons.person_outline, 'Género', patient.gender!),
+          ],
+          if (patient.emergencyContact != null) ...[
+            const SizedBox(height: 16),
+            _buildInfoRow(Icons.emergency_outlined, 'Contacto de emergencia', patient.emergencyContact!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHealthInfoSection(Patient patient) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.favorite_outline,
+                  color: Colors.red,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Información de Salud',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          if (patient.height != null) ...[
+            _buildInfoRow(Icons.height_outlined, 'Altura', '${patient.height!.toStringAsFixed(1)} cm'),
+            const SizedBox(height: 16),
+          ],
+          if (patient.weight != null) ...[
+            _buildInfoRow(Icons.monitor_weight_outlined, 'Peso', '${patient.weight!.toStringAsFixed(1)} kg'),
+            const SizedBox(height: 16),
+          ],
+          if (patient.height != null && patient.weight != null) ...[
+            _buildInfoRow(Icons.calculate_outlined, 'IMC', '${patient.calculateBMI()?.toStringAsFixed(1) ?? 'N/A'}'),
+            const SizedBox(height: 16),
+          ],
+          _buildInfoRow(Icons.medical_services_outlined, 'Condición Médica', patient.hasMedicalCondition ? 'Sí' : 'No'),
+          if (patient.chronicDisease != null && patient.chronicDisease!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildInfoRow(Icons.local_hospital_outlined, 'Enfermedad Crónica', patient.chronicDisease!),
+          ],
+          if (patient.allergies != null && patient.allergies!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildInfoRow(Icons.warning_outlined, 'Alergias', patient.allergies!),
+          ],
+          if (patient.dietaryPreferences != null && patient.dietaryPreferences!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildInfoRow(Icons.restaurant_outlined, 'Preferencias Dietéticas', patient.dietaryPreferences!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountInfoSection(User user) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.account_circle_outlined,
+                  color: Colors.blue,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Información de Cuenta',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildInfoRow(Icons.badge_outlined, 'ID de Usuario', user.userId.toString()),
+          const SizedBox(height: 16),
+          _buildInfoRow(Icons.calendar_today_outlined, 'Fecha de Registro', _formatDate(user.createdAt)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, {Color? textColor}) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: Colors.orange, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: textColor ?? Colors.black87,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _showEditDialog,
+            icon: const Icon(Icons.edit),
+            label: const Text('Editar Perfil'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _showLogoutDialog,
+            icon: const Icon(Icons.logout),
+            label: const Text('Cerrar Sesión'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red,
+              side: const BorderSide(color: Colors.red),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildErrorWidget(String error, AuthProvider authProvider) => Center(
     child: Padding(
@@ -384,287 +760,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ),
   );
 
-  Widget _buildProfileHeader(User user) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [Colors.orange.shade400, Colors.orange.shade600],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.orange.withOpacity(0.3),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
-        )
-      ],
-    ),
-    child: Column(
-      children: [
-        GestureDetector(
-          onTap: user.role == Role.patient ? _showImageOptions : null,
-          child: Consumer<AuthProvider>(
-            builder: (context, authProvider, child) {
-              return Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    backgroundImage: _getProfileImage(user),
-                    child: _getProfileImage(user) == null
-                        ? Text(
-                      '${user.firstName[0]}${user.lastName[0]}',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                    )
-                        : null,
-                  ),
-                  // Mostrar loading overlay cuando se está actualizando la imagen
-                  if (authProvider.isUpdatingImage)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.black54,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (user.role == Role.patient && !authProvider.isUpdatingImage)
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          size: 20,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          '${user.firstName} ${user.lastName}',
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          user.email,
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.white70,
-          ),
-        ),
-      ],
-    ),
-  );
-
-  Widget _buildPersonalInfoCard(Patient patient) => Card(
-    elevation: 4,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.person, color: Colors.orange.shade600),
-              const SizedBox(width: 8),
-              Text(
-                'Información Personal',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange.shade600,
-                ),
-              ),
-            ],
-          ),
-          const Divider(),
-          _buildInfoRow(Icons.email, 'Email', patient.email),
-          if (patient.phone != null)
-            _buildInfoRow(Icons.phone, 'Teléfono', patient.phone!),
-          if (patient.birthDate != null)
-            _buildInfoRow(Icons.cake, 'Fecha de Nacimiento', _formatDate(patient.birthDate!)),
-          if (patient.emergencyContact != null)
-            _buildInfoRow(Icons.emergency, 'Contacto de emergencia', patient.emergencyContact!),
-        ],
-      ),
-    ),
-  );
-
-  Widget _buildHealthInfoCard(Patient patient) => Card(
-    elevation: 4,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.favorite, color: Colors.red.shade400),
-              const SizedBox(width: 8),
-              Text(
-                'Información de Salud',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red.shade400,
-                ),
-              ),
-            ],
-          ),
-          const Divider(),
-          if (patient.height != null)
-            _buildInfoRow(Icons.height, 'Altura', '${patient.height!.toStringAsFixed(1)} cm'),
-          if (patient.weight != null)
-            _buildInfoRow(Icons.monitor_weight, 'Peso', '${patient.weight!.toStringAsFixed(1)} kg'),
-          if (patient.height != null && patient.weight != null) ...[
-            _buildInfoRow(Icons.calculate, 'IMC', '${patient.calculateBMI()?.toStringAsFixed(1) ?? 'N/A'}'),
-          ],
-          _buildInfoRow(Icons.medical_services, 'Condición Médica', patient.hasMedicalCondition ? 'Sí' : 'No'),
-          if (patient.chronicDisease != null && patient.chronicDisease!.isNotEmpty)
-            _buildInfoRow(Icons.local_hospital, 'Enfermedad Crónica', patient.chronicDisease!),
-          if (patient.allergies != null && patient.allergies!.isNotEmpty)
-            _buildInfoRow(Icons.warning, 'Alergias', patient.allergies!),
-          if (patient.dietaryPreferences != null && patient.dietaryPreferences!.isNotEmpty)
-            _buildInfoRow(Icons.restaurant, 'Preferencias Dietéticas', patient.dietaryPreferences!),
-          if (patient.gender != null && patient.gender!.isNotEmpty)
-            _buildInfoRow(Icons.person_outline, 'Género', patient.gender!),
-        ],
-      ),
-    ),
-  );
-
-  Widget _buildAccountInfoCard(User user) => Card(
-    elevation: 4,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.account_circle, color: Colors.blue.shade600),
-              const SizedBox(width: 8),
-              Text(
-                'Información de Cuenta',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade600,
-                ),
-              ),
-            ],
-          ),
-          const Divider(),
-          _buildInfoRow(Icons.badge, 'ID de Usuario', user.userId.toString()),
-          _buildInfoRow(Icons.calendar_today, 'Fecha de Registro', _formatDate(user.createdAt)),
-        ],
-      ),
-    ),
-  );
-
-  Widget _buildInfoRow(IconData icon, String label, String value) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: Colors.grey.shade600),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade700,
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w400),
-          ),
-        ),
-      ],
-    ),
-  );
-
-  Widget _buildActionButtons() => Column(
-    children: [
-      SizedBox(
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: _showEditDialog,
-          icon: const Icon(Icons.edit),
-          label: const Text('Editar Perfil'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
-      ),
-      const SizedBox(height: 12),
-      SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          onPressed: _showLogoutDialog,
-          icon: const Icon(Icons.logout),
-          label: const Text('Cerrar Sesión'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.red,
-            side: const BorderSide(color: Colors.red),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
-      ),
-    ],
-  );
-
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-  }
-
-  int _calculateAge(DateTime birthDate) {
-    final now = DateTime.now();
-    int age = now.year - birthDate.year;
-    if (now.month < birthDate.month || (now.month == birthDate.month && now.day < birthDate.day)) {
-      age--;
-    }
-    return age;
   }
 }

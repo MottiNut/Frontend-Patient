@@ -68,12 +68,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Logo
-              SizedBox(
-                height: 40,
-                width: 40,
+              // Logo con funcionalidad de drawer
+              GestureDetector(
+                onTap: () => _openSettingsDrawer(context),
                 child: SvgPicture.asset(
                   'assets/images/vector.svg',
+                  height: 40,
+                  width: 40,
                   fit: BoxFit.contain,
                 ),
               ),
@@ -213,6 +214,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
         ),
       ),
     );
+  }
+
+  void _openSettingsDrawer(BuildContext context) {
+    // Ahora abre el drawer lateral del Scaffold
+    Scaffold.of(context).openDrawer();
   }
 
   void _navigateToNotifications(BuildContext context) {

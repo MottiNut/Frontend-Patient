@@ -5,6 +5,7 @@ import 'package:frontendpatient/nutrition_plan/presentation/widgets/plan_card.da
 import 'package:frontendpatient/nutrition_plan/presentation/widgets/plan_details_dialog.dart';
 import 'package:provider/provider.dart';
 import '../../../commons/widgets/custom_app_bar.dart';
+import '../../../commons/widgets/settings_drawer.dart';
 import '../controllers/pending_plans_controller.dart';
 
 class PendingPlansScreen extends StatefulWidget {
@@ -95,6 +96,10 @@ class _PendingPlansScreenState extends State<PendingPlansScreen> {
       value: _controller,
       child: Scaffold(
         appBar: const CustomAppBar(),
+        drawer: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.85, // 85% del ancho de la pantalla
+          child: const SettingsDrawer(),
+        ),
         body: Consumer<PendingPlansController>(
           builder: (context, controller, _) {
             if (controller.isLoading) {

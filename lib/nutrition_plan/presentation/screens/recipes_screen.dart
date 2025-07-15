@@ -5,6 +5,7 @@ import 'package:frontendpatient/nutrition_plan/presentation/widgets/no_plan_widg
 import 'package:frontendpatient/nutrition_plan/presentation/widgets/recipes_error_widget.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../commons/widgets/settings_drawer.dart';
 import '../../application/services/nutrition_plan_service.dart';
 import '../../../commons/widgets/custom_app_bar.dart';
 
@@ -115,6 +116,10 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(),
+      drawer: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.85, // 85% del ancho de la pantalla
+        child: const SettingsDrawer(),
+      ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           final user = authProvider.currentUser;

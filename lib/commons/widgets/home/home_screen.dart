@@ -3,8 +3,8 @@ import 'package:frontendpatient/nutrition_plan/domain/models/daily_plan.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../nutrition_plan/application/services/nutrition_plan_service.dart';
-import '../app_navigation_handler.dart';
 import '../custom_app_bar.dart';
+import '../settings_drawer.dart';
 import 'widgets/welcome_header_widget.dart';
 import 'widgets/date_selector_widget.dart';
 import 'widgets/motivational_quote_widget.dart';
@@ -26,7 +26,6 @@ class PatientHomeScreen extends StatefulWidget {
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
   final NutritionPlanService _planService = NutritionPlanService();
-  final AppNavigationHandler _navigationHandler = AppNavigationHandler();
   MealPlanState _currentState = MealPlanState.loading;
   String? _errorMessage;
   DailyPlan? _currentPlan;
@@ -97,6 +96,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(),
+      drawer: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.85, // 85% del ancho de la pantalla
+        child: const SettingsDrawer(),
+      ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           final patient = authProvider.currentUser;
