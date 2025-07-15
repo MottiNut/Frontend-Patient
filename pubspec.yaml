@@ -47,6 +47,7 @@ dependencies:
 
   fluttertoast: ^8.2.12
   font_awesome_flutter: ^10.8.0
+  carousel_slider: ^4.2.1
 
 
 

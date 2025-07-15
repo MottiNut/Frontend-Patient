@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../../models/nutrition_plan/nutririon_plan_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/nutrition_plan_service.dart';
-import '../../shared/widgets/app_navigation_handler.dart';
 import '../../shared/widgets/custom_app_bar.dart';
 
 class RecipesScreen extends StatefulWidget {
@@ -18,12 +17,21 @@ class RecipesScreen extends StatefulWidget {
 
 class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateMixin {
   final NutritionPlanService _nutritionPlanService = NutritionPlanService();
-  final AppNavigationHandler _navigationHandler = AppNavigationHandler();
+  final PageController _pageController = PageController();
 
-  late TabController _tabController;
+  // Variables para el header colapsable
+  late AnimationController _headerAnimationController;
+  late Animation<double> _headerAnimation;
+  // Variables para el deslizamiento en tiempo real
+  double _headerHeight = 1.0; // 1.0 = completamente visible, 0.0 = completamente oculto
+  bool _isHeaderCollapsed = false;
+  double _startPanY = 0.0;
+  final double _maxHeaderHeight = 200.0; // Altura máxima aproximada del header
+
   bool isLoadingWeeklyPlan = true;
   String? errorMessage;
   WeeklyPlanResponse? weeklyPlan;
+  int currentDayIndex = 0;
 
   final List<String> dayNames = [
     'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'
@@ -32,19 +40,35 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
     _loadWeeklyPlan();
+
+    // Inicializar la animación del header
+    _headerAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _headerAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _headerAnimationController,
+      curve: Curves.easeInOut,
+    ));
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _pageController.dispose();
+    _headerAnimationController.dispose();
     _nutritionPlanService.dispose();
     super.dispose();
   }
 
   Future<void> _loadWeeklyPlan() async {
     try {
+      if (!mounted) return;
+
       setState(() {
         isLoadingWeeklyPlan = true;
         errorMessage = null;
@@ -52,15 +76,38 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
 
       final plan = await _nutritionPlanService.getWeeklyPlan();
 
+      if (!mounted) return;
+
       setState(() {
         weeklyPlan = plan;
         isLoadingWeeklyPlan = false;
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         errorMessage = e.toString();
         isLoadingWeeklyPlan = false;
       });
+    }
+  }
+
+  void _navigateToDay(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  // El método _toggleHeader ahora puede ser simplificado o eliminado
+  void _toggleHeader() {
+    if (_isHeaderCollapsed) {
+      _animateToHeight(1.0);
+      _isHeaderCollapsed = false;
+    } else {
+      _animateToHeight(0.0);
+      _isHeaderCollapsed = true;
     }
   }
 
@@ -99,11 +146,118 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
 
           return Column(
             children: [
-              _buildPlanHeader(),
-              _buildTabBarView(),
+              _buildCollapsibleHeader(),
+              _buildDayIndicators(),
+              _buildPageView(),
             ],
           );
         },
+      ),
+    );
+  }
+
+  void _animateToHeight(double targetHeight) {
+    final currentHeight = _headerHeight;
+
+    _headerAnimationController.reset();
+    _headerAnimationController.addListener(() {
+      setState(() {
+        _headerHeight = currentHeight +
+            (_headerAnimationController.value * (targetHeight - currentHeight));
+      });
+    });
+
+    _headerAnimationController.forward();
+  }
+
+  Widget _buildCollapsibleHeader() {
+    return GestureDetector(
+      onPanStart: (details) {
+        _startPanY = details.localPosition.dy;
+      },
+      onPanUpdate: (details) {
+        final deltaY = details.localPosition.dy - _startPanY;
+        final sensitivity = 0.005; // Ajusta la sensibilidad del deslizamiento
+
+        setState(() {
+          _headerHeight = (_headerHeight - (deltaY * sensitivity)).clamp(0.0, 1.0);
+        });
+
+        _startPanY = details.localPosition.dy;
+      },
+      onPanEnd: (details) {
+        // Determinar si debe colapsar completamente o expandir completamente
+        if (_headerHeight > 0.5) {
+          // Expandir completamente
+          _animateToHeight(1.0);
+          _isHeaderCollapsed = false;
+        } else {
+          // Colapsar completamente
+          _animateToHeight(0.0);
+          _isHeaderCollapsed = true;
+        }
+      },
+      child: Column(
+        children: [
+          ClipRect(
+            child: Align(
+              alignment: Alignment.topCenter,
+              heightFactor: _headerHeight,
+              child: _buildPlanHeader(),
+            ),
+          ),
+          // Indicador persistente cuando está colapsado
+          if (_headerHeight < 0.1) _buildCollapsedIndicator(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollapsedIndicator() {
+    return GestureDetector(
+      onTap: () {
+        _animateToHeight(1.0);
+        _isHeaderCollapsed = false;
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          border: Border(
+            bottom: BorderSide(color: Colors.orange.shade200, width: 0.5),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Texto indicativo
+            Text(
+              'Toca aquí o desliza hacia abajo para ver detalles',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.orange.shade600,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 4),
+            // Barra indicadora visual
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.orange.shade400,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 4),
+            // Icono de flecha hacia abajo
+            Icon(
+              Icons.keyboard_arrow_down,
+              color: Colors.orange.shade600,
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -121,22 +275,37 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Objetivo: ${weeklyPlan!.goal}',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.orange,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  'Objetivo: ${weeklyPlan!.goal}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: _toggleHeader,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    _isHeaderCollapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+                    color: Colors.orange.shade700,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
-          Text(
-            'Requerimiento energético: ${weeklyPlan!.energyRequirement} kcal/día',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
           Text(
             'Semana: ${_formatDate(weeklyPlan!.weekStartDate)} - ${_formatDate(weeklyPlan!.weekEndDate)}',
             style: TextStyle(
@@ -176,23 +345,105 @@ class _RecipesScreenState extends State<RecipesScreen> with TickerProviderStateM
               ),
             ),
           ],
+          // Indicador visual para el gesto de deslizar
+          const SizedBox(height: 8),
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.orange.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTabBarView() {
+  Widget _buildDayIndicators() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            dayNames.length,
+                (index) => GestureDetector(
+              onTap: () => _navigateToDay(index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                constraints: const BoxConstraints(
+                  minWidth: 40,
+                  maxWidth: 50,
+                ),
+                decoration: BoxDecoration(
+                  color: currentDayIndex == index
+                      ? Colors.orange
+                      : Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: currentDayIndex == index
+                        ? Colors.orange.shade700
+                        : Colors.grey.shade300,
+                  ),
+                  boxShadow: currentDayIndex == index
+                      ? [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                      : null,
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    dayNames[index].substring(0, 3), // Abreviatura del día
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: currentDayIndex == index
+                          ? Colors.white
+                          : Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPageView() {
     return Expanded(
-      child: TabBarView(
-        controller: _tabController,
-        children: weeklyPlan!.dailyPlans.map((dailyPlan) {
-          return RefreshIndicator(
-            onRefresh: _loadWeeklyPlan,
-            child: DayPlanWidget(
-              dailyPlan: dailyPlan,
+      child: PageView.builder(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            currentDayIndex = index;
+          });
+        },
+        itemCount: weeklyPlan!.dailyPlans.length,
+        itemBuilder: (context, index) {
+          final dailyPlan = weeklyPlan!.dailyPlans[index];
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            child: RefreshIndicator(
+              onRefresh: _loadWeeklyPlan,
+              child: DayPlanWidget(
+                dailyPlan: dailyPlan,
+              ),
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }
