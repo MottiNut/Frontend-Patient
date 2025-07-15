@@ -1,6 +1,6 @@
-// lib/models/notification_model.dart
+// lib/models/notification.dart
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:frontendpatient/models/notification/notification_type.dart';
+import 'package:frontendpatient/notification/domain/models/notification_type.dart';
 
 class NotificationModel {
   final String id;

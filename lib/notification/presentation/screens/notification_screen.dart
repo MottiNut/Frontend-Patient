@@ -1,9 +1,9 @@
 // lib/screens/notifications/notifications_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../models/notification/notification_model.dart';
-import '../../../models/notification/notification_type.dart';
-import '../../../providers/notification_provider.dart';
+import '../../domain/models/notification.dart';
+import '../../domain/models/notification_type.dart';
+import '../providers/notification_provider.dart';
 import '../widgets/custom_error.dart';
 import '../widgets/loading_widget.dart';
 import '../widgets/notification_filter.dart';

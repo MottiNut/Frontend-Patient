@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:frontendpatient/services/firebase_service.dart';
-import '../models/notification/notification_model.dart';
-import '../models/notification/notification_type.dart';
+import 'package:frontendpatient/notification/application/services/firebase_service.dart';
+import '../../domain/models/notification.dart';
+import '../../domain/models/notification_type.dart';
 
 class NotificationProvider with ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();

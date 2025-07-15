@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontendpatient/commons/routes/app_wrapper.dart';
 import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
-import 'package:frontendpatient/providers/notification_provider.dart';
+import 'package:frontendpatient/notification/presentation/providers/notification_provider.dart';
 import 'package:provider/provider.dart';
 import 'commons/themes/app_theme.dart';
 import 'commons/routes/app_router.dart';

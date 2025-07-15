@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:frontendpatient/screens/notifications/screens/notification_screen.dart';
+import 'package:frontendpatient/notification/presentation/screens/notification_screen.dart';
 import 'package:provider/provider.dart';
 import '../routes/route_names.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
-import '../../providers/notification_provider.dart';
+import '../../notification/presentation/providers/notification_provider.dart';
 import 'app_navigation_handler.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
