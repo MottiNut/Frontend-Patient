@@ -217,8 +217,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
   }
 
   void _openSettingsDrawer(BuildContext context) {
-    // Ahora abre el drawer lateral del Scaffold
-    Scaffold.of(context).openDrawer();
+    // Usar el drawer del Scaffold padre
+    final scaffoldState = Scaffold.of(context);
+    if (scaffoldState.hasDrawer) {
+      scaffoldState.openDrawer();
+    }
   }
 
   void _navigateToNotifications(BuildContext context) {

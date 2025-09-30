@@ -5,6 +5,7 @@ import '../../nutrition_plan/presentation/screens/recipes_screen.dart';
 import '../../nutrition_plan/presentation/screens/pending_plans_screen.dart';
 import '../../auth/presentation/screens/profile_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/settings_drawer.dart'; // Importa tu SettingsDrawer
 
 class SwipeNavigationWrapper extends StatefulWidget {
   final int initialIndex;
@@ -59,6 +60,8 @@ class _SwipeNavigationWrapperState extends State<SwipeNavigationWrapper> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Aquí es donde defines el drawer que se verá por encima del bottomNavigationBar
+      drawer: const SettingsDrawer(),
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
@@ -151,6 +154,8 @@ class _AdvancedSwipeNavigationWrapperState extends State<AdvancedSwipeNavigation
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Aquí también defines el drawer
+      drawer: const SettingsDrawer(),
       body: GestureDetector(
         onPanEnd: _handleSwipe,
         child: AnimatedSwitcher(
