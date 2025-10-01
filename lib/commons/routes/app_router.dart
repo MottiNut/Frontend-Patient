@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:frontendpatient/commons/routes/swipe_navigation_wrapper.dart';
 import '../../auth/presentation/screens/login_screen.dart';
 import '../../auth/presentation/screens/register_screen.dart';
+import '../../screens/splash/splash_screen.dart';
 import 'route_names.dart';
 
 class AppRouter {
   static final Map<String, Widget Function(BuildContext)> _routes = {
+    RouteNames.splash: (_) => SplashScreen(),
     RouteNames.login: (_) => const LoginScreen(),
     RouteNames.register: (_) => const RegisterFlow(),
-    // 🔥 ESTE ES EL CAMBIO IMPORTANTE:
-    // RouteNames.home debe apuntar al SwipeNavigationWrapper, no al PatientHomeScreen
+
     RouteNames.home: (_) => const SwipeNavigationWrapper(initialIndex: 0),
 
     // Si necesitas acceso directo a secciones específicas:

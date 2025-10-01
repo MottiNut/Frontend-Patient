@@ -1,11 +1,16 @@
-// screens/auth/login_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import '../../../commons/themes/app_theme.dart';
+import '../../../commons/widgets/requestSnacbar/snackBar_manager.dart';
 import '../providers/auth_provider.dart';
 import '../../../commons/utils/validators.dart';
 import '../../../commons/routes/route_names.dart';
+import '../terms and conditions/politica_privacidad_screen.dart';
+import '../terms and conditions/terminos_condiciones_screen.dart';
+import 'package:flutter/gestures.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +24,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  bool isLoginSelected = true;
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   @override
   void dispose() {
@@ -61,92 +70,96 @@ class _LoginScreenState extends State<LoginScreen> {
                       'assets/images/logo.svg',
                       width: 80,
                       height: 80,
+                      color: AppColors.primary,
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 20),
                     Text(
-                      'Motti Nut',
+                      'MottiNut',
                       style: AppTextStyles.tittle.copyWith(
                         color: AppColors.mainOrange,
-                        fontSize: 32,
+                        fontSize: 27,
+                        fontWeight: FontWeight.bold
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 40),
-                // Pestañas Login / Registro
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextButton(
-                      onPressed: () {},
-                      child: const Text('Iniciar sesión',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      onPressed: () {
+                        setState(() {
+                          isLoginSelected = true;
+                        });
+                        Navigator.pushNamed(context, RouteNames.login).then((_) {
+                          setState(() {
+                            isLoginSelected = true;
+                          });
+                        });
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Iniciar sesión',
+                            style: TextStyle(
+                              fontWeight: isLoginSelected ? FontWeight.bold : FontWeight.w500,
+                              color: isLoginSelected ? AppColors.primary : Colors.grey.shade400,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: 1.5,
+                            width: 100,
+                            color: isLoginSelected ? AppColors.mainOrange : Colors.transparent,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      height: 20,
+                      width: 0.9,
+                      color: Colors.grey.shade400,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, RouteNames.register);
+                        setState(() {
+                          isLoginSelected = false;
+                        });
+                        Navigator.pushNamed(context, RouteNames.register).then((_) {
+                          setState(() {
+                            isLoginSelected = true;
+                          });
+                        });
                       },
-                      child: const Text('Registrar'),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Registrar',
+                            style: TextStyle(
+                              fontWeight: !isLoginSelected ? FontWeight.bold : FontWeight.w500,
+                              color: !isLoginSelected ? AppColors.primary : Colors.grey.shade400,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: 2,
+                            width: 100,
+                            color: !isLoginSelected ? AppColors.mainOrange : Colors.transparent,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
 
-                // Email
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: Validators.validateEmail,
-                  decoration: const InputDecoration(
-                    labelText: 'Usuario',
-                    prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(24)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(24)),
-                      borderSide: BorderSide(color: AppColors.mainOrange),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(24)),
-                      borderSide: BorderSide(color: AppColors.mainOrange, width: 2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 30),
+                _buildInputFields(),
 
-                // Contraseña
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  validator: Validators.validatePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Contraseña',
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(24)),
-                    ),
-                    enabledBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(24)),
-                      borderSide: BorderSide(color: AppColors.mainOrange),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(24)),
-                      borderSide: BorderSide(color: AppColors.mainOrange, width: 2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 50),
+                SizedBox(height: 30),
 
                 // Errores y Botón
                 Consumer<AuthProvider>(
@@ -188,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
 
-                        // Botón de iniciar sesión
+
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -219,9 +232,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 10),
 
-                // Divisor "o"
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Row(
@@ -229,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Expanded(
                         child: Divider(
                           color: Colors.grey,
-                          thickness: 1,
+                          thickness: 0.2,
                         ),
                       ),
                       Padding(
@@ -237,8 +249,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Text(
                           'o',
                           style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 16,
+                            color: Colors.grey[400],
+                            fontSize: 15,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -246,35 +258,316 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Expanded(
                         child: Divider(
                           color: Colors.grey,
-                          thickness: 1,
+                          thickness: 0.2,
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                // Iconos externos
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.apple, size: 32),
-                    SizedBox(width: 20),
-                    Icon(Icons.android, size: 32),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                SizedBox(height: 8),
+                _buildSocialButtonsRow(),
 
-                // Términos
-                const Text(
-                  'Al hacer clic en continuar, acepta nuestros\nTérminos de servicio y Política de privacidad',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12),
-                ),
-                const SizedBox(height: 20),
 
               ],
             ),
           ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: _buildTermsAndConditions(context),
+        ),
+      ),
+
+    );
+  }
+
+  Widget _buildInputFields() {
+    return Column(
+      children: [
+        SizedBox(height: 15),
+        _buildEmailField(),
+        SizedBox(height: 18),
+        _buildPasswordField(),
+      ],
+    );
+  }
+
+  Widget _buildEmailField() {
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      validator: Validators.validateEmail,
+      style: TextStyle(
+        color: AppColors.textDark,
+        fontSize: 16,
+      ),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.surface.withOpacity(0.3),
+        labelText: 'Usuario',
+        labelStyle: TextStyle(
+          color: AppColors.textDark,
+          fontSize: 17,
+          letterSpacing: -0.4,
+          fontWeight: FontWeight.w300,
+        ),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: SvgPicture.asset(
+            'assets/images/user_icon.svg',
+            width: 20,
+            height: 20,
+            color: AppColors.primary.withOpacity(0.8),
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.grey, width: 0.6),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide(color: AppColors.errorIcon, width: 1.6),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide(color: AppColors.errorIcon, width: 1.6),
+        ),
+        errorStyle: TextStyle(
+          color: AppColors.errorIcon,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: _obscurePassword,
+      validator: Validators.validatePassword,
+      style: TextStyle(
+        color: AppColors.textDark,
+        fontWeight: FontWeight.w500,
+        fontSize: 16,
+      ),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.surface.withOpacity(0.3),
+        labelText: 'Contraseña',
+        labelStyle: TextStyle(
+          color: AppColors.textDark,
+          fontSize: 17,
+          letterSpacing: -0.4,
+          fontWeight: FontWeight.w300,
+        ),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: SvgPicture.asset(
+            'assets/images/candado_icon.svg',
+            height: 20,
+            width: 20,
+            color: AppColors.primary.withOpacity(0.8),
+          ),
+        ),
+        suffixIcon: IconButton(
+          icon: _obscurePassword
+              ? SvgPicture.asset(
+            'assets/images/eye_icon.svg',
+            height: 18,
+            width: 18,
+            color: Colors.grey.shade500,
+          )
+              : Icon(
+            Icons.visibility_off,
+            color: AppColors.textInput.withOpacity(0.8),
+            size: 25,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscurePassword = !_obscurePassword;
+            });
+          },
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.grey, width: 0.6),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide(color: AppColors.errorIcon, width: 1.6),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide(color: AppColors.errorIcon, width: 1.6),
+        ),
+        errorStyle: TextStyle(
+          color: AppColors.errorIcon,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildSocialButtonsRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildSocialButton(
+          'assets/images/logo_google_login.png',
+          'Google',
+          _loginWithGoogle,
+        ),
+        SizedBox(width: 35),
+        _buildSocialButton(
+          'assets/images/apple_logo.png',
+          'Apple',
+          _loginWithApple,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton(
+      String assetPath, String provider, VoidCallback onPressed) {
+    return Container(
+      width: 43,
+      height: 43,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(50),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: Image.asset(
+          assetPath,
+          height: 27,
+          width: 27,
+          color: AppColors.primary,
+          errorBuilder: (context, error, stackTrace) {
+            if (provider == 'Google') {
+              return Icon(Icons.login, color: AppColors.primary, size: 27);
+            } else {
+              return Icon(Icons.apple, color: AppColors.primary, size: 27);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  void _loginWithGoogle() async {
+    try {
+      await _googleSignIn.signIn();
+      Navigator.pushReplacementNamed(context, '/home');
+    } catch (error) {
+      print(error);
+
+      SnackBarManager.showError(context,
+          'Se produjo un error al iniciar sesión con Google. Inténtalo nuevamente.');
+    }
+  }
+
+  void _loginWithApple() async {
+    try {
+      SnackBarManager.showError(
+          context, 'Login con Apple próximamente disponible');
+    } catch (error) {
+      print(error);
+
+      SnackBarManager.showError(context,
+          'Se produjo un error al iniciar sesión con Apple. Inténtalo nuevamente.');
+    }
+  }
+  Widget _buildTermsAndConditions(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          text: 'Al continuar, aceptas los \n',
+          style: TextStyle(
+            color: AppColors.textInput,
+            fontWeight: FontWeight.w300,
+            fontSize: 11,
+            letterSpacing: 0.5,
+            height: 1.3,
+          ),
+          children: [
+            TextSpan(
+              text: 'Términos y Condiciones',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.textDark,
+                fontWeight: FontWeight.w500,
+                decoration: TextDecoration.underline,
+                letterSpacing: 0.5,
+              ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TerminosCondicionesScreen(),
+                    ),
+                  );
+                },
+            ),
+            TextSpan(
+              text: ' y ',
+              style: TextStyle(
+                color: AppColors.textInput,
+                fontWeight: FontWeight.w400,
+                fontSize: 11,
+              ),
+            ),
+            TextSpan(
+              text: 'Política de privacidad',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.textDark,
+                fontWeight: FontWeight.w500,
+                decoration: TextDecoration.underline,
+              ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PoliticaPrivacidadScreen(),
+                    ),
+                  );
+                },
+            ),
+          ],
         ),
       ),
     );

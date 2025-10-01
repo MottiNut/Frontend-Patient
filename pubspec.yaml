@@ -38,6 +38,9 @@ dependencies:
   google_fonts: ^6.1.0
   image_picker: ^1.0.4
   permission_handler: ^11.0.1
+
+  connectivity_plus: ^7.0.0
+  
   mime: ^1.0.4
   http_parser: ^4.0.2
   firebase_core: ^2.30.0
@@ -49,6 +52,9 @@ dependencies:
   font_awesome_flutter: ^10.8.0
   carousel_slider: ^4.2.1
 
+  url_launcher: ^6.3.2
+  google_sign_in: ^5.4.4
+  table_calendar: ^3.1.3
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -85,13 +91,36 @@ flutter:
           weight: 500
         - asset: assets/fonts/Montserrat-SemiBold.ttf
           weight: 600
+
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Nunito-italic.ttf
+          weight: 300
+        - asset: assets/fonts/Nunito-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Nunito-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Nunito-ExtraBold.ttf
+          weight: 800
   assets:
     - assets/images/
     - assets/images/meal-card.png
     - assets/images/vector-retrocession.svg
+    - assets/images/vector-retrocession.svg
+
+      #iconos de login
+    - assets/images/logo_google_login.png
+    - assets/images/apple_logo.png
+    - assets/images/candado_icon.svg
+    - assets/images/user_icon.svg
+    - assets/images/eye_icon.svg
+
+
   uses-material-design: true
 flutter_launcher_icons:
-  image_path: "assets/images/icon.png"
+  image_path: "assets/images/logo_icon.png"
   android: true
   ios: tru
   remove_alpha_ios: true

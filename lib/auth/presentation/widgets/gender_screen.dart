@@ -13,23 +13,45 @@ class GenderScreen extends StatelessWidget {
 
   Widget _buildGenderOption(String genderLabel, String genderValue, IconData icon) {
     final isSelected = selectedGender == genderValue;
-    return Card(
-      color: isSelected ? AppColors.lightOrange : null,
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.mainOrange),
-        title: Text(
-          genderLabel,
-          style: AppTextStyles.description.copyWith(
-            letterSpacing: 0,
-            fontSize: 16,
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isSelected ? AppColors.mainOrange : Colors.grey.shade100,
+          foregroundColor: isSelected ? Colors.white : Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
           ),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          elevation: isSelected ? 4 : 0,
         ),
-        trailing: isSelected
-            ? const Icon(Icons.check, color: AppColors.mainOrange)
-            : null,
-        onTap: () {
-          onGenderSelected(genderValue);
-        },
+        onPressed: () => onGenderSelected(genderValue),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.grey.shade700,
+              size: 28,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                genderLabel,
+                style: AppTextStyles.description.copyWith(
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+          ],
+        ),
       ),
     );
   }

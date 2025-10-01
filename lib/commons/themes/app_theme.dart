@@ -3,38 +3,49 @@ import 'package:flutter/material.dart';
 class AppColors {
   static const Color lightOrange = Color(0xFFFFCFAC);
   static const Color mediumOrange = Color(0xFFFFAE73);
+
   static const Color mainOrange = Color(0xFFFF6C00); // color principal
   static const Color darkOrange1 = Color(0xFFCC5700);
   static const Color darkOrange2 = Color(0xFF994100);
   static const Color darkestOrange = Color(0xFF662B00);
 
+  static const Color primary = Color(0xFFFF6C00);
+  static const Color secondary = Color(0xFF00CEDC);
+  static const Color checkValidation = Color(0xFF0CB00F);
+
+  static const Color errorIcon = Color(0xFFFF006E);
+
   static const Color whiteBackground = Colors.white;
+  static const Color backgroundLigth = Colors.white;
+  static const Color textInput = Colors.grey;
+  static const Color surface = Color(0xFFE5E8E5);
+  static const Color textDark = Colors.black;
 }
 
 class AppTextStyles {
   static const TextStyle sectionHeaderPrefix = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w300,
     fontSize: 20,
     height: 1.2,
   );
 
   static const TextStyle profileGreeting = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w400,
     fontSize: 35,
     height: 1.2,
   );
 
   static const TextStyle tittle = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w500,
     fontSize: 29,
     height: 0.42,
   );
 
   static const TextStyle shortDescription = TextStyle(
-      fontFamily: 'Montserrat',
+      fontFamily: 'Nunito',
       fontWeight: FontWeight.w400,
       fontSize: 16,
       height: 1.20,
@@ -42,14 +53,14 @@ class AppTextStyles {
   );
 
   static const TextStyle titleAccompaniment = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w300,
     fontSize: 22,
     height: 1.5, // Aumenta el espacio entre líneas
   );
 
   static const TextStyle subtitle = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w600,
     fontSize: 25,
     height: 1.2,
@@ -57,7 +68,7 @@ class AppTextStyles {
   );
 
   static const TextStyle description = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w400,
     fontSize: 18,
     height: 1.2,
@@ -65,14 +76,14 @@ class AppTextStyles {
   );
 
   static const TextStyle navBar = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w500,
     fontSize: 15,
     height: 1.2,
   );
 
   static const TextStyle mealCardTitle = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w600,
     fontSize: 20,
     height: 1.2,
@@ -80,7 +91,7 @@ class AppTextStyles {
   );
 
   static const TextStyle mealCardSubtitle = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w400,
     fontSize: 16,
     height: 1.2,
@@ -88,14 +99,14 @@ class AppTextStyles {
   );
 
   static const TextStyle titleMeals = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: 'Nunito',
     fontWeight: FontWeight.w300,
     fontSize: 30,
     height: 0.50,
   );
 }
 
-// ✅ NUEVO: Clase AppTheme que centraliza toda la configuración
+
 class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(

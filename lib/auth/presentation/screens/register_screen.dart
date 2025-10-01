@@ -220,25 +220,6 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
         final bool hasMedicalConditionBool = formData['hasMedicalCondition'] == true;
 
-        print('🏥 Tiene condición médica: $hasMedicalConditionBool');
-        print('💊 Enfermedad crónica: $chronicDisease');
-        print('🥜 Alergias: $allergies');
-        print('👤 Género: $gender');
-
-        // Log de todos los datos que se van a enviar
-        print('📝 Datos del registro:');
-        print('  - Email: ${_emailController.text.trim()}');
-        print('  - Nombre: ${_firstNameController.text.trim()}');
-        print('  - Apellido: ${_lastNameController.text.trim()}');
-        print('  - Fecha nacimiento: $birthDate');
-        print('  - Altura: $height');
-        print('  - Peso: $weight');
-        print('  - Género: $gender');
-        print('  - Condición médica: $hasMedicalConditionBool');
-        print('  - Enfermedad crónica: $chronicDisease');
-        print('  - Alergias: $allergies');
-
-        print('🌐 Llamando al método registerPatient...');
 
         final success = await authProvider.registerPatient(
           email: _emailController.text.trim(),
@@ -412,7 +393,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
   @override
   Widget build(BuildContext context) {
-    // Determinar los colores del botón según si la página está completa
+
     final bool isPageComplete = _isCurrentPageComplete();
     final Color buttonColor = isPageComplete ? AppColors.mainOrange : const Color(0xFFE5E4E3);
     final Color iconColor = isPageComplete ? AppColors.whiteBackground : const Color(0xFFB2B0B0);
@@ -420,7 +401,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         return Scaffold(
-          backgroundColor: Colors.grey[50],
+          backgroundColor: Colors.white,
           body: SafeArea(
             child: Column(
               children: [
@@ -444,7 +425,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end, // Cambiar a end para solo mostrar botón de siguiente
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GestureDetector(
                         onTap: authProvider.isLoading ? null : (isPageComplete ? _nextPage : null),

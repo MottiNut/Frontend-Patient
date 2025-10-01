@@ -61,14 +61,13 @@ class _AppWrapperState extends State<AppWrapper> {
     // Vibrar el dispositivo para alertar al usuario
     await _triggerVibration();
 
-    // No mostrar toast para errores de login/auth, solo vibrar
-    // El usuario ya verá el error en la pantalla de error
+
   }
 
   Future<void> _triggerVibration() async {
     try {
       debugPrint('📳 Intentando vibrar...');
-      // Usar HapticFeedback que es más confiable y eficiente
+
       await HapticFeedback.heavyImpact();
       debugPrint('✅ Vibración ejecutada');
     } catch (e) {
@@ -103,8 +102,7 @@ class _AppWrapperState extends State<AppWrapper> {
             return const _LoadingScreen();
 
           case AuthState.authenticated:
-          // 🔥 ESTE ES EL CAMBIO IMPORTANTE:
-          // En lugar de PatientHomeScreen, usar SwipeNavigationWrapper
+
             return const SwipeNavigationWrapper(initialIndex: 0);
 
           case AuthState.error:
