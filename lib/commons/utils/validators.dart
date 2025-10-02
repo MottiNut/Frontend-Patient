@@ -15,17 +15,34 @@ class Validators {
   }
 
   // Validador de contraseña
+  // Validador de contraseña
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'La contraseña es requerida';
     }
 
-    if (value.length < 6) {
-      return 'La contraseña debe tener al menos 6 caracteres';
+    // Reglas
+    final hasMinLength = value.length >= 6;
+    final hasUppercase = RegExp(r'[A-Z]').hasMatch(value);
+    final hasNumber = RegExp(r'[0-9]').hasMatch(value);
+    final hasSpecialChar = RegExp(r'[!@#\$&*~%^(),.?":{}|<>]').hasMatch(value);
+
+    if (!hasMinLength) {
+      return 'Debe tener al menos 6 caracteres';
+    }
+    if (!hasUppercase) {
+      return 'Debe contener al menos una letra mayúscula';
+    }
+    if (!hasNumber) {
+      return 'Debe contener al menos un número';
+    }
+    if (!hasSpecialChar) {
+      return 'Debe contener al menos un carácter especial';
     }
 
     return null;
   }
+
 
   // Validador de nombre
   static String? validateName(String? value, String fieldName) {

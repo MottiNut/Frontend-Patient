@@ -596,7 +596,7 @@ class _BirthDateScreenState extends State<BirthDateScreen> {
                           child: Text(
                             'Seleccionar Mes y Año',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textDark,
                             ),
@@ -622,7 +622,7 @@ class _BirthDateScreenState extends State<BirthDateScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Selector de Año - Carrusel Horizontal
+
                           Padding(
                             padding: const EdgeInsets.only(left: 4, bottom: 8),
                             child: Text(
@@ -636,77 +636,135 @@ class _BirthDateScreenState extends State<BirthDateScreen> {
                           ),
                           Container(
                             height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: ListView.builder(
-                              controller: yearScrollController,
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              itemCount: DateTime.now().year - 1900 + 1,
-                              itemBuilder: (context, index) {
-                                int year = 1900 + index;
-                                bool isSelected = year == selectedYear;
+                            child: Stack(
+                              children: [
+                                // LISTVIEW PRINCIPAL
+                                ListView.builder(
+                                  controller: yearScrollController,
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(horizontal: 45), // margen para no tapar con las flechas
+                                  itemCount: DateTime.now().year - 1900 + 1,
+                                  itemBuilder: (context, index) {
+                                    int year = 1900 + index;
+                                    bool isSelected = year == selectedYear;
 
-                                return InkWell(
-                                  onTap: () {
-                                    setDialogState(() {
-                                      selectedYear = year;
-                                    });
-                                  },
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 8,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 18,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? AppColors.mainOrange
-                                          : Colors.white,
+                                    return InkWell(
+                                      onTap: () {
+                                        setDialogState(() {
+                                          selectedYear = year;
+                                        });
+                                      },
                                       borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? AppColors.mainOrange
-                                            : Colors.grey.shade300,
-                                        width: 1.5,
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                                        decoration: BoxDecoration(
+                                          color: isSelected ? AppColors.mainOrange : Colors.grey.shade100,
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: isSelected ? AppColors.mainOrange : Colors.grey.shade200,
+                                            width: 1.5,
+                                          ),
+                                          boxShadow: isSelected
+                                              ? [
+                                            BoxShadow(
+                                              color: AppColors.mainOrange.withOpacity(0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
+                                              : null,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            year.toString(),
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                              color: isSelected ? Colors.white : AppColors.textDark,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      boxShadow: isSelected
-                                          ? [
-                                        BoxShadow(
-                                          color: AppColors.mainOrange
-                                              .withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                          : null,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        year.toString(),
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: isSelected
-                                              ? FontWeight.bold
-                                              : FontWeight.w600,
-                                          color: isSelected
-                                              ? Colors.white
-                                              : AppColors.textDark,
-                                        ),
+                                    );
+                                  },
+                                ),
+
+                                // FLECHA IZQUIERDA
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      yearScrollController.animateTo(
+                                        yearScrollController.offset - 100,
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.ease,
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 28,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black12,
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        Icons.arrow_back_ios,
+                                        size: 18,
+                                        color: Colors.grey.shade700,
                                       ),
                                     ),
                                   ),
-                                );
-                              },
+                                ),
+
+                                // FLECHA DERECHA
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      yearScrollController.animateTo(
+                                        yearScrollController.offset + 100,
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.ease,
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 28,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black12,
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 18,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+
 
                           const SizedBox(height: 16),
 

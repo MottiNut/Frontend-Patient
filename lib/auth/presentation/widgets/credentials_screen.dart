@@ -22,8 +22,23 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   bool _obscurePassword = true;
   bool _obscureRepeatPassword = true;
 
+  // Estados de validación de la contraseña
+  bool hasMinLength = false;
+  bool hasUpperCase = false;
+  bool hasNumber = false;
+
+  void _checkPassword(String password) {
+    setState(() {
+      hasMinLength = password.length >= 6;
+      hasUpperCase = password.contains(RegExp(r'[A-Z]'));
+      hasNumber = password.contains(RegExp(r'[0-9]'));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final allValid = hasMinLength && hasUpperCase && hasNumber;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -37,6 +52,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
           obscureText: false,
         ),
         const SizedBox(height: 20),
+
         _buildLabel('Contraseña'),
         const SizedBox(height: 8),
         _buildTextField(
@@ -50,8 +66,19 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
               _obscurePassword = !_obscurePassword;
             });
           },
+          onChanged: _checkPassword,
         ),
+
+        // 🔥 Requisitos dinámicos de la contraseña
+        if (!allValid) ...[
+          const SizedBox(height: 10),
+          _buildRequirement("Mínimo 6 caracteres", hasMinLength),
+          _buildRequirement("Al menos una mayúscula", hasUpperCase),
+          _buildRequirement("Al menos un número", hasNumber),
+        ],
+
         const SizedBox(height: 20),
+
         _buildLabel('Repetir Contraseña'),
         const SizedBox(height: 8),
         _buildTextField(
@@ -92,6 +119,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     required IconData icon,
     bool obscureText = false,
     VoidCallback? toggleObscure,
+    Function(String)? onChanged,
   }) {
     return TextFormField(
       controller: controller,
@@ -109,7 +137,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         )
             : null,
         hintText: hint,
-        hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+        hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
         filled: true,
         fillColor: Colors.grey.shade100,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -131,6 +159,28 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         ),
       ),
       validator: validator,
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildRequirement(String text, bool met) {
+    return Row(
+      children: [
+        Icon(
+          met ? Icons.check_circle : Icons.cancel,
+          color: met ? Colors.green : Colors.red,
+          size: 18,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 13,
+            color: met ? Colors.green : Colors.red,
+            fontWeight: met ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ],
     );
   }
 }

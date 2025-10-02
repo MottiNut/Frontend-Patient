@@ -29,19 +29,51 @@ class RegisterPatientRequest {
     this.gender,
   });
 
-  Map<String, dynamic> toJson() => {
-    'email': email,
-    'password': password,
-    'firstName': firstName,
-    'lastName': lastName,
-    'birthDate': birthDate.toIso8601String().split('T')[0],
-    'phone': phone,
-    'height': height,
-    'weight': weight,
-    'hasMedicalCondition': hasMedicalCondition,
-    'chronicDisease': chronicDisease,
-    'allergies': allergies,
-    'dietaryPreferences': dietaryPreferences,
-    'gender': gender,
-  };
+  Map<String, dynamic> toJson() {
+    // Crear el mapa base con campos requeridos
+    final Map<String, dynamic> json = {
+      'email': email,
+      'password': password,
+      'firstName': firstName,
+      'lastName': lastName,
+      'birthDate': birthDate.toIso8601String().split('T')[0], // Formato: YYYY-MM-DD
+    };
+
+    // Agregar campos opcionales solo si no son nulos
+    if (phone != null && phone!.isNotEmpty) {
+      json['phone'] = phone;
+    }
+    if (height != null) {
+      json['height'] = height;
+    }
+    if (weight != null) {
+      json['weight'] = weight;
+    }
+    if (hasMedicalCondition != null) {
+      json['hasMedicalCondition'] = hasMedicalCondition;
+    }
+    if (chronicDisease != null && chronicDisease!.isNotEmpty) {
+      json['chronicDisease'] = chronicDisease;
+    }
+    if (allergies != null && allergies!.isNotEmpty) {
+      json['allergies'] = allergies;
+    }
+    if (dietaryPreferences != null && dietaryPreferences!.isNotEmpty) {
+      json['dietaryPreferences'] = dietaryPreferences;
+    }
+    if (gender != null && gender!.isNotEmpty) {
+      json['gender'] = gender;
+    }
+
+    return json;
+  }
+
+  @override
+  String toString() {
+    return 'RegisterPatientRequest('
+        'email: $email, '
+        'firstName: $firstName, '
+        'lastName: $lastName, '
+        'birthDate: ${birthDate.toIso8601String().split('T')[0]})';
+  }
 }

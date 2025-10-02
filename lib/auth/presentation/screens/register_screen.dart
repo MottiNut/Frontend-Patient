@@ -9,6 +9,7 @@ import 'package:frontendpatient/auth/presentation/widgets/gender_screen.dart';
 import 'package:frontendpatient/auth/presentation/widgets/height_weight_screen.dart';
 import 'package:frontendpatient/auth/presentation/widgets/medical_condition_screen.dart';
 import 'package:frontendpatient/auth/presentation/widgets/personal_info_screen.dart';
+import 'package:frontendpatient/commons/routes/route_names.dart';
 import 'package:provider/provider.dart';
 import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
 
@@ -23,8 +24,8 @@ class _RegisterFlowState extends State<RegisterFlow> {
   final _pageController = PageController();
   final _formKey = GlobalKey<FormState>();
   int _currentPage = 0;
+  bool _isRegistering = false;
 
-  // Controladores para los campos de texto
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -36,7 +37,6 @@ class _RegisterFlowState extends State<RegisterFlow> {
   final _chronicDiseaseController = TextEditingController();
   final _allergiesController = TextEditingController();
 
-  // Datos del formulario
   final Map<String, dynamic> formData = {
     'firstName': '',
     'lastName': '',
@@ -50,12 +50,12 @@ class _RegisterFlowState extends State<RegisterFlow> {
     'hasMedicalCondition': false,
     'chronicDisease': '',
     'allergies': '',
+    'gender': null,
   };
 
   @override
   void initState() {
     super.initState();
-    // Agregar listeners para actualizar el estado cuando cambien los campos
     _firstNameController.addListener(_updateFormState);
     _lastNameController.addListener(_updateFormState);
     _emailController.addListener(_updateFormState);
@@ -69,9 +69,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
   }
 
   void _updateFormState() {
-    setState(() {
-      // Solo actualizar el estado para refrescar los colores
-    });
+    if (mounted) setState(() {});
   }
 
   @override
@@ -86,47 +84,38 @@ class _RegisterFlowState extends State<RegisterFlow> {
     _heightController.dispose();
     _chronicDiseaseController.dispose();
     _allergiesController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
-  // Función para verificar si la página actual está completa
   bool _isCurrentPageComplete() {
     switch (_currentPage) {
-      case 0: // PersonalInfoScreen
+      case 0:
         return _firstNameController.text.trim().isNotEmpty &&
             _lastNameController.text.trim().isNotEmpty;
-
-      case 1: // CredentialsScreen
+      case 1:
         return _emailController.text.trim().isNotEmpty &&
             _passwordController.text.trim().isNotEmpty &&
             _repeatPasswordController.text.trim().isNotEmpty &&
             _passwordController.text == _repeatPasswordController.text;
-
       case 2:
         return formData['gender'] != null && formData['gender'].toString().trim().isNotEmpty;
-
-      case 3: // BirthDateScreen
+      case 3:
         return formData['birthDate'] != null;
-
-      case 4: // HeightWeightScreen
+      case 4:
         return _heightController.text.trim().isNotEmpty &&
             _weightController.text.trim().isNotEmpty;
-
-      case 5: // MedicalConditionScreen
-        return true; // Esta página siempre es válida (tiene valor por defecto)
-
-      case 6: // ChronicDiseaseScreen
+      case 5:
+        return true;
+      case 6:
         if (formData['hasMedicalCondition'] == true) {
-          // Si tiene condición médica, debe seleccionar algo
           return formData['chronicDisease'] != null && formData['chronicDisease'] != '' ||
               _chronicDiseaseController.text.trim().isNotEmpty;
         }
-        return true; // Si no tiene condición médica, es válido
-
-      case 7: // AllergiesScreen
+        return true;
+      case 7:
         return formData['allergies'] != null && formData['allergies'] != '' ||
             _allergiesController.text.trim().isNotEmpty;
-
       default:
         return false;
     }
@@ -164,131 +153,179 @@ class _RegisterFlowState extends State<RegisterFlow> {
     }
   }
 
-  void _finishRegistration() async {
-    print('🚀 Iniciando registro...');
-    print('📄 Página actual: $_currentPage');
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.mainOrange),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Registrando cuenta...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-    if (_validateCurrentPage()) {
-      print('✅ Validación de página actual exitosa');
+  void _finishRegistration() async {
+    if (!_validateCurrentPage() || _isRegistering) {
+      debugPrint('❌ Validación falló o ya está registrando');
+      return;
+    }
+
+    setState(() => _isRegistering = true);
+    _showLoadingDialog();
+
+    try {
+      final birthDate = formData['birthDate'] as DateTime?;
+      if (birthDate == null) throw Exception('Fecha de nacimiento requerida');
+
+      final weight = _weightController.text.isNotEmpty
+          ? double.tryParse(_weightController.text)
+          : null;
+
+      final height = _heightController.text.isNotEmpty
+          ? double.tryParse(_heightController.text)
+          : null;
+
+      String? chronicDisease;
+      if (formData['hasMedicalCondition'] == true) {
+        final allowedDiseases = ['Diabetes', 'Hipertensión arterial', 'Obesidad o sobrepeso'];
+        chronicDisease = allowedDiseases.contains(formData['chronicDisease'])
+            ? formData['chronicDisease']
+            : (_chronicDiseaseController.text.trim().isNotEmpty
+            ? _chronicDiseaseController.text.trim()
+            : null);
+      }
+
+      final gender = formData['gender'] as String?;
+      final allowedAllergies = ['Gluten', 'Lactosa', 'Frutos Secos', 'Mariscos'];
+      String? allergies;
+      if (formData['allergies'] == 'Ninguna') {
+        allergies = null;
+      } else {
+        allergies = allowedAllergies.contains(formData['allergies'])
+            ? formData['allergies']
+            : (_allergiesController.text.trim().isNotEmpty
+            ? _allergiesController.text.trim()
+            : null);
+      }
+
+      debugPrint('📤 Datos a enviar:');
+      debugPrint('  Email: ${_emailController.text.trim()}');
+      debugPrint('  Nombre: ${_firstNameController.text.trim()} ${_lastNameController.text.trim()}');
 
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      print('🔗 AuthProvider obtenido');
 
-      try {
-        // Preparar los datos
-        final birthDate = formData['birthDate'] as DateTime?;
-        final weight = _weightController.text.isNotEmpty
-            ? double.tryParse(_weightController.text)
-            : null;
-        final height = _heightController.text.isNotEmpty
-            ? double.tryParse(_heightController.text)
-            : null;
+      final success = await authProvider.registerPatient(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        birthDate: birthDate,
+        phone: null,
+        height: height,
+        weight: weight,
+        hasMedicalCondition: formData['hasMedicalCondition'] == true,
+        chronicDisease: chronicDisease,
+        allergies: allergies,
+        gender: gender,
+        dietaryPreferences: null,
+      );
 
-        print('📅 Fecha de nacimiento: $birthDate');
-        print('⚖️ Peso: $weight');
-        print('📏 Altura: $height');
+      // Cerrar diálogo de carga
+      if (mounted) Navigator.of(context).pop();
 
-        // Obtener chronicDisease correctamente
-        String? chronicDisease;
-        if (formData['hasMedicalCondition'] == true) {
-          if (formData['chronicDisease'] == 'Diabetes' ||
-              formData['chronicDisease'] == 'Hipertensión arterial' ||
-              formData['chronicDisease'] == 'Obesidad o sobrepeso') {
-            chronicDisease = formData['chronicDisease'];
-          }
-          else if (_chronicDiseaseController.text.trim().isNotEmpty) {
-            chronicDisease = _chronicDiseaseController.text.trim();
-          }
+      if (success && authProvider.isVerificationPending) {
+        debugPrint('✅ Registro exitoso - navegando a verificación');
+
+        if (mounted) {
+          // Navegar a verificación de código
+          Navigator.pushReplacementNamed(
+            context,
+            RouteNames.codeVerification,
+            arguments: {
+              'email': _emailController.text.trim(),
+              'phone': null,
+              'verificationMethod': VerificationMethod.email,
+            },
+          );
         }
+      } else if (!success) {
+        // CASO CRÍTICO: Registro falló - permanecer en la misma pantalla
+        debugPrint('❌ Registro falló: ${authProvider.errorMessage}');
 
-        final gender = formData['gender'] as String?;
-
-        // Obtener alergias correctamente
-        String? allergies;
-        if (formData['allergies'] == 'Gluten' ||
-            formData['allergies'] == 'Lactosa' ||
-            formData['allergies'] == 'Frutos Secos' ||
-            formData['allergies'] == 'Mariscos') {
-          allergies = formData['allergies'];
-        }
-        else if (_allergiesController.text.trim().isNotEmpty) {
-          allergies = _allergiesController.text.trim();
-        }
-        else if (formData['allergies'] == 'Ninguna') {
-          allergies = null;
-        }
-
-        final bool hasMedicalConditionBool = formData['hasMedicalCondition'] == true;
-
-
-        final success = await authProvider.registerPatient(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          firstName: _firstNameController.text.trim(),
-          lastName: _lastNameController.text.trim(),
-          birthDate: birthDate!,
-          phone: '',
-          height: height,
-          weight: weight,
-          hasMedicalCondition: hasMedicalConditionBool,
-          chronicDisease: chronicDisease,
-          allergies: allergies,
-          gender: gender,
-          dietaryPreferences: null,
-        );
-
-        print('📊 Resultado del registro: $success');
-
-        if (success) {
-          print('🎉 Registro exitoso!');
-          // Mostrar mensaje de éxito
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('¡Registro completado exitosamente!'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
-              ),
-            );
-
-            // Navegar de vuelta al login después de un breve delay
-            await Future.delayed(const Duration(seconds: 1));
-            if (mounted) {
-              Navigator.of(context).pop();
-            }
-          }
-        } else {
-          print('❌ Error en el registro');
-          print('💬 Mensaje de error: ${authProvider.errorMessage}');
-
-          // Mostrar error
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(authProvider.errorMessage ?? 'Error al registrar usuario'),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 3),
-              ),
-            );
-          }
-        }
-      } catch (e) {
-        print('💥 Error inesperado en _finishRegistration: $e');
-        print('📍 Stack trace: ${StackTrace.current}');
-
-        // Manejar errores inesperados
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error inesperado: ${e.toString()}'),
+              content: Text(
+                authProvider.errorMessage ?? 'Error al registrar usuario. Por favor, intenta nuevamente.',
+              ),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(
+                label: 'Cerrar',
+                textColor: Colors.white,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              ),
             ),
           );
+
+          // NO NAVEGAR - permanecer en la pantalla de registro
+          // El usuario puede corregir datos y volver a intentar
         }
       }
-    } else {
-      print('❌ Validación de página falló');
+    } catch (e) {
+      debugPrint('💥 Error inesperado: $e');
+
+      if (mounted) {
+        // Cerrar diálogo si está abierto
+        Navigator.of(context).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error inesperado: ${e.toString()}. Por favor, intenta nuevamente.'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Cerrar',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+
+        // NO NAVEGAR - permanecer en la pantalla de registro
+      }
+    } finally {
+      if (mounted) setState(() => _isRegistering = false);
     }
   }
 
@@ -297,11 +334,10 @@ class _RegisterFlowState extends State<RegisterFlow> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
-          // Botón de retroceso con SVG - siempre visible
           GestureDetector(
             onTap: _currentPage > 0 ? _prevPage : () {
-              // Si estamos en la primera página, regresar a la pantalla anterior (login)
-              Navigator.of(context).pop();
+              // Si está en la primera página, volver al login
+              Navigator.of(context).pushReplacementNamed(RouteNames.login);
             },
             child: Container(
               width: 32,
@@ -314,11 +350,9 @@ class _RegisterFlowState extends State<RegisterFlow> {
               ),
             ),
           ),
-
-          // Barra de progreso
           Expanded(
             child: LinearProgressIndicator(
-              value: (_currentPage + 1) / 9,
+              value: (_currentPage + 1) / 8,
               backgroundColor: Colors.grey[300],
               color: AppColors.mainOrange,
               minHeight: 6,
@@ -364,8 +398,6 @@ class _RegisterFlowState extends State<RegisterFlow> {
             setState(() {
               _heightController.text = (height * 100).toInt().toString();
               _weightController.text = weight.toString();
-              formData['height'] = (height * 100).toInt().toString();
-              formData['weight'] = weight.toString();
             });
           },
         );
@@ -393,110 +425,71 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
   @override
   Widget build(BuildContext context) {
-
     final bool isPageComplete = _isCurrentPageComplete();
     final Color buttonColor = isPageComplete ? AppColors.mainOrange : const Color(0xFFE5E4E3);
     final Color iconColor = isPageComplete ? AppColors.whiteBackground : const Color(0xFFB2B0B0);
 
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        return Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(
-            child: Column(
-              children: [
-                _buildProgressBar(),
-                Expanded(
-                  child: Form(
-                    key: _formKey,
-                    child: PageView.builder(
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: 9,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: SingleChildScrollView(
-                          child: _buildPage(index),
-                        ),
-                      ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildProgressBar(),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: PageView.builder(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 8,
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: SingleChildScrollView(
+                      child: _buildPage(index),
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      GestureDetector(
-                        onTap: authProvider.isLoading ? null : (isPageComplete ? _nextPage : null),
-                        child: Container(
-                          width: 73,
-                          height: 73,
-                          decoration: BoxDecoration(
-                            color: buttonColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: authProvider.isLoading
-                                ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                                : Icon(
-                              _currentPage == 7 ? Icons.check : Icons.arrow_forward,
-                              color: iconColor,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Mostrar error si existe
-                if (authProvider.errorMessage != null)
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      border: Border.all(color: Colors.red.shade200),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            authProvider.errorMessage!,
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            authProvider.clearError();
-                          },
-                          icon: Icon(Icons.close, color: Colors.red.shade600, size: 18),
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 16),
-              ],
+              ),
+            ),
+            _buildNextButton(isPageComplete, buttonColor, iconColor),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNextButton(
+      bool isPageComplete,
+      Color buttonColor,
+      Color iconColor,
+      ) {
+    return SafeArea(
+      top: false,
+      left: false,
+      right: false,
+      minimum: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: GestureDetector(
+          onTap: _isRegistering || !isPageComplete ? null : _nextPage,
+          child: Container(
+            width: 57,
+            height: 57,
+            decoration: BoxDecoration(
+              color: buttonColor,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Icon(
+                _currentPage == 7 ? Icons.check : Icons.arrow_forward_ios,
+                color: iconColor,
+                size: 28,
+              ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

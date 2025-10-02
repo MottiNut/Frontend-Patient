@@ -19,6 +19,23 @@ enum AuthState {
   loggingOut,
 }
 
+enum VerificationMethod {
+  email,
+  sms,
+  whatsapp;
+
+  String get displayName {
+    switch (this) {
+      case VerificationMethod.email:
+        return 'email';
+      case VerificationMethod.sms:
+        return 'sms';
+      case VerificationMethod.whatsapp:
+        return 'whatsApp';
+    }
+  }
+}
+
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
   NotificationProvider? _notificationProvider;
@@ -29,6 +46,18 @@ class AuthProvider with ChangeNotifier {
   bool _isUpdatingImage = false;
   bool _isAppInitialized = false;
 
+  bool _isAuthenticated = false;
+  bool _isLoading = false;
+  String? _token;
+  String? _userId;
+  String? _email;
+  Map<String, dynamic>? _user;
+
+  bool _isVerificationPending = false;
+  String? _verificationMethod;
+  String? _pendingVerificationEmail;
+  String? _pendingVerificationPhone;
+
   // Getters optimizados
   AuthState get state => _state;
   User? get currentUser => _currentUser;
@@ -38,13 +67,16 @@ class AuthProvider with ChangeNotifier {
   bool get isUpdatingImage => _isUpdatingImage;
   bool get isLoggingOut => _state == AuthState.loggingOut;
 
-  // Método mejorado para inyección de dependencias
+  // NUEVO: Getters de verificación
+  bool get isVerificationPending => _isVerificationPending;
+  String? get pendingVerificationEmail => _pendingVerificationEmail;
+  String? get pendingVerificationPhone => _pendingVerificationPhone;
+
   void setNotificationProvider(NotificationProvider notificationProvider) {
     _notificationProvider = notificationProvider;
     debugPrint('📱 NotificationProvider injected into AuthProvider');
   }
 
-  // Inicialización mejorada con mejor manejo de errores
   Future<void> initializeApp() async {
     if (_isAppInitialized) {
       AppNavigationHandler.resetToHome();
@@ -56,12 +88,8 @@ class AuthProvider with ChangeNotifier {
     _setState(AuthState.loading);
 
     try {
-      // Inicializar notificaciones de forma asíncrona
       _initializeNotificationsAsync();
-
-      // Verificar estado de autenticación
       await _checkAuthStatusInternal();
-
       _isAppInitialized = true;
       debugPrint('✅ App initialization completed');
     } catch (e) {
@@ -70,7 +98,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Inicialización asíncrona de notificaciones para evitar bloqueo
   void _initializeNotificationsAsync() {
     _notificationProvider?.initialize().then((_) {
       debugPrint('✅ Notifications initialized');
@@ -79,7 +106,6 @@ class AuthProvider with ChangeNotifier {
     });
   }
 
-  // Verificación de estado de auth optimizada
   Future<void> _checkAuthStatusInternal() async {
     try {
       final isLoggedIn = await _authService.isLoggedIn();
@@ -87,8 +113,6 @@ class AuthProvider with ChangeNotifier {
       if (isLoggedIn) {
         _currentUser = await _authService.getCurrentUser();
         _setState(AuthState.authenticated);
-
-        // Configurar notificaciones de forma asíncrona
         _configureNotificationsForUser();
       } else {
         _setState(AuthState.unauthenticated);
@@ -99,7 +123,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Configuración asíncrona de notificaciones
   void _configureNotificationsForUser() {
     if (_notificationProvider != null && _currentUser != null) {
       _notificationProvider!
@@ -125,7 +148,6 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Login optimizado
   Future<bool> login(String email, String password) async {
     return _executeAuthOperation(() async {
       debugPrint('🔐 Attempting login for: $email');
@@ -141,7 +163,11 @@ class AuthProvider with ChangeNotifier {
     }, 'Error en login');
   }
 
-  // Registro de paciente optimizado
+  // MODIFICADO: Registro de paciente con verificación
+  // NOTA IMPORTANTE: En registerPatient, eliminar cualquier navegación automática
+// El método solo debe retornar true/false y actualizar el estado
+// La navegación debe ser manejada SOLO por la UI (RegisterScreen)
+
   Future<bool> registerPatient({
     required String email,
     required String password,
@@ -157,9 +183,12 @@ class AuthProvider with ChangeNotifier {
     String? dietaryPreferences,
     String? gender,
   }) async {
-    return _executeAuthOperation(() async {
-      debugPrint('🔄 AuthProvider.registerPatient iniciado');
+    debugPrint('🔄 AuthProvider.registerPatient iniciado');
 
+    // NO cambiar estado a loading aquí si ya lo maneja _executeAuthOperation
+    clearError(); // Limpiar errores previos
+
+    return _executeAuthOperation(() async {
       final request = RegisterPatientRequest(
         email: email,
         password: password,
@@ -177,14 +206,151 @@ class AuthProvider with ChangeNotifier {
       );
 
       await _authService.registerPatient(request);
-      _currentUser = await _authService.getCurrentUser();
 
-      _configureNotificationsForUser();
+      // Configurar verificación pendiente
+      _isVerificationPending = true;
+      _pendingVerificationEmail = email;
+      _pendingVerificationPhone = phone;
+
+      debugPrint('✅ Registro exitoso - Verificación pendiente');
+      debugPrint('📧 Email pendiente: $email');
+
       return true;
     }, 'Error en registro');
   }
 
-  // Registro de nutricionista optimizado
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  Future<bool> sendVerificationCode({
+    required VerificationMethod method,
+    String? phoneNumber,
+  }) async {
+    if (_pendingVerificationEmail == null && _email == null) {
+      _setError('No hay usuario pendiente de verificación');
+      return false;
+    }
+
+    _setLoading(true);
+    clearError();
+
+    try {
+
+      final response = await _authService.sendVerificationCode(
+        email: _pendingVerificationEmail ?? _email!,
+        method: method,
+        phoneNumber: phoneNumber,
+      );
+
+      if (response.success) {
+        _verificationMethod = method.name;
+        notifyListeners();
+        return true;
+      } else {
+        _setError(response.message ?? 'Error enviando código');
+        return false;
+      }
+    } catch (e) {
+      _setError('Error de conexión: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyCode(String code) async {
+    if (_pendingVerificationEmail == null && _email == null) {
+      _setError('No hay verificación pendiente');
+      return {
+        'success': false,
+        'message': 'No hay verificación pendiente'
+      };
+    }
+
+    _setLoading(true);
+    clearError();
+
+    try {
+      final response = await _authService.verifyCode(
+        email: _pendingVerificationEmail ?? _email!,
+        code: code,
+      );
+
+      // CORRECCIÓN PRINCIPAL: Verificar también el mensaje para casos de éxito
+      bool isActualSuccess = response.success;
+
+      // Si el backend responde con success=false pero mensaje indica éxito
+      if (!isActualSuccess && response.message != null) {
+        String message = response.message!.toLowerCase();
+        if (message.contains('verificado exitosamente') ||
+            message.contains('email verificado') ||
+            message.contains('verificado correctamente') ||
+            message.contains('verification successful')) {
+          isActualSuccess = true;
+        }
+      }
+
+      if (isActualSuccess) {
+        // Limpiar estado de verificación
+        _isVerificationPending = false;
+        _verificationMethod = null;
+        _pendingVerificationEmail = null;
+
+        return {
+          'success': true,
+          'message': response.message ?? 'Verificación exitosa',
+          'verificationStatus': response.verificationStatus,
+          'isAuthenticated': false,
+          'requiresLogin': true
+        };
+      } else {
+        _setError(response.message ?? 'Código inválido');
+        return {
+          'success': false,
+          'message': response.message ?? 'Código inválido'
+        };
+      }
+    } catch (e) {
+      _setError('Error de conexión: ${e.toString()}');
+      return {
+        'success': false,
+        'message': 'Error de conexión: ${e.toString()}'
+      };
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /*Future<bool> resendVerificationCode() async {
+    if (_pendingVerificationEmail == null && _email == null) {
+      _setError('No hay verificación pendiente');
+      return false;
+    }
+
+    _setLoading(true);
+    clearError();
+
+    try {
+      final response = await _authService.resendVerificationCode(
+        email: _pendingVerificationEmail ?? _email!,
+      );
+
+      if (response.success) {
+        return true;
+      } else {
+        _setError(response.message ?? 'Error reenviando código');
+        return false;
+      }
+    } catch (e) {
+      _setError('Error de conexión: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }*/
+
   Future<bool> registerNutritionist({
     required String email,
     required String password,
@@ -219,7 +385,6 @@ class AuthProvider with ChangeNotifier {
     }, 'Error en registro');
   }
 
-  // Actualización de perfil optimizada
   Future<bool> updatePatientProfile(UpdatePatientProfileRequest request) async {
     if (!_validatePatientUser()) return false;
 
@@ -238,7 +403,6 @@ class AuthProvider with ChangeNotifier {
     }, 'Error actualizando perfil');
   }
 
-  // Actualización de imagen optimizada
   Future<bool> updatePatientProfileImage(File? imageFile) async {
     if (!_validatePatientUser()) return false;
 
@@ -264,17 +428,14 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Logout mejorado con mejor manejo de timeouts
   Future<void> logout() async {
     debugPrint('👋 Starting logout process...');
     _setState(AuthState.loggingOut);
 
     try {
-      // Limpiar notificaciones con timeout
       await _clearNotifications();
       AppNavigationHandler.resetToHome();
 
-      // Logout del servicio de auth con timeout
       await _authService.logout().timeout(
         const Duration(seconds: 10),
         onTimeout: () {
@@ -287,33 +448,45 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('⚠️ Error in logout process: $e');
     } finally {
-      // Siempre limpiar el estado local
       _clearLocalState();
       _setState(AuthState.unauthenticated);
       debugPrint('✅ Logout completed');
     }
   }
 
-  // Métodos auxiliares privados
   Future<bool> _executeAuthOperation(
       Future<bool> Function() operation,
       String errorPrefix,
       ) async {
-    // Limpiar errores previos al iniciar nueva operación
     if (_errorMessage != null) {
       _errorMessage = null;
     }
 
     _setState(AuthState.loading);
+
     try {
       final result = await operation();
+
       if (result) {
-        _setState(AuthState.authenticated);
+        // Si hay verificación pendiente, mantener como unauthenticated
+        if (_isVerificationPending) {
+          _setState(AuthState.unauthenticated);
+          debugPrint('✅ Operación exitosa - verificación pendiente');
+        } else {
+          _setState(AuthState.authenticated);
+          debugPrint('✅ Operación exitosa - autenticado');
+        }
+      } else {
+        // Operación falló pero sin error explícito
+        _setState(AuthState.unauthenticated);
+        debugPrint('⚠️ Operación retornó false');
       }
+
       return result;
     } catch (e) {
       _setError('$errorPrefix: $e');
       debugPrint('❌ $errorPrefix: $e');
+      // NO navegar aquí, solo actualizar estado
       return false;
     }
   }
@@ -354,6 +527,10 @@ class AuthProvider with ChangeNotifier {
     _currentUser = null;
     _errorMessage = null;
     _isUpdatingImage = false;
+    _isVerificationPending = false;
+    _verificationMethod = null;
+    _pendingVerificationEmail = null;
+    _pendingVerificationPhone = null;
   }
 
   void _setState(AuthState newState) {
@@ -375,11 +552,9 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Método público para limpiar errores
   void clearError() {
     if (_errorMessage != null) {
       _errorMessage = null;
-      // Si estamos en estado de error, volver al estado anterior apropiado
       if (_state == AuthState.error) {
         _state = _currentUser != null
             ? AuthState.authenticated
@@ -389,13 +564,16 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Método para resetear el estado completo (útil para testing o casos especiales)
   void resetState() {
     _state = AuthState.initial;
     _currentUser = null;
     _errorMessage = null;
     _isUpdatingImage = false;
     _isAppInitialized = false;
+    _isVerificationPending = false;
+    _verificationMethod = null;
+    _pendingVerificationEmail = null;
+    _pendingVerificationPhone = null;
     notifyListeners();
   }
 }

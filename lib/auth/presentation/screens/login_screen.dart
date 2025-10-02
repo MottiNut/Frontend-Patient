@@ -166,41 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   builder: (context, authProvider, child) {
                     return Column(
                       children: [
-                        // Mostrar error si existe
-                        if (authProvider.errorMessage != null)
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.red[50],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.red[200]!),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.error_outline,
-                                    color: Colors.red[700], size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    authProvider.errorMessage!,
-                                    style: TextStyle(
-                                      color: Colors.red[700],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.close, size: 18),
-                                  color: Colors.red[700],
-                                  onPressed: () {
-                                    authProvider.clearError();
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-
 
                         SizedBox(
                           width: double.infinity,

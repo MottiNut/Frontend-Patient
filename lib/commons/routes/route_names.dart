@@ -1,9 +1,9 @@
-// core/routes/route_names.dart
 class RouteNames {
   // Auth routes
-  static const String splash = '/splah';
+  static const String splash = '/splash';
   static const String login = '/login';
   static const String register = '/register';
+  static const String codeVerification = '/code-verification';
 
   // Main app routes
   static const String home = '/home';

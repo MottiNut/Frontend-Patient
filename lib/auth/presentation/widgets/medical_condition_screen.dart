@@ -21,6 +21,7 @@ class MedicalConditionScreen extends StatelessWidget {
           style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
+            fontSize: 18
           ),
           textAlign: TextAlign.center,
         ),
@@ -29,7 +30,7 @@ class MedicalConditionScreen extends StatelessWidget {
           'Proporciona más información y podré ayudarte mejor',
           style: AppTextStyles.description.copyWith(
             color: Colors.grey[600],
-            fontSize: 14,
+            fontSize: 15,
             letterSpacing: 0,
           ),
           textAlign: TextAlign.center,
@@ -64,7 +65,7 @@ class _YesNoButtonsState extends State<YesNoButtons> {
   @override
   void initState() {
     super.initState();
-    // Inicializar con el valor recibido
+
     selectedOption = widget.initialValue ? 'SI' : 'NO';
   }
 
@@ -87,16 +88,16 @@ class _YesNoButtonsState extends State<YesNoButtons> {
         setState(() {
           selectedOption = label;
         });
-        // Llamar al callback con el valor booleano
+
         widget.onChanged(label == 'SI');
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.orange : Colors.grey[300],
+        backgroundColor: isSelected ? Colors.orange : Colors.grey[200],
         foregroundColor: isSelected ? Colors.white : Colors.black,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(24),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
       ),
       child: Text(label, style: const TextStyle(fontSize: 16)),
     );

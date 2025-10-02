@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:frontendpatient/auth/domain/models/auth_response.dart';
 import 'package:frontendpatient/auth/data/dtos/login_request.dart';
 import 'package:frontendpatient/auth/data/dtos/register_nutritionist_request.dart';
@@ -17,13 +18,31 @@ import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
 import '../../../commons/utils/api_error.dart';
 import '../../../commons/utils/response_error.dart';
+import '../../presentation/providers/auth_provider.dart';
 
 class AuthService {
   static const String baseUrl = ApiConstants.auth;
   static const String tokenKey = 'auth_token';
 
+  static const String verificationSendEmailEndpoint = '$baseUrl/verification/send/email';
+  static const String verificationSendSmsEndpoint = '$baseUrl/verification/send/sms';
+  static const String verificationSendWhatsappEndpoint = '$baseUrl/verification/send/whatsapp';
+  static const String verificationResendEndpoint = '$baseUrl/verification/resend';
+  static const String verificationVerifyEndpoint = '$baseUrl/verification/verify';
+  static const String verificationSendEndpoint = '$baseUrl/verification/send';
+
   final http.Client _client = http.Client();
 
+  // Headers comunes
+  Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
+  Map<String, String> _headersWithAuth(String token) => {
+    ..._headers,
+    'Authorization': 'Bearer $token',
+  };
 
   Future<AuthResponse> login(LoginRequest request) async {
     final response = await _client.post(
@@ -34,7 +53,12 @@ class AuthService {
 
     if (response.statusCode == 200) {
       final authResponse = AuthResponse.fromJson(json.decode(response.body));
-      await _saveToken(authResponse.token);
+      if (authResponse.token != null) {
+        await _saveToken(authResponse.token!);
+      } else {
+        throw Exception("El token es nulo en la respuesta de login/register");
+      }
+
       return authResponse;
     } else {
       handleResponseError(response);
@@ -44,35 +68,72 @@ class AuthService {
 
   Future<AuthResponse> registerPatient(RegisterPatientRequest request) async {
     try {
-      final requestBody = json.encode(request.toJson());
+      final jsonData = request.toJson();
+
+      // LOGGING COMPLETO
+      print('🔵 ===== DATOS QUE SE ENVÍAN AL BACKEND =====');
+      print('📧 Email: ${jsonData['email']}');
+      print('🔑 Password length: ${(jsonData['password'] as String).length}');
+      print('👤 FirstName: ${jsonData['firstName']}');
+      print('👤 LastName: ${jsonData['lastName']}');
+      print('📅 BirthDate: ${jsonData['birthDate']}');
+      print('📱 Phone: ${jsonData['phone']}');
+      print('📏 Height: ${jsonData['height']} (tipo: ${jsonData['height'].runtimeType})');
+      print('⚖️ Weight: ${jsonData['weight']} (tipo: ${jsonData['weight'].runtimeType})');
+      print('🏥 HasMedicalCondition: ${jsonData['hasMedicalCondition']}');
+      print('💊 ChronicDisease: ${jsonData['chronicDisease']}');
+      print('🥜 Allergies: ${jsonData['allergies']}');
+      print('🍽️ DietaryPreferences: ${jsonData['dietaryPreferences']}');
+      print('⚥ Gender: ${jsonData['gender']}');
+      print('📤 JSON COMPLETO:');
+      print(JsonEncoder.withIndent('  ').convert(jsonData));
+      print('================================================');
 
       final response = await _client.post(
         Uri.parse('$baseUrl/register/patient'),
         headers: {'Content-Type': 'application/json'},
-        body: requestBody,
+        body: json.encode(jsonData),
       );
+
+      print('📨 Response status: ${response.statusCode}');
+      print('📄 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(json.decode(response.body));
         print('💾 Guardando token...');
-        await _saveToken(authResponse.token);
+        await _saveToken(authResponse.token!);
         return authResponse;
       } else {
         print('❌ Error del servidor - Status: ${response.statusCode}');
+
+        // Analizar el error
         try {
-          final error = ApiError.fromJson(json.decode(response.body));
-          throw Exception(error.message);
+          final errorData = json.decode(response.body);
+          print('❌ Error data: $errorData');
+
+          String errorMessage = errorData['message'] ?? 'Error desconocido';
+
+          // Si hay detalles del error, mostrarlos
+          if (errorData['errors'] != null) {
+            print('❌ Detalles del error: ${errorData['errors']}');
+          }
+
+          throw Exception(errorMessage);
         } catch (parseError) {
+          if (parseError is Exception) {
+            rethrow;
+          }
           throw Exception('Server error: ${response.statusCode} - ${response.body}');
         }
       }
     } on SocketException catch (e) {
-      throw Exception('Sin conexión a internet: $e');
+      throw Exception('Sin conexión a internet');
     } on TimeoutException catch (e) {
-      throw Exception('Timeout de conexión: $e');
-    } on FormatException catch (e) {
-      throw Exception('Error de formato de datos: $e');
+      throw Exception('Tiempo de espera agotado');
     } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
       throw Exception('Error de conexión: $e');
     }
   }
@@ -87,7 +148,7 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(json.decode(response.body));
-        await _saveToken(authResponse.token);
+        await _saveToken(authResponse.token!);
         return authResponse;
       } else {
         final error = ApiError.fromJson(json.decode(response.body));
@@ -276,4 +337,131 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(tokenKey);
   }
+
+  /// Enviar código de verificación
+  Future<AuthResponse> sendVerificationCode({
+    required String email,
+    required VerificationMethod method,
+    String? phoneNumber,
+  }) async {
+    try {
+      String endpoint;
+      Map<String, dynamic> requestBody = {
+        'email': email,
+      };
+
+      // Seleccionar el endpoint correcto según el método
+      switch (method) {
+        case VerificationMethod.email:
+          endpoint = verificationSendEmailEndpoint;
+          break;
+        case VerificationMethod.sms:
+          endpoint = verificationSendSmsEndpoint;
+          requestBody['phoneNumber'] = phoneNumber;
+          break;
+        case VerificationMethod.whatsapp:
+          endpoint = verificationSendWhatsappEndpoint;
+          requestBody['phoneNumber'] = phoneNumber;
+          break;
+      }
+
+      if (phoneNumber != null) debugPrint('📤 Teléfono: $phoneNumber');
+
+      final response = await _client.post(
+        Uri.parse(endpoint),
+        headers: _headers,
+        body: json.encode(requestBody),
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return AuthResponse.fromJson(responseData);
+      } else {
+        return AuthResponse(
+          success: false,
+          message: responseData['message'] ?? 'Error enviando código',
+        );
+      }
+    } catch (e) {
+
+      return AuthResponse(
+        success: false,
+        message: 'Error de conexión: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<AuthResponse> verifyCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _client.post(
+        Uri.parse(verificationVerifyEndpoint),
+        headers: _headers,
+        body: json.encode({
+          'code': code,
+          'type': 'email', // O el tipo correspondiente
+          'email': email,
+        }),
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return AuthResponse.fromJson(responseData);
+      } else {
+        return AuthResponse(
+          success: false,
+          message: responseData['message'] ?? 'Código inválido',
+        );
+      }
+    } catch (e) {
+
+      return AuthResponse(
+        success: false,
+        message: 'Error de conexión: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Reenviar código de verificación
+  Future<bool> resendVerificationCode({
+    required String email,
+  }) async {
+    try {
+      print('🔄 Reenviando código de verificación');
+      print('📧 Email: $email');
+
+      final response = await _client.post(
+        Uri.parse('$baseUrl/verification/resend'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'email': email,
+          'type': 'email',
+        }),
+      );
+
+      print('📨 Response status: ${response.statusCode}');
+      print('📄 Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        print('✅ Código reenviado exitosamente');
+        return true;
+      } else {
+        print('❌ Error reenviando código');
+        try {
+          final error = ApiError.fromJson(json.decode(response.body));
+          throw Exception(error.message);
+        } catch (parseError) {
+          throw Exception('Server error: ${response.statusCode} - ${response.body}');
+        }
+      }
+    } catch (e) {
+      print('💥 Error en resendVerificationCode: $e');
+      throw Exception('Error reenviando código: $e');
+    }
+  }
+
 }

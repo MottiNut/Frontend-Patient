@@ -2,7 +2,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -17,8 +16,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   int _retryCount = 0;
-  bool _isCheckingConnection = false;
-  bool _isInitializing = false;
+  bool _hasNavigated = false;
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
@@ -28,16 +26,16 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     _initializeLocalNotifications();
     _initializeNotifications();
-    _checkInternetConnection();
+    _checkAndNavigate();
   }
 
   void _initializeLocalNotifications() {
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    AndroidInitializationSettings('@mipmap/ic_launcher');
     const DarwinInitializationSettings iosSettings =
-        DarwinInitializationSettings();
+    DarwinInitializationSettings();
 
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -54,58 +52,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeNotifications() async {
     try {
-      NotificationSettings settings = await _firebaseMessaging
-          .requestPermission(alert: true, badge: true, sound: true);
+      await _firebaseMessaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
     } catch (e) {
       debugPrint('Error initializing notifications: $e');
     }
   }
 
-  Future<void> _showLocalNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          'channel_id',
-          'Notificaciones',
-          channelDescription: 'Canal de notificaciones de la app',
-          importance: Importance.max,
-          priority: Priority.high,
-          ticker: 'ticker',
-          playSound: true,
-          color: Color(0xFF2EC4B6),
-          largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-          styleInformation: BigTextStyleInformation(''),
-        );
-
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const NotificationDetails notificationDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await flutterLocalNotificationsPlugin.show(
-      message.hashCode,
-      message.notification?.title ?? 'Notificación',
-      message.notification?.body ?? '',
-      notificationDetails,
-      payload: message.data['payload'] ?? '',
-    );
-  }
-
-  Future<void> _checkInternetConnection() async {
-    setState(() {
-      _isCheckingConnection = true;
-    });
-
-    var connectivityResult = await (Connectivity().checkConnectivity());
-
-    setState(() {
-      _isCheckingConnection = false;
-    });
+  Future<void> _checkAndNavigate() async {
+    // Verificar conectividad
+    final connectivityResult = await Connectivity().checkConnectivity();
 
     if (connectivityResult == ConnectivityResult.none) {
       _retryCount++;
@@ -114,91 +73,85 @@ class _SplashScreenState extends State<SplashScreen> {
       } else {
         exit(0);
       }
-    } else {
-      await _initializeApp();
+      return;
     }
-  }
 
-  Future<void> _initializeApp() async {
-    if (_isInitializing) return;
+    // Esperar 2 segundos para mostrar el splash
+    await Future.delayed(const Duration(milliseconds: 2000));
 
-    setState(() {
-      _isInitializing = true;
-    });
+    if (!mounted || _hasNavigated) return;
 
     try {
-      await Future.delayed(const Duration(milliseconds: 2000));
-
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
+      _hasNavigated = true;
+
       if (authProvider.isAuthenticated) {
-        debugPrint('✅ Usuario autenticado, navegando al home...');
+        debugPrint('✅ Usuario autenticado → home');
         Navigator.pushReplacementNamed(context, '/button_navigation');
       } else {
-        debugPrint('🔐 Usuario no autenticado, navegando al login...');
+        debugPrint('🔐 No autenticado → login');
         Navigator.pushReplacementNamed(context, '/login');
       }
     } catch (e) {
-      debugPrint('❌ Error en _initializeApp: $e');
-      Navigator.pushReplacementNamed(context, '/login');
-    } finally {
-      setState(() {
-        _isInitializing = false;
-      });
+      debugPrint('❌ Error: $e');
+      if (mounted && !_hasNavigated) {
+        _hasNavigated = true;
+        Navigator.pushReplacementNamed(context, '/login');
+      }
     }
   }
 
   void _showNoInternetDialog() {
+    if (!mounted) return;
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(7.0),
-            ),
-            title: Text(
-              'Sin Conexión de Internet',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.errorIcon,
-              ),
-            ),
-            content: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.wifi_off, color: AppColors.errorIcon, size: 50),
-                SizedBox(height: 20),
-                Text(
-                  'Por favor, verifica tu conexión a\n internet e intenta nuevamente.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.black87, fontSize: 16),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _checkInternetConnection();
-                },
-                style: TextButton.styleFrom(
-                  side: BorderSide(color: AppColors.mainOrange, width: 2.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                ),
-                child: Text(
-                  'Reintentar',
-                  style: TextStyle(fontSize: 18, color: AppColors.secondary),
-                ),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(7.0),
+        ),
+        title: Text(
+          'Sin Conexión de Internet',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppColors.errorIcon,
           ),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.wifi_off, color: AppColors.errorIcon, size: 50),
+            SizedBox(height: 20),
+            Text(
+              'Por favor, verifica tu conexión a internet e intenta nuevamente.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black87, fontSize: 16),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _checkAndNavigate();
+            },
+            style: TextButton.styleFrom(
+              side: BorderSide(color: AppColors.mainOrange, width: 2.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            ),
+            child: Text(
+              'Reintentar',
+              style: TextStyle(fontSize: 18, color: AppColors.secondary),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -213,41 +166,8 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
       child: Scaffold(
         backgroundColor: AppColors.mainOrange,
-        extendBody: true,
-        extendBodyBehindAppBar: true,
-        body: Stack(
-          children: [
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/logo_icon.png',
-
-                  ),
-                ],
-              ),
-            ),
-           /* if (_isInitializing || _isCheckingConnection)
-              Positioned(
-                bottom: 30,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        _isCheckingConnection
-                            ? 'Verificando conexión...'
-                            : 'Inicializando...',
-                        style: TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                      SizedBox(height: 10),
-                    ],
-                  ),
-                ),
-              ),*/
-          ],
+        body: Center(
+          child: Image.asset('assets/images/logo_icon.png'),
         ),
       ),
     );
