@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
 import 'dart:async';
 
+import '../../../commons/widgets/requestSnacbar/snackBar_manager.dart';
+
 class CodeVerificationScreen extends StatefulWidget {
   final String email;
   final String? phone;
@@ -91,19 +93,13 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
   void _handleCountdownExpired() {
     if (_autoResendCount < _maxAutoResends) {
       _autoResendCount++;
-      _showSnackBar(
-        'Código expirado. Enviando uno nuevo automáticamente... '
-            '($_autoResendCount/$_maxAutoResends)',
-        isError: false,
-      );
+      SnackBarManager.showInfo(context, 'Código expirado. Enviando uno nuevo automáticamente...');
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) _resendCodeAutomatically();
       });
     } else {
-      _showSnackBar(
-        'Código expirado. Usa el botón "Reenviar" para solicitar uno nuevo',
-        isError: true,
-      );
+
+      SnackBarManager.showInfo(context,'Código expirado. Usa el botón "Reenviar" para solicitar uno nuevo');
     }
   }
 
@@ -122,20 +118,19 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
       );
 
       if (success) {
-        _showSnackBar('Nuevo código enviado automáticamente', isError: false);
+        SnackBarManager.showSuccess(context, 'Nuevo código enviado automáticamente');
         _clearCode();
         _startResendTimer();
       } else {
         String errorMsg = authProvider.errorMessage ??
             'No pudimos enviar el código automáticamente';
-        _showSnackBar(errorMsg, isError: true);
+        SnackBarManager.showError(context, errorMsg);
         _canResend = true;
       }
     } catch (e) {
-      _showSnackBar(
-        'Error en el reenvío automático. Usa el botón "Reenviar"',
-        isError: true,
-      );
+
+      SnackBarManager.showError(context, 'Error en el reenvío automático. Usa el botón "Reenviar"');
+
       _canResend = true;
     } finally {
       if (mounted) setState(() => _isResending = false);
@@ -163,7 +158,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
 
   Future<void> _verifyCode() async {
     if (!_isCodeComplete) {
-      _showSnackBar('Completa todos los dígitos del código', isError: true);
+      SnackBarManager.showError(context, 'Completa todos los dígitos del código');
       _shakeFields();
       return;
     }
@@ -189,7 +184,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
       }
 
       if (isSuccess) {
-        _showSnackBar('¡Verificación exitosa!', isError: false);
+        SnackBarManager.showSuccess(context, '¡Verificación exitosa!');
 
         await Future.delayed(const Duration(milliseconds: 1500));
 
@@ -206,25 +201,19 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
       } else {
         _attempts++;
         if (_attempts >= 3) {
-          _showSnackBar(
-            'Has excedido 3 intentos. La pantalla se cerrará.',
-            isError: true,
-          );
+          SnackBarManager.showError(context, 'Has excedido 3 intentos. La pantalla se cerrará.');
           Future.delayed(const Duration(milliseconds: 1500), () {
             if (mounted) Navigator.of(context).pop();
           });
         } else {
           String errorMessage = message ?? 'Código incorrecto. Inténtalo de nuevo';
-          _showSnackBar(
-            '$errorMessage\nIntento $_attempts de 3',
-            isError: true,
-          );
+          SnackBarManager.showError(context, '$errorMessage\nIntento $_attempts de 3');
           _shakeFields();
           _clearCode();
         }
       }
     } catch (e) {
-      _showSnackBar('Algo salió mal. Inténtalo de nuevo', isError: true);
+      SnackBarManager.showError(context, 'Algo salió mal. Inténtalo de nuevo');
       _shakeFields();
       _clearCode();
     } finally {
@@ -251,16 +240,16 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
       );
 
       if (success) {
-        _showSnackBar('Nuevo código enviado correctamente', isError: false);
+        SnackBarManager.showSuccess(context, 'Nuevo código enviado correctamente');
         _clearCode();
         _autoResendCount = 0;
         _startResendTimer();
       } else {
         String errorMsg = authProvider.errorMessage ?? 'No pudimos enviar el código';
-        _showSnackBar(errorMsg, isError: true);
+        SnackBarManager.showError(context, errorMsg);
       }
     } catch (e) {
-      _showSnackBar('Error al enviar el código. Inténtalo más tarde', isError: true);
+      SnackBarManager.showError(context, 'Error al enviar el código. Inténtalo más tarde');
     } finally {
       if (mounted) setState(() => _isResending = false);
     }
@@ -290,14 +279,6 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -327,7 +308,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
                       ),
                       child: Icon(
                         _getVerificationIcon(),
-                        size: 48,
+                        size: 40,
                         color: Colors.white,
                       ),
                     ),
@@ -341,7 +322,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
               Text(
                 'Verifica tu ${_getVerificationTypeText()}',
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -354,7 +335,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
               Text(
                 _getVerificationMessage(),
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   color: Colors.grey[600],
                   height: 1.4,
                 ),
@@ -436,7 +417,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
               // Botón verificar
               SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 52,
                 child: ElevatedButton(
                   onPressed: _isLoading || !_isCodeComplete ? null : _verifyCode,
                   style: ElevatedButton.styleFrom(
@@ -514,7 +495,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
                     ),
                 ],
               ),
-
+/*
               const SizedBox(height: 40),
 
               // Consejos
@@ -560,7 +541,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen>
                     ),
                   ],
                 ),
-              ),
+              ),*/
 
               const SizedBox(height: 20),
             ],

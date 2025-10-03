@@ -70,38 +70,25 @@ class AuthService {
     try {
       final jsonData = request.toJson();
 
-      // LOGGING COMPLETO
-      print('🔵 ===== DATOS QUE SE ENVÍAN AL BACKEND =====');
-      print('📧 Email: ${jsonData['email']}');
-      print('🔑 Password length: ${(jsonData['password'] as String).length}');
-      print('👤 FirstName: ${jsonData['firstName']}');
-      print('👤 LastName: ${jsonData['lastName']}');
-      print('📅 BirthDate: ${jsonData['birthDate']}');
-      print('📱 Phone: ${jsonData['phone']}');
-      print('📏 Height: ${jsonData['height']} (tipo: ${jsonData['height'].runtimeType})');
-      print('⚖️ Weight: ${jsonData['weight']} (tipo: ${jsonData['weight'].runtimeType})');
-      print('🏥 HasMedicalCondition: ${jsonData['hasMedicalCondition']}');
-      print('💊 ChronicDisease: ${jsonData['chronicDisease']}');
-      print('🥜 Allergies: ${jsonData['allergies']}');
-      print('🍽️ DietaryPreferences: ${jsonData['dietaryPreferences']}');
-      print('⚥ Gender: ${jsonData['gender']}');
-      print('📤 JSON COMPLETO:');
-      print(JsonEncoder.withIndent('  ').convert(jsonData));
-      print('================================================');
-
       final response = await _client.post(
         Uri.parse('$baseUrl/register/patient'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(jsonData),
       );
 
-      print('📨 Response status: ${response.statusCode}');
-      print('📄 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(json.decode(response.body));
-        print('💾 Guardando token...');
-        await _saveToken(authResponse.token!);
+
+
+        if (authResponse.token != null) {
+          await _saveToken(authResponse.token!);
+          print('✅ Token guardado exitosamente: ${authResponse.token!.substring(0, 20)}...');
+        } else {
+
+          throw Exception("El token es nulo en la respuesta de registro");
+        }
+
         return authResponse;
       } else {
         print('❌ Error del servidor - Status: ${response.statusCode}');
@@ -137,6 +124,7 @@ class AuthService {
       throw Exception('Error de conexión: $e');
     }
   }
+
 
   Future<AuthResponse> registerNutritionist(RegisterNutritionistRequest request) async {
     try {
@@ -339,6 +327,7 @@ class AuthService {
   }
 
   /// Enviar código de verificación
+  /// Enviar código de verificación - VERSIÓN CORREGIDA CON TOKEN
   Future<AuthResponse> sendVerificationCode({
     required String email,
     required VerificationMethod method,
@@ -365,26 +354,54 @@ class AuthService {
           break;
       }
 
-      if (phoneNumber != null) debugPrint('📤 Teléfono: $phoneNumber');
+      debugPrint('📧 Enviando código de verificación por ${method.name}');
+      debugPrint('📍 Endpoint: $endpoint');
+      debugPrint('📨 Email: $email');
+      if (phoneNumber != null) debugPrint('📱 Teléfono: $phoneNumber');
+
+      // ✅ OBTENER TOKEN ACTUALIZADO - importante después del registro
+      final token = await getToken();
+      Map<String, String> headers = {..._headers};
+
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+        debugPrint('🔐 Usando token para enviar verificación: ${token.substring(0, 20)}...');
+      } else {
+        debugPrint('⚠️ No hay token disponible - intentando sin autenticación');
+      }
 
       final response = await _client.post(
         Uri.parse(endpoint),
-        headers: _headers,
+        headers: headers,
         body: json.encode(requestBody),
       );
+
+      debugPrint('📨 Response status: ${response.statusCode}');
+      debugPrint('📄 Response body: ${response.body}');
+
+      // ✅ MEJOR MANEJO DE ERROR 403
+      if (response.statusCode == 403) {
+        debugPrint('❌ ERROR 403 - Acceso denegado al endpoint de verificación');
+        return AuthResponse(
+          success: false,
+          message: 'No tienes permisos para enviar código de verificación. El usuario puede solicitar reenvío manualmente.',
+        );
+      }
 
       final responseData = json.decode(response.body);
 
       if (response.statusCode == 200) {
+        debugPrint('✅ Código de verificación enviado exitosamente');
         return AuthResponse.fromJson(responseData);
       } else {
+        debugPrint('❌ Error enviando código: ${responseData['message']}');
         return AuthResponse(
           success: false,
-          message: responseData['message'] ?? 'Error enviando código',
+          message: responseData['message'] ?? 'Error enviando código. Status: ${response.statusCode}',
         );
       }
     } catch (e) {
-
+      debugPrint('💥 Error de conexión enviando código: $e');
       return AuthResponse(
         success: false,
         message: 'Error de conexión: ${e.toString()}',

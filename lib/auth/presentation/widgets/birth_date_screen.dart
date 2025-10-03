@@ -860,7 +860,7 @@ class _BirthDateScreenState extends State<BirthDateScreen> {
                           child: OutlinedButton(
                             onPressed: () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               side: BorderSide(
                                 color: Colors.grey.shade300,
                                 width: 1.5,
@@ -892,7 +892,7 @@ class _BirthDateScreenState extends State<BirthDateScreen> {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.mainOrange,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),

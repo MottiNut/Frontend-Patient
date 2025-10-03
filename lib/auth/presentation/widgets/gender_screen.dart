@@ -14,43 +14,48 @@ class GenderScreen extends StatelessWidget {
   Widget _buildGenderOption(String genderLabel, String genderValue, IconData icon) {
     final isSelected = selectedGender == genderValue;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected ? AppColors.mainOrange : Colors.grey.shade100,
-          foregroundColor: isSelected ? Colors.white : Colors.black87,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-          elevation: isSelected ? 4 : 0,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.primary : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          width: 1.5,
         ),
-        onPressed: () => onGenderSelected(genderValue),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.white : Colors.grey.shade700,
-              size: 28,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                genderLabel,
-                style: AppTextStyles.description.copyWith(
-                  fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+      ),
+      child: InkWell(
+        onTap: () => onGenderSelected(genderValue),
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? AppColors.whiteBackground : Colors.grey.shade600,
+                size: 26,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  genderLabel,
+                  style: AppTextStyles.description.copyWith(
+                    letterSpacing: 0,
+                    fontSize: 16,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? AppColors.whiteBackground : Colors.black87,
+                  ),
                 ),
               ),
-            ),
-            if (isSelected)
-              const Icon(
-                Icons.check_circle_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-          ],
+              if (isSelected)
+                const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 20,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -66,20 +71,22 @@ class GenderScreen extends StatelessWidget {
           style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
             letterSpacing: 0,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           'Esto nos ayuda a personalizar mejor tu plan nutricional.',
           style: AppTextStyles.description.copyWith(
             color: Colors.grey[600],
-            fontSize: 14,
+            fontSize: 13.5,
             letterSpacing: 0,
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         _buildGenderOption('Hombre', 'Masculino', Icons.male),
         _buildGenderOption('Mujer', 'Femenino', Icons.female),
       ],

@@ -10,6 +10,8 @@ import 'package:frontendpatient/notification/presentation/providers/notification
 import 'package:frontendpatient/auth/application/services/auth_service.dart';
 import 'package:frontendpatient/commons/widgets/app_navigation_handler.dart';
 
+import '../../../commons/services/secure_storage_service.dart';
+
 enum AuthState {
   initial,
   loading,
@@ -57,6 +59,8 @@ class AuthProvider with ChangeNotifier {
   String? _verificationMethod;
   String? _pendingVerificationEmail;
   String? _pendingVerificationPhone;
+
+  final _storageService = SecureStorageService();
 
   // Getters optimizados
   AuthState get state => _state;
@@ -108,6 +112,13 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> _checkAuthStatusInternal() async {
     try {
+
+      final hasSession = await _storageService.hasActiveSession();
+
+      if (hasSession) {
+        debugPrint('✅ Sesión activa encontrada en storage');
+      }
+
       final isLoggedIn = await _authService.isLoggedIn();
 
       if (isLoggedIn) {
@@ -148,25 +159,89 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> login(String email, String password) async {
-    return _executeAuthOperation(() async {
-      debugPrint('🔐 Attempting login for: $email');
+  // SOLO MÉTODO login() MODIFICADO - Reemplazar en tu AuthProvider existente
 
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    clearError();
+    _setState(AuthState.loading);
+
+    try {
       final request = LoginRequest(email: email, password: password);
+
       await _authService.login(request);
       _currentUser = await _authService.getCurrentUser();
-      AppNavigationHandler.resetToHome();
-      _configureNotificationsForUser();
-      debugPrint('✅ Login successful for user: ${_currentUser!.userId}');
 
-      return true;
-    }, 'Error en login');
+      try {
+        await _authService.login(request);
+        _currentUser = await _authService.getCurrentUser();
+
+
+        AppNavigationHandler.resetToHome();
+        _configureNotificationsForUser();
+        _setState(AuthState.authenticated);
+        debugPrint('✅ Login successful for user: ${_currentUser!.userId}');
+
+        return {
+          'success': true,
+          'requiresVerification': false,
+        };
+
+      } catch (e) {
+        String errorMsg = e.toString().toLowerCase();
+        debugPrint('❌ Login error: $e');
+
+        // ✅ DETECTAR SI EL ERROR ES POR FALTA DE VERIFICACIÓN
+        if (errorMsg.contains('verificación') ||
+            errorMsg.contains('verificar') ||
+            errorMsg.contains('not verified') ||
+            errorMsg.contains('email not verified') ||
+            errorMsg.contains('unverified') ||
+            errorMsg.contains('403') && errorMsg.contains('verif')) {
+
+          debugPrint('⚠️ Login blocked - Email not verified');
+
+          // Configurar estado de verificación pendiente
+          _isVerificationPending = true;
+          _pendingVerificationEmail = email;
+          _email = email;
+          _setState(AuthState.unauthenticated);
+
+          // Intentar enviar código de verificación automáticamente
+          try {
+            await _authService.sendVerificationCode(
+              email: email,
+              method: VerificationMethod.email,
+            );
+            debugPrint('✅ Verification code sent automatically');
+          } catch (sendError) {
+            debugPrint('⚠️ Could not send verification code automatically: $sendError');
+          }
+
+          return {
+            'success': false,
+            'requiresVerification': true,
+            'message': 'Tu correo no ha sido verificado',
+          };
+        }
+
+
+        _setError('Error en login: $e');
+        return {
+          'success': false,
+          'requiresVerification': false,
+          'message': e.toString(),
+        };
+      }
+    } catch (e) {
+      debugPrint('💥 Unexpected error in login: $e');
+      _setError('Error inesperado: $e');
+      return {
+        'success': false,
+        'requiresVerification': false,
+        'message': e.toString(),
+      };
+    }
   }
-
-  // MODIFICADO: Registro de paciente con verificación
-  // NOTA IMPORTANTE: En registerPatient, eliminar cualquier navegación automática
-// El método solo debe retornar true/false y actualizar el estado
-// La navegación debe ser manejada SOLO por la UI (RegisterScreen)
 
   Future<bool> registerPatient({
     required String email,
@@ -184,9 +259,7 @@ class AuthProvider with ChangeNotifier {
     String? gender,
   }) async {
     debugPrint('🔄 AuthProvider.registerPatient iniciado');
-
-    // NO cambiar estado a loading aquí si ya lo maneja _executeAuthOperation
-    clearError(); // Limpiar errores previos
+    clearError();
 
     return _executeAuthOperation(() async {
       final request = RegisterPatientRequest(
@@ -205,15 +278,38 @@ class AuthProvider with ChangeNotifier {
         gender: gender,
       );
 
-      await _authService.registerPatient(request);
+      final authResponse = await _authService.registerPatient(request);
 
-      // Configurar verificación pendiente
+      if (authResponse.token == null) {
+        debugPrint('❌ No se recibió token después del registro');
+        throw Exception('Error en el registro: no se recibió token de autenticación');
+      }
+
+      try {
+        final verificationResponse = await _authService.sendVerificationCode(
+          email: email,
+          method: VerificationMethod.email,
+          phoneNumber: phone,
+        );
+
+        if (!verificationResponse.success) {
+          debugPrint('⚠️ Código de verificación no enviado automáticamente: ${verificationResponse.message}');
+          debugPrint('ℹ️ El usuario podrá solicitar reenvío manualmente desde la pantalla de verificación');
+        } else {
+          debugPrint('✅ Código de verificación enviado exitosamente');
+        }
+      } catch (e) {
+        debugPrint('⚠️ Excepción enviando código automáticamente: $e');
+        debugPrint('ℹ️ Esto no afecta el registro - el usuario puede solicitar reenvío manual');
+      }
+
+      // ✅ CONFIGURAR VERIFICACIÓN PENDIENTE (incluso si falló el envío automático)
       _isVerificationPending = true;
       _pendingVerificationEmail = email;
       _pendingVerificationPhone = phone;
 
-      debugPrint('✅ Registro exitoso - Verificación pendiente');
-      debugPrint('📧 Email pendiente: $email');
+      debugPrint('✅ Registro completado - Verificación pendiente para: $email');
+      debugPrint('📧 El usuario puede solicitar reenvío de código manualmente si no lo recibió');
 
       return true;
     }, 'Error en registro');
@@ -237,22 +333,34 @@ class AuthProvider with ChangeNotifier {
     clearError();
 
     try {
+      final emailToUse = _pendingVerificationEmail ?? _email!;
+      debugPrint('🔄 Solicitando reenvío de código a: $emailToUse');
 
       final response = await _authService.sendVerificationCode(
-        email: _pendingVerificationEmail ?? _email!,
+        email: emailToUse,
         method: method,
         phoneNumber: phoneNumber,
       );
 
       if (response.success) {
         _verificationMethod = method.name;
+        debugPrint('✅ Código de verificación reenviado exitosamente');
         notifyListeners();
         return true;
       } else {
-        _setError(response.message ?? 'Error enviando código');
+        String errorMsg = response.message ?? 'Error enviando código';
+        debugPrint('❌ Error reenviando código: $errorMsg');
+
+        // ✅ MANEJO ESPECÍFICO PARA ERROR 403
+        if (errorMsg.contains('403') || errorMsg.contains('permisos')) {
+          _setError('No se pudo enviar el código automáticamente. Por favor, contacta al soporte o intenta iniciar sesión para solicitar verificación.');
+        } else {
+          _setError(errorMsg);
+        }
         return false;
       }
     } catch (e) {
+      debugPrint('💥 Excepción reenviando código: $e');
       _setError('Error de conexión: ${e.toString()}');
       return false;
     } finally {
@@ -434,6 +542,11 @@ class AuthProvider with ChangeNotifier {
 
     try {
       await _clearNotifications();
+
+
+      await _storageService.clearTokens();
+      debugPrint('✅ Tokens cleared from secure storage');
+
       AppNavigationHandler.resetToHome();
 
       await _authService.logout().timeout(

@@ -20,86 +20,71 @@ class MedicalConditionScreen extends StatelessWidget {
           '¿Padeces algún tipo de enfermedad?',
           style: AppTextStyles.subtitle.copyWith(
             color: AppColors.mainOrange,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
             letterSpacing: 0,
-            fontSize: 18
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
-          'Proporciona más información y podré ayudarte mejor',
+          'Es fundamental contestar de manera sincera ya que a base de eso se arma tu plan nutricional',
           style: AppTextStyles.description.copyWith(
             color: Colors.grey[600],
-            fontSize: 15,
+            fontSize: 13.5,
             letterSpacing: 0,
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 25),
-        YesNoButtons(
-          initialValue: hasMedicalCondition,
-          onChanged: onConditionChanged,
+        const SizedBox(height: 20),
+
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildOptionCard('SI', hasMedicalCondition, () {
+              onConditionChanged(true);
+            }),
+            const SizedBox(width: 9),
+            _buildOptionCard('NO', !hasMedicalCondition, () {
+              onConditionChanged(false);
+            }),
+          ],
         ),
       ],
     );
   }
-}
 
-class YesNoButtons extends StatefulWidget {
-  final bool initialValue;
-  final Function(bool) onChanged;
-
-  const YesNoButtons({
-    super.key,
-    required this.initialValue,
-    required this.onChanged,
-  });
-
-  @override
-  _YesNoButtonsState createState() => _YesNoButtonsState();
-}
-
-class _YesNoButtonsState extends State<YesNoButtons> {
-  String? selectedOption;
-
-  @override
-  void initState() {
-    super.initState();
-
-    selectedOption = widget.initialValue ? 'SI' : 'NO';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildOptionButton('SI'),
-        const SizedBox(width: 16),
-        _buildOptionButton('NO'),
-      ],
-    );
-  }
-
-  Widget _buildOptionButton(String label) {
-    final isSelected = selectedOption == label;
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          selectedOption = label;
-        });
-
-        widget.onChanged(label == 'SI');
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.orange : Colors.grey[200],
-        foregroundColor: isSelected ? Colors.white : Colors.black,
-        shape: RoundedRectangleBorder(
+  Widget _buildOptionCard(String label, bool isSelected, VoidCallback onTap) {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 1.5,
+          ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            child: Center(
+              child: Text(
+                label,
+                style: AppTextStyles.description.copyWith(
+                  letterSpacing: 0,
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? AppColors.whiteBackground : Colors.black87,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 16)),
     );
   }
 }

@@ -1,21 +1,41 @@
-// utils/validators.dart
+
 class Validators {
-  // Validador de email
+
   static String? validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'El email es requerido';
     }
 
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value.trim())) {
+    final email = value.trim();
+
+    if (email.length < 6 || email.length > 254) {
+      return 'El email debe tener entre 6 y 254 caracteres';
+    }
+
+    if (email.contains(' ')) {
+      return 'El email no puede contener espacios';
+    }
+
+    // Regex mejorado
+    final emailRegex = RegExp(
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    );
+
+    if (!emailRegex.hasMatch(email)) {
       return 'Ingresa un email válido';
+    }
+
+    // No permitir puntos consecutivos
+    if (email.contains('..')) {
+      return 'El email no puede contener puntos consecutivos';
     }
 
     return null;
   }
 
+
   // Validador de contraseña
-  // Validador de contraseña
+
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'La contraseña es requerida';

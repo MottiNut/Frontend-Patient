@@ -13,6 +13,9 @@ import 'package:frontendpatient/commons/routes/route_names.dart';
 import 'package:provider/provider.dart';
 import 'package:frontendpatient/auth/presentation/providers/auth_provider.dart';
 
+import '../../../commons/services/secure_storage_service.dart';
+import '../../../commons/widgets/requestSnacbar/snackBar_manager.dart';
+
 class RegisterFlow extends StatefulWidget {
   const RegisterFlow({super.key});
 
@@ -25,6 +28,8 @@ class _RegisterFlowState extends State<RegisterFlow> {
   final _formKey = GlobalKey<FormState>();
   int _currentPage = 0;
   bool _isRegistering = false;
+
+  final _storageService = SecureStorageService();
 
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -150,6 +155,27 @@ class _RegisterFlowState extends State<RegisterFlow> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+    } else {
+      // Si está en la primera página, volver al login
+      Navigator.of(context).pushReplacementNamed(RouteNames.login);
+    }
+  }
+
+  // Manejar el botón de retroceso del sistema
+  Future<bool> _onWillPop() async {
+    if (_isRegistering) {
+      // No permitir retroceso mientras se está registrando
+      return false;
+    }
+
+    if (_currentPage > 0) {
+      // Si no está en la primera página, retroceder una página
+      _prevPage();
+      return false; // No salir de la pantalla
+    } else {
+      // Si está en la primera página, volver al login
+      Navigator.of(context).pushReplacementNamed(RouteNames.login);
+      return false; // No usar el pop por defecto
     }
   }
 
@@ -158,8 +184,8 @@ class _RegisterFlowState extends State<RegisterFlow> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        return WillPopScope(
-          onWillPop: () async => false,
+        return PopScope(
+          canPop: false,
           child: Dialog(
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(
@@ -175,10 +201,10 @@ class _RegisterFlowState extends State<RegisterFlow> {
                   ),
                   SizedBox(height: 20),
                   Text(
-                    'Registrando cuenta...',
+                    'Creando cuenta...',
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -234,10 +260,6 @@ class _RegisterFlowState extends State<RegisterFlow> {
             : null);
       }
 
-      debugPrint('📤 Datos a enviar:');
-      debugPrint('  Email: ${_emailController.text.trim()}');
-      debugPrint('  Nombre: ${_firstNameController.text.trim()} ${_lastNameController.text.trim()}');
-
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
       final success = await authProvider.registerPatient(
@@ -256,14 +278,26 @@ class _RegisterFlowState extends State<RegisterFlow> {
         dietaryPreferences: null,
       );
 
-      // Cerrar diálogo de carga
       if (mounted) Navigator.of(context).pop();
 
       if (success && authProvider.isVerificationPending) {
-        debugPrint('✅ Registro exitoso - navegando a verificación');
+
+        try {
+          await _storageService.saveSavedEmail(_emailController.text.trim());
+          await _storageService.saveRememberMe(true);
+          debugPrint('✅ Email guardado para próximo login');
+        } catch (e) {
+          debugPrint('⚠️ Error guardando email (no crítico): $e');
+        }
 
         if (mounted) {
-          // Navegar a verificación de código
+          SnackBarManager.showSuccess(
+              context,
+              'Registro exitoso. Se ha enviado un código de verificación a ${_emailController.text.trim()}'
+          );
+        }
+
+        if (mounted) {
           Navigator.pushReplacementNamed(
             context,
             RouteNames.codeVerification,
@@ -275,54 +309,22 @@ class _RegisterFlowState extends State<RegisterFlow> {
           );
         }
       } else if (!success) {
-        // CASO CRÍTICO: Registro falló - permanecer en la misma pantalla
-        debugPrint('❌ Registro falló: ${authProvider.errorMessage}');
-
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                authProvider.errorMessage ?? 'Error al registrar usuario. Por favor, intenta nuevamente.',
-              ),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 5),
-              action: SnackBarAction(
-                label: 'Cerrar',
-                textColor: Colors.white,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                },
-              ),
-            ),
+          SnackBarManager.showError(
+              context,
+              authProvider.errorMessage ?? 'Error al registrar usuario. Por favor, intenta nuevamente.'
           );
-
-          // NO NAVEGAR - permanecer en la pantalla de registro
-          // El usuario puede corregir datos y volver a intentar
         }
       }
     } catch (e) {
       debugPrint('💥 Error inesperado: $e');
 
       if (mounted) {
-        // Cerrar diálogo si está abierto
         Navigator.of(context).pop();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error inesperado: ${e.toString()}. Por favor, intenta nuevamente.'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'Cerrar',
-              textColor: Colors.white,
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              },
-            ),
-          ),
+        SnackBarManager.showError(
+            context,
+            'Error inesperado: ${e.toString()}. Por favor, intenta nuevamente.'
         );
-
-        // NO NAVEGAR - permanecer en la pantalla de registro
       }
     } finally {
       if (mounted) setState(() => _isRegistering = false);
@@ -330,38 +332,58 @@ class _RegisterFlowState extends State<RegisterFlow> {
   }
 
   Widget _buildProgressBar() {
+    final totalSteps = 8;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
+          // Botón de retroceso
           GestureDetector(
-            onTap: _currentPage > 0 ? _prevPage : () {
-              // Si está en la primera página, volver al login
-              Navigator.of(context).pushReplacementNamed(RouteNames.login);
-            },
+            onTap: _isRegistering ? null : _prevPage,
             child: Container(
-              width: 32,
-              height: 32,
+              width: 28,
+              height: 28,
               margin: const EdgeInsets.only(right: 16),
               child: SvgPicture.asset(
                 'assets/images/vector-retrocession.svg',
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
+                colorFilter: _isRegistering
+                    ? ColorFilter.mode(Colors.grey.shade400, BlendMode.srcIn)
+                    : null,
               ),
             ),
           ),
+
+          // Barra de progreso
           Expanded(
-            child: LinearProgressIndicator(
-              value: (_currentPage + 1) / 8,
-              backgroundColor: Colors.grey[300],
-              color: AppColors.mainOrange,
-              minHeight: 6,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: LinearProgressIndicator(
+                value: (_currentPage + 1) / totalSteps,
+                backgroundColor: Colors.grey[300],
+                color: AppColors.mainOrange,
+                minHeight: 8,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Contador al final
+          Text(
+            '${_currentPage + 1} de $totalSteps',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
             ),
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildPage(int index) {
     switch (index) {
@@ -426,34 +448,42 @@ class _RegisterFlowState extends State<RegisterFlow> {
   @override
   Widget build(BuildContext context) {
     final bool isPageComplete = _isCurrentPageComplete();
-    final Color buttonColor = isPageComplete ? AppColors.mainOrange : const Color(0xFFE5E4E3);
+    final Color buttonColor = isPageComplete ? AppColors.primary : const Color(0xFFE5E4E3);
     final Color iconColor = isPageComplete ? AppColors.whiteBackground : const Color(0xFFB2B0B0);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildProgressBar(),
-            Expanded(
-              child: Form(
-                key: _formKey,
-                child: PageView.builder(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 8,
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: SingleChildScrollView(
-                      child: _buildPage(index),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (!didPop) {
+          await _onWillPop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildProgressBar(),
+              Expanded(
+                child: Form(
+                  key: _formKey,
+                  child: PageView.builder(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 8,
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: SingleChildScrollView(
+                        child: _buildPage(index),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            _buildNextButton(isPageComplete, buttonColor, iconColor),
-            const SizedBox(height: 10),
-          ],
+              _buildNextButton(isPageComplete, buttonColor, iconColor),
+              const SizedBox(height: 10),
+            ],
+          ),
         ),
       ),
     );
@@ -464,6 +494,50 @@ class _RegisterFlowState extends State<RegisterFlow> {
       Color buttonColor,
       Color iconColor,
       ) {
+
+    if (_currentPage == 7) {
+      return SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        minimum: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _isRegistering || !isPageComplete ? null : _nextPage,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: buttonColor,
+              disabledBackgroundColor: const Color(0xFFE5E4E3),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(27),
+              ),
+              elevation: 0,
+            ),
+            child: _isRegistering
+                ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation(Colors.white),
+                strokeWidth: 2.5,
+              ),
+            )
+                : Text(
+              'Registrar cuenta',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: iconColor,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+
     return SafeArea(
       top: false,
       left: false,
@@ -482,7 +556,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
             ),
             child: Center(
               child: Icon(
-                _currentPage == 7 ? Icons.check : Icons.arrow_forward_ios,
+                Icons.arrow_forward_ios,
                 color: iconColor,
                 size: 28,
               ),

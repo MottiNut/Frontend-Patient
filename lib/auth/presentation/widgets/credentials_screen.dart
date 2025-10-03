@@ -50,6 +50,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
           validator: Validators.validateEmail,
           icon: Icons.email,
           obscureText: false,
+          onChanged: (value) {
+            setState(() {});
+          },
         ),
         const SizedBox(height: 20),
 
@@ -140,25 +143,29 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
         filled: true,
         fillColor: Colors.grey.shade100,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: BorderSide(color: AppColors.mainOrange, width: 1.4),
+          borderSide: BorderSide(color: AppColors.mainOrange, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          borderSide: const BorderSide(color: Colors.red, width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
       ),
-      validator: validator,
+      validator: (value) {
+        final msg = validator(value);
+        return msg != null ? msg : null; // si hay mensaje, se muestra
+      },
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       onChanged: onChanged,
     );
   }
@@ -168,7 +175,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       children: [
         Icon(
           met ? Icons.check_circle : Icons.cancel,
-          color: met ? Colors.green : Colors.red,
+          color: met ? Colors.green : Colors.grey.shade400, // gris suave si no se cumple
           size: 18,
         ),
         const SizedBox(width: 6),
@@ -176,11 +183,12 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
           text,
           style: TextStyle(
             fontSize: 13,
-            color: met ? Colors.green : Colors.red,
+            color: met ? Colors.green : Colors.grey.shade500, // gris suave
             fontWeight: met ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
       ],
     );
   }
+
 }

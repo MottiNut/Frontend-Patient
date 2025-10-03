@@ -16,49 +16,51 @@ class AllergiesScreen extends StatelessWidget {
   Widget _buildAllergyOption(String label, IconData icon) {
     final isSelected = selectedAllergy == label;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.lightOrange : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(16),
+        color: isSelected ? AppColors.primary : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isSelected ? AppColors.mainOrange : Colors.transparent,
+          color: isSelected ? AppColors.primary : Colors.transparent,
           width: 1.5,
         ),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Icon(
-          icon,
-          color: isSelected ? AppColors.mainOrange : Colors.grey.shade600,
-          size: 28,
-        ),
-        title: Text(
-          label,
-          style: AppTextStyles.description.copyWith(
-            letterSpacing: 0,
-            fontSize: 16,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? AppColors.mainOrange : Colors.black87,
-          ),
-        ),
-        trailing: isSelected
-            ? Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: AppColors.mainOrange,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.check,
-            color: Colors.white,
-            size: 18,
-          ),
-        )
-            : null,
+      child: InkWell(
         onTap: () {
           onAllergyChanged(label);
           customAllergyController.clear();
         },
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? AppColors.whiteBackground : Colors.grey.shade600,
+                size: 26,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTextStyles.description.copyWith(
+                    letterSpacing: 0,
+                    fontSize: 16,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? AppColors.whiteBackground : Colors.black87,
+                  ),
+                ),
+              ),
+              if (isSelected)
+                const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 20,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -84,106 +86,141 @@ class AllergiesScreen extends StatelessWidget {
             letterSpacing: 0,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           'Tu seguridad es primero. Evitaremos estos alimentos',
           style: AppTextStyles.description.copyWith(
             color: Colors.grey[600],
-            fontSize: 14,
+            fontSize: 13.5,
             letterSpacing: 0,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
 
         _buildAllergyOption('Gluten', Icons.grain),
         _buildAllergyOption('Lactosa', Icons.local_drink),
         _buildAllergyOption('Frutos Secos', Icons.nature),
         _buildAllergyOption('Mariscos', Icons.set_meal),
 
-        // Opción "Otro" con campo de texto
         Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
-            color: isCustomSelected ? AppColors.lightOrange : Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
+            color: selectedAllergy == 'Ninguna' ? AppColors.primary : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isCustomSelected ? AppColors.mainOrange : Colors.transparent,
+              color: selectedAllergy == 'Ninguna' ? AppColors.primary : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          child: InkWell(
+            onTap: () {
+              onAllergyChanged('Ninguna');
+              customAllergyController.clear();
+            },
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    color: selectedAllergy == 'Ninguna' ? AppColors.whiteBackground : Colors.grey.shade600,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Ninguna',
+                      style: AppTextStyles.description.copyWith(
+                        letterSpacing: 0,
+                        fontSize: 16,
+                        fontWeight: selectedAllergy == 'Ninguna' ? FontWeight.w700 : FontWeight.w500,
+                        color: selectedAllergy == 'Ninguna' ? AppColors.whiteBackground : Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            color: isCustomSelected ? AppColors.mediumOrange : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isCustomSelected ? AppColors.mediumOrange : Colors.transparent,
               width: 1.5,
             ),
           ),
           child: Column(
             children: [
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                leading: Icon(
-                  Icons.more_horiz,
-                  color: isCustomSelected ? AppColors.mainOrange : Colors.grey.shade600,
-                  size: 28,
-                ),
-                title: Text(
-                  'Otro...',
-                  style: AppTextStyles.description.copyWith(
-                    letterSpacing: 0,
-                    fontSize: 16,
-                    fontWeight: isCustomSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isCustomSelected ? AppColors.mainOrange : Colors.black87,
-                  ),
-                ),
-                trailing: isCustomSelected
-                    ? Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppColors.mainOrange,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                )
-                    : null,
+              InkWell(
                 onTap: () {
                   if (!isCustomSelected) {
                     onAllergyChanged('');
                     customAllergyController.text = '';
                   }
                 },
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+
+                      Expanded(
+                        child: Text(
+                          'Otro tipo de alergia',
+                          style: AppTextStyles.description.copyWith(
+                            letterSpacing: 0,
+                            fontSize: 15.5,
+                            fontWeight: isCustomSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isCustomSelected ? AppColors.whiteBackground : Colors.black87,
+                          ),
+                        ),
+                      ),
+
+                    ],
+                  ),
+                ),
               ),
 
-              // Campo de texto cuando "Otro" está seleccionado
+
               if (isCustomSelected)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
                   child: TextFormField(
                     controller: customAllergyController,
-                    style: const TextStyle(fontSize: 16, color: Colors.black87),
+                    style: const TextStyle(fontSize: 15, color: Colors.black87),
                     decoration: InputDecoration(
                       prefixIcon: Icon(
                         Icons.edit_note,
                         color: Colors.grey.shade400,
+                        size: 22,
                       ),
                       labelText: 'Especifica tu alergia o intolerancia',
                       labelStyle: AppTextStyles.description.copyWith(
                         color: AppColors.darkOrange1,
-                        fontSize: 14,
+                        fontSize: 13,
                         letterSpacing: 0,
                       ),
                       hintText: 'Ej: Huevos, Soja, Chocolate, etc.',
                       hintStyle: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13.5,
                         color: Colors.grey.shade400,
                       ),
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: AppColors.mediumOrange),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.mainOrange, width: 1.5),
+                        borderSide: const BorderSide(color: AppColors.mainOrange, width: 1.5),
                       ),
                       errorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -206,54 +243,6 @@ class AllergiesScreen extends StatelessWidget {
                   ),
                 ),
             ],
-          ),
-        ),
-
-        // Opción "Ninguna"
-        Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: selectedAllergy == 'Ninguna' ? AppColors.lightOrange : Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selectedAllergy == 'Ninguna' ? AppColors.mainOrange : Colors.transparent,
-              width: 1.5,
-            ),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            leading: Icon(
-              Icons.check_circle_outline,
-              color: selectedAllergy == 'Ninguna' ? AppColors.mainOrange : Colors.grey.shade600,
-              size: 28,
-            ),
-            title: Text(
-              'Ninguna',
-              style: AppTextStyles.description.copyWith(
-                letterSpacing: 0,
-                fontSize: 16,
-                fontWeight: selectedAllergy == 'Ninguna' ? FontWeight.w600 : FontWeight.w500,
-                color: selectedAllergy == 'Ninguna' ? AppColors.mainOrange : Colors.black87,
-              ),
-            ),
-            trailing: selectedAllergy == 'Ninguna'
-                ? Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: AppColors.mainOrange,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check,
-                color: Colors.white,
-                size: 18,
-              ),
-            )
-                : null,
-            onTap: () {
-              onAllergyChanged('Ninguna');
-              customAllergyController.clear();
-            },
           ),
         ),
       ],
